@@ -4,8 +4,8 @@ This GitHub repository contains [OGC](http://opengeospatial.org)'s proposed stan
 
 The editor's drafts of the specifications can be found at 
 
-* [OGC API - Routes - Part 1: Core](https://htmlpreview.github.io/?https://github.com/opengeospatial/ogcapi-routes/blob/main/api/standard/21-000.html)
-* [OGC Route Exchange Model](https://htmlpreview.github.io/?https://github.com/opengeospatial/ogcapi-routes/blob/main/rem/standard/21-001.html)
+* [OGC API - Routes - Part 1: Core](https://htmlpreview.github.io/?https://github.com/opengeospatial/ogcapi-routes/blob/master/api/standard/21-000.html)
+* [OGC Route Exchange Model](https://htmlpreview.github.io/?https://github.com/opengeospatial/ogcapi-routes/blob/master/rem/standard/21-001.html)
 
 [OGC API standards](https://ogcapi.ogc.org) define modular API building blocks to spatially enable Web APIs in a consistent way. [OpenAPI](http://openapis.org) is used to define the reusable API building blocks with responses in JSON and HTML.
 
