@@ -1,0 +1,257 @@
+== Overview of the Route model
+
+=== Scenarios
+
+The Route model is driven by three routing scenarios. These were:
+
+* Online - fully connected with stability
+* Intermittent - unreliable connection
+* Offline - no connectivity
+
+==== Online scenario
+In the Online scenario, an operator uses a routing client to request a route from a Routing API provider, which in turn retrieves the route from an online routing engine. In this scenario all components have consistent connections between them and out to the wider internet.
+
+This scenario uses OGC API Routes for all request and response handling between the client and the routing infrastructure.
+
+==== Intermittent scenario
+The intermittent scenario is where the components have connectivity, but it is not necessarily consistent, stable, reliable, or high-speed.
+
+Therefore, the network cannot be relied upon to provide connectivity on demand and compensation actions are likely when connectivity is not available. Intermittent connectivity is unpredictable and it maybe that in the real-world, decisions are made to treat intermittent connectivity as no connectivity, as it is the only sensible course of action, especially if the scenario involves threat to life.
+
+For example, only one of the clients had access to a routing engine. Therefore, the connected client had the ability to create routes, but other clients cannot. If the clients are able to communicate with each other via some other means (Bluetooth or some other peer-to-peer communication, for example), the clients could still share pre-defined routes, that is, the routing operation has been completed when a connection to the routing engine was established, but has now been lost. 
+
+Another approach to support in particular low-bandwidth situations is to not transmit the complete route definition to the client, but to return route information segment by segment as the vehicle moves along the route.
+
+==== Offline scenario
+The Offline scenario assumes that there is no connectivity outside of a device’s local network, this could be a desktop computer, mobile device or a mesh. In the real-world the scenario is modeling an instance where there is no connectivity and there is not going to be any connectivity for the duration of an operation. 
+
+An operator uses the routing functionality provided by the client to create a route. The operator then shares this route with other local clients using the route exchange model. To enable the required functionality, all of the capability has to be tightly coupled in a single location. Practically, this involves installing all of the components on the same machine to remove communication dependencies with the wider network.
+
+=== The Route model
+
+[#rem-classes]
+.UML class diagram of the Route model
+image::UML/rem-classes.png[alt=UML diagram,width=100%]
+
+==== Destination
+* a subtype of `Waypoint`
+* a `Feature`
+* constraints:
+** `type = 'end'`
+
+==== Route
+* an `Object` 
+* association role `describedBy`
+** multiplicity: 1
+** value: `RouteDefinition`
+* attribute `end`
+** definition: The end point of the route.
+** multiplicity: 1
+** value: `Destination`
+* attribute `name`
+** definition: Title of the route.
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `overview`
+** multiplicity: 0..1
+** value: `RouteOverview`
+* attribute `segments`
+** multiplicity: 0..*
+** value: `RouteSegment`
+ * attribute `start`
+** definition: The start point of the route.
+** multiplicity: 1
+** value: `Start`
+* attribute `status`
+** definition: Processing status of the route.
+** multiplicity: 1
+** default: accepted
+** values:
+*** `accepted`: The route is queued for processing.
+*** `running`: The route is being computed.
+*** `successful`: The route is available.
+*** `failed`: The route could not be computed.
+* constraints:
+** `overview.duration=segments->collect(duration)->sum()`
+** `overview.length=segments->collect(length)->sum()`
+** `status=successful implies (overview->notEmpty() and segments->notEmpty())`
+
+==== RouteComponent
+* a supertype of `RouteOverview`, `RouteSegment`, `Waypoint`
+* a `Feature`
+* is abstract
+* attribute `type`
+** multiplicity: 1
+** values:
+*** `start`
+*** `end` 
+*** `overview` 
+*** `segment`
+
+==== RouteDefinition
+* a `Object`
+* definition: Information about the definition of the route. At a minimum, a route is defined by two waypoints, the start and end point of the route.
+* attribute `algorithm`
+** definition: Select the routing / graph solving algorithm to use for calculating the route.
+** multiplicity: 0..1
+** value: `RoutingAlgorithm`
+* attribute `dataset`
+** definition: The name of the source dataset with a transport network used for calculating the route.
+** multiplicity: 0..1
+** value: `SourceDataset`
+* attribute `end`
+** multiplicity: 1
+** value: `Waypoint`
+* attribute `engine`
+** definition: The name of the routing engine used for calculating the route.
+** multiplicity: 0..1
+** value: `RoutingEngine`
+* attribute `intermediate`
+** definition: Additional waypoints along the route between start and end to consider when computing the route.
+** multiplicity: 0..*
+** value: `Waypoint`
+* attribute `maxHeight`
+** definition: A height restriction for vehicles in meters to consider when computing the route.
+** multiplicity: 0..1
+** value: `Measure`
+* attribute `maxWeight`
+** definition: A weight restriction for vehicles in tons to consider when computing the route.
+** multiplicity: 0..1
+** value: `Measure`
+* attribute `obstacles`
+** definition: Areas the route should avoid.
+** note: Currently this uses a simple approach. In general, the list of obstacles could also be a feature collection where every obstacle is a feature. Such a representation would be required, if the routing engine is able to handle obstacles with different characteristics/properties (for example, an obstacle is only valid for a certain time interval).
+** multiplicity: 0..1
+** value: `GM_MultiSurface`
+* attribute `preference`
+** definition: The optimization goal for the route calculation (fastest, shortest, etc.). 
+** multiplicity: 1
+** default: `fastest`
+** values:
+*** `fastest`
+*** `shortest`
+*** ...
+* attribute `start`
+** multiplicity: 1
+** value: `Waypoint`
+* attribute `temporal`
+** definition: The time of departure or arrival. The default value is an immediate departure.
+** multiplicity: 0..1
+** value: `TemporalConstraint`
+
+==== RouteOverview
+* a subtype of `RouteComponent`
+* a `Feature`
+* attribute `comment`
+** definition: Explains any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `duration`
+** definition: Estimated amount of time required to travel the route (in seconds).
+** multiplicity: 1
+** value: `Measure`
+* attribute `length`
+** definition: Length of the route (in meters).
+** multiplicity: 1
+** value: `Measure`
+* attribute `maxHeight`
+** definition: A known height restriction on the route (in meters).
+** multiplicity: 0..1
+** value: `Measure`
+* attribute `maxWeight`
+** definition: A known weight restriction on the route (in tons).
+** multiplicity: 0..1
+** value: `Measure`
+* attribute `obstacles`
+** definition: Describes how obstacles were taken into account in the route calculation.
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `path`
+** definition: The path from the start point to the end point of the route.
+** multiplicity: 1
+** value: `GM_Curve`
+* attribute `processingTime`
+** definition: The time when the route was calculated.
+** multiplicity: 0..1
+** value: `DateTime`
+* constraints:
+** `type = 'overview'`
+
+==== RouteSegment
+* a subtype of `RouteComponent`
+* a `Feature`
+* attribute `duration`
+** definition: Estimated amount of time required to travel the segment (in seconds).
+** multiplicity: 1
+** value: `Measure`
+* attribute `instructions`
+** definition: An instruction for the maneuver at the end of the segment.
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `length`
+** definition: Length of the segment(in meters).
+** multiplicity: 1
+** value: `Measure`
+* attribute `locationAtEnd`
+** definition: The last position of the segment and be on the path geometry of the route overview.
+** multiplicity: 1
+** value: `GM_Point`
+* attribute `maxHeight`
+** definition: A known height restriction(in meters).
+** multiplicity: 0..1
+** value: `Measure`
+* attribute `maxWeight`
+** definition: A known weight restriction (in tons).
+** multiplicity: 0..1
+** value: `Measure`
+* association role `next`
+** multiplicity: 0..1
+** value: `RouteSegment`
+* association role `prev`
+** multiplicity: 0..1
+** value: `RouteSegment`
+* attribute `roadName`
+** definition: The road/street name of the segment.
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `speedLimit`
+** definition: A known speed limit on the segment.
+** multiplicity: 0..1
+** value: `Measure`
+* constraints:
+** `type = 'segment'`
+
+==== Start
+* a subtype of `Waypoint`
+* a `Feature`
+* constraints:
+** `type = 'start'`
+
+==== TemporalConstraint
+* a `Data type`
+* attribute `timestamp`
+** multiplicity: 1
+** value: `DateTime`
+* attribute `type`
+** multiplicity: 1
+** default: `departure`
+** values:
+*** `departure`
+*** `arrival `
+
+==== Waypoint
+* a subtype of `RouteComponent`
+* a supertype of `Destination`, `Start`
+* a `Feature`
+* definition: A waypoint of the route.
+* attribute `location`
+** definition: The coordinates of the waypoint.
+** multiplicity: 1
+** value: `GM_Point`
+* attribute `name`
+** definition: A name for the waypoint.
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `timestamp`
+** multiplicity: 0..1
+** value: `DateTime`

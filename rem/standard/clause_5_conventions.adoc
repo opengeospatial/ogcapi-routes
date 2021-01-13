@@ -1,0 +1,15 @@
+== Conventions
+This section provides details and examples for any conventions used in the document. 
+
+=== Identifiers
+The normative provisions in this Standard are denoted by the URI
+
+http://www.opengis.net/spec/rem/1.0
+
+All requirements and conformance tests that appear in this document are denoted by partial URIs which are relative to this base.
+
+=== JSON schema
+
+This document uses JSON Schema to document the syntax of the Route Exchange Model.
+
+#TODO: add JSON schema and change OpenAPI 3.0 schemas to JSON Schema.#

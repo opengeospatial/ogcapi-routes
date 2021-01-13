@@ -1,0 +1,1058 @@
+{
+    "@context": {
+        "@version": 1.1,
+        "geojson": "https://purl.org/geojson/vocab#",
+        "rte": "https://raw.githubusercontent.com/ogcincubator/route/master/route#",
+        "Feature": "geojson:Feature",
+        "FeatureCollection": "geojson:FeatureCollection",
+        "GeometryCollection": "geojson:GeometryCollection",
+        "LineString": "geojson:LineString",
+        "MultiLineString": "geojson:MultiLineString",
+        "MultiPoint": "geojson:MultiPoint",
+        "MultiPolygon": "geojson:MultiPolygon",
+        "Point": "geojson:Point",
+        "Polygon": "geojson:Polygon",
+        "bbox": {
+            "@container": "@list",
+            "@id": "geojson:bbox"
+        },
+        "coordinates": {
+            "@container": "@list",
+            "@id": "geojson:coordinates"
+        },
+        "features": {
+            "@container": "@set",
+            "@id": "geojson:features"
+        },
+        "geometry": "geojson:geometry",
+        "id": "@id",
+        "properties": "@nest",
+        "name": "rdfs:label",
+        "status": "rte:status",
+        "length_m": "rte:length",
+        "duration_s": "rte:duration",
+        "instructions": "rte:instructions",
+        "text": "rte:text",
+        "roadName": "rte:roadName"
+    },
+    "type": "FeatureCollection",
+    "id": "https://api.example.com/v1/routes/4711",
+    "@type": [
+        "geojson:FeatureCollection",
+        "rte:Route"
+    ],
+    "name": "National Cathedral to Washington Monument",
+    "status": "successful",
+    "features": [
+        {
+            "id": "1",
+            "@type": [
+                "geojson:Feature",
+                "rte:RouteOverview"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "overview",
+                "length_m": 8290,
+                "duration_s": 1053
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [
+                        -77.0721011,
+                        38.9308998
+                    ],
+                    [
+                        -77.0721066,
+                        38.9309335
+                    ],
+                    [
+                        -77.072171,
+                        38.9309657
+                    ],
+                    [
+                        -77.0724392,
+                        38.9309442
+                    ],
+                    [
+                        -77.0726538,
+                        38.9308369
+                    ],
+                    [
+                        -77.0728254,
+                        38.9308584
+                    ],
+                    [
+                        -77.0729434,
+                        38.9300859
+                    ],
+                    [
+                        -77.0729756,
+                        38.929764
+                    ],
+                    [
+                        -77.0731151,
+                        38.9290237
+                    ],
+                    [
+                        -77.0731902,
+                        38.9280903
+                    ],
+                    [
+                        -77.0731902,
+                        38.9275324
+                    ],
+                    [
+                        -77.0716774,
+                        38.9275324
+                    ],
+                    [
+                        -77.0685983,
+                        38.9252687
+                    ],
+                    [
+                        -77.0677829,
+                        38.9246893
+                    ],
+                    [
+                        -77.0675147,
+                        38.9245391
+                    ],
+                    [
+                        -77.066946,
+                        38.9243674
+                    ],
+                    [
+                        -77.0667315,
+                        38.9243352
+                    ],
+                    [
+                        -77.0663667,
+                        38.9243245
+                    ],
+                    [
+                        -77.0655835,
+                        38.9241421
+                    ],
+                    [
+                        -77.0652187,
+                        38.9240134
+                    ],
+                    [
+                        -77.0649827,
+                        38.9239061
+                    ],
+                    [
+                        -77.0646071,
+                        38.9236701
+                    ],
+                    [
+                        -77.064178,
+                        38.9233375
+                    ],
+                    [
+                        -77.0638454,
+                        38.9230049
+                    ],
+                    [
+                        -77.0637274,
+                        38.9228547
+                    ],
+                    [
+                        -77.0635772,
+                        38.9225972
+                    ],
+                    [
+                        -77.0634162,
+                        38.9222646
+                    ],
+                    [
+                        -77.0632231,
+                        38.9216208
+                    ],
+                    [
+                        -77.0631373,
+                        38.9214063
+                    ],
+                    [
+                        -77.0630729,
+                        38.9213097
+                    ],
+                    [
+                        -77.0629442,
+                        38.9211702
+                    ],
+                    [
+                        -77.062633,
+                        38.9209127
+                    ],
+                    [
+                        -77.0617425,
+                        38.9202476
+                    ],
+                    [
+                        -77.0608735,
+                        38.9196146
+                    ],
+                    [
+                        -77.0606267,
+                        38.9194536
+                    ],
+                    [
+                        -77.0594788,
+                        38.9185953
+                    ],
+                    [
+                        -77.0589745,
+                        38.9182627
+                    ],
+                    [
+                        -77.0582235,
+                        38.9177048
+                    ],
+                    [
+                        -77.0580733,
+                        38.9175761
+                    ],
+                    [
+                        -77.057333,
+                        38.9170396
+                    ],
+                    [
+                        -77.0576763,
+                        38.9166534
+                    ],
+                    [
+                        -77.0577836,
+                        38.9164817
+                    ],
+                    [
+                        -77.0578158,
+                        38.9162135
+                    ],
+                    [
+                        -77.0577836,
+                        38.9160526
+                    ],
+                    [
+                        -77.0577192,
+                        38.9159131
+                    ],
+                    [
+                        -77.0576227,
+                        38.9158165
+                    ],
+                    [
+                        -77.0572042,
+                        38.9154947
+                    ],
+                    [
+                        -77.0563245,
+                        38.9148617
+                    ],
+                    [
+                        -77.0559275,
+                        38.9146042
+                    ],
+                    [
+                        -77.0556164,
+                        38.9143467
+                    ],
+                    [
+                        -77.055155,
+                        38.9141214
+                    ],
+                    [
+                        -77.055037,
+                        38.9140248
+                    ],
+                    [
+                        -77.0549941,
+                        38.9138961
+                    ],
+                    [
+                        -77.0550048,
+                        38.9136386
+                    ],
+                    [
+                        -77.055037,
+                        38.9134669
+                    ],
+                    [
+                        -77.0550156,
+                        38.9133811
+                    ],
+                    [
+                        -77.0549726,
+                        38.913306
+                    ],
+                    [
+                        -77.0548868,
+                        38.9132416
+                    ],
+                    [
+                        -77.0545113,
+                        38.9130485
+                    ],
+                    [
+                        -77.0538998,
+                        38.9126837
+                    ],
+                    [
+                        -77.0533419,
+                        38.9124799
+                    ],
+                    [
+                        -77.0522904,
+                        38.91204
+                    ],
+                    [
+                        -77.0518398,
+                        38.9116859
+                    ],
+                    [
+                        -77.051636,
+                        38.9115036
+                    ],
+                    [
+                        -77.0514321,
+                        38.911289
+                    ],
+                    [
+                        -77.0510566,
+                        38.9108491
+                    ],
+                    [
+                        -77.050885,
+                        38.9106774
+                    ],
+                    [
+                        -77.0507777,
+                        38.9106023
+                    ],
+                    [
+                        -77.0505524,
+                        38.910377
+                    ],
+                    [
+                        -77.0504451,
+                        38.9102054
+                    ],
+                    [
+                        -77.0503914,
+                        38.9099801
+                    ],
+                    [
+                        -77.0503807,
+                        38.9098299
+                    ],
+                    [
+                        -77.0504129,
+                        38.9096367
+                    ],
+                    [
+                        -77.0504665,
+                        38.9095294
+                    ],
+                    [
+                        -77.0505846,
+                        38.90939
+                    ],
+                    [
+                        -77.0507133,
+                        38.909272
+                    ],
+                    [
+                        -77.0508206,
+                        38.9091861
+                    ],
+                    [
+                        -77.0509601,
+                        38.9091218
+                    ],
+                    [
+                        -77.0511854,
+                        38.9090359
+                    ],
+                    [
+                        -77.0513785,
+                        38.9090145
+                    ],
+                    [
+                        -77.0515716,
+                        38.9090037
+                    ],
+                    [
+                        -77.0525372,
+                        38.9090359
+                    ],
+                    [
+                        -77.0527518,
+                        38.9090252
+                    ],
+                    [
+                        -77.0530951,
+                        38.9089501
+                    ],
+                    [
+                        -77.0534492,
+                        38.9088106
+                    ],
+                    [
+                        -77.053889,
+                        38.9085102
+                    ],
+                    [
+                        -77.0542002,
+                        38.9081776
+                    ],
+                    [
+                        -77.0545113,
+                        38.9077592
+                    ],
+                    [
+                        -77.0552087,
+                        38.9062035
+                    ],
+                    [
+                        -77.0554876,
+                        38.9056563
+                    ],
+                    [
+                        -77.0557237,
+                        38.9052486
+                    ],
+                    [
+                        -77.0561743,
+                        38.9046478
+                    ],
+                    [
+                        -77.056421,
+                        38.9042401
+                    ],
+                    [
+                        -77.0565283,
+                        38.9040148
+                    ],
+                    [
+                        -77.056582,
+                        38.9038646
+                    ],
+                    [
+                        -77.0567,
+                        38.9031136
+                    ],
+                    [
+                        -77.0568824,
+                        38.902663
+                    ],
+                    [
+                        -77.0569575,
+                        38.9023948
+                    ],
+                    [
+                        -77.0571184,
+                        38.9019978
+                    ],
+                    [
+                        -77.0571828,
+                        38.9017725
+                    ],
+                    [
+                        -77.0572257,
+                        38.9014292
+                    ],
+                    [
+                        -77.057215,
+                        38.9011288
+                    ],
+                    [
+                        -77.0571721,
+                        38.9009464
+                    ],
+                    [
+                        -77.0570219,
+                        38.9005709
+                    ],
+                    [
+                        -77.0567107,
+                        38.8996053
+                    ],
+                    [
+                        -77.0564425,
+                        38.8988543
+                    ],
+                    [
+                        -77.0563781,
+                        38.898586
+                    ],
+                    [
+                        -77.0563459,
+                        38.8983715
+                    ],
+                    [
+                        -77.0563459,
+                        38.8981247
+                    ],
+                    [
+                        -77.0564103,
+                        38.8976634
+                    ],
+                    [
+                        -77.0564532,
+                        38.8971269
+                    ],
+                    [
+                        -77.0564747,
+                        38.8951528
+                    ],
+                    [
+                        -77.056464,
+                        38.8949382
+                    ],
+                    [
+                        -77.0564318,
+                        38.8947129
+                    ],
+                    [
+                        -77.0563567,
+                        38.8944447
+                    ],
+                    [
+                        -77.0562708,
+                        38.8942623
+                    ],
+                    [
+                        -77.0558417,
+                        38.8935435
+                    ],
+                    [
+                        -77.0555627,
+                        38.8931251
+                    ],
+                    [
+                        -77.0554554,
+                        38.8929105
+                    ],
+                    [
+                        -77.055198,
+                        38.8925242
+                    ],
+                    [
+                        -77.0551014,
+                        38.8923419
+                    ],
+                    [
+                        -77.0549834,
+                        38.8922453
+                    ],
+                    [
+                        -77.0548654,
+                        38.8922024
+                    ],
+                    [
+                        -77.0547581,
+                        38.8921702
+                    ],
+                    [
+                        -77.0542109,
+                        38.8920736
+                    ],
+                    [
+                        -77.0540285,
+                        38.8920093
+                    ],
+                    [
+                        -77.0533526,
+                        38.8916016
+                    ],
+                    [
+                        -77.0530736,
+                        38.8914621
+                    ],
+                    [
+                        -77.052387,
+                        38.8912153
+                    ],
+                    [
+                        -77.0522261,
+                        38.8911188
+                    ],
+                    [
+                        -77.0521402,
+                        38.8910329
+                    ],
+                    [
+                        -77.0520759,
+                        38.8909471
+                    ],
+                    [
+                        -77.0520544,
+                        38.890754
+                    ],
+                    [
+                        -77.0520651,
+                        38.8906467
+                    ],
+                    [
+                        -77.0523334,
+                        38.8901317
+                    ],
+                    [
+                        -77.0525694,
+                        38.8895845
+                    ],
+                    [
+                        -77.052623,
+                        38.8891768
+                    ],
+                    [
+                        -77.0525908,
+                        38.8889086
+                    ],
+                    [
+                        -77.0525479,
+                        38.8887584
+                    ],
+                    [
+                        -77.0524728,
+                        38.8885975
+                    ],
+                    [
+                        -77.0522475,
+                        38.8882434
+                    ],
+                    [
+                        -77.0521188,
+                        38.8880825
+                    ],
+                    [
+                        -77.0519578,
+                        38.8879108
+                    ],
+                    [
+                        -77.0516467,
+                        38.8876212
+                    ],
+                    [
+                        -77.0513678,
+                        38.8873851
+                    ],
+                    [
+                        -77.0508742,
+                        38.8872027
+                    ],
+                    [
+                        -77.0505953,
+                        38.8871276
+                    ],
+                    [
+                        -77.0501983,
+                        38.887074
+                    ],
+                    [
+                        -77.0499408,
+                        38.8870096
+                    ],
+                    [
+                        -77.0491147,
+                        38.886956
+                    ],
+                    [
+                        -77.0480955,
+                        38.8869345
+                    ],
+                    [
+                        -77.0449626,
+                        38.8868058
+                    ],
+                    [
+                        -77.0429778,
+                        38.8867736
+                    ],
+                    [
+                        -77.0423341,
+                        38.8868272
+                    ],
+                    [
+                        -77.0417118,
+                        38.8869131
+                    ],
+                    [
+                        -77.0381391,
+                        38.8869452
+                    ],
+                    [
+                        -77.0367014,
+                        38.8869452
+                    ],
+                    [
+                        -77.0362508,
+                        38.886956
+                    ],
+                    [
+                        -77.0358753,
+                        38.8869989
+                    ],
+                    [
+                        -77.0352101,
+                        38.8870847
+                    ],
+                    [
+                        -77.0348454,
+                        38.8871706
+                    ],
+                    [
+                        -77.0346093,
+                        38.8872564
+                    ],
+                    [
+                        -77.0342767,
+                        38.8874495
+                    ],
+                    [
+                        -77.0338154,
+                        38.8876748
+                    ],
+                    [
+                        -77.0336866,
+                        38.8877714
+                    ],
+                    [
+                        -77.0336437,
+                        38.8880289
+                    ],
+                    [
+                        -77.0335472,
+                        38.8881791
+                    ],
+                    [
+                        -77.033118,
+                        38.8886511
+                    ],
+                    [
+                        -77.033,
+                        38.888855
+                    ],
+                    [
+                        -77.0329249,
+                        38.8890588
+                    ],
+                    [
+                        -77.0328605,
+                        38.8895094
+                    ],
+                    [
+                        -77.0329356,
+                        38.8899279
+                    ],
+                    [
+                        -77.0330107,
+                        38.890121
+                    ]
+                ]
+            },
+            "bbox": [
+                -77.0731902,
+                38.8867736,
+                -77.0328605,
+                38.9309657
+            ]
+        },
+        {
+            "id": "2",
+            "@type": [
+                "geojson:Feature",
+                "rte:Start"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "start"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0721,
+                    38.9309
+                ]
+            }
+        },
+        {
+            "id": "3",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 70,
+                "duration_s": 46,
+                "instructions": "continue",
+                "text": "Head north on North Rd. Go for 70 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0721011,
+                    38.9308998
+                ]
+            }
+        },
+        {
+            "id": "4",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 372,
+                "duration_s": 75,
+                "roadName": "North Rd",
+                "instructions": "left",
+                "text": "Turn left onto Wisconsin Ave NW. Go for 372 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0728254,
+                    38.9308584
+                ]
+            }
+        },
+        {
+            "id": "5",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 131,
+                "duration_s": 28,
+                "roadName": "Wisconsin Ave NW",
+                "instructions": "left",
+                "text": "Turn left onto Garfield St NW. Go for 131 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0731902,
+                    38.9275324
+                ]
+            }
+        },
+        {
+            "id": "6",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 1752,
+                "duration_s": 215,
+                "roadName": "Garfield St NW",
+                "instructions": "right",
+                "text": "Turn right onto Massachusetts Ave NW. Go for 1.8 km."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0716774,
+                    38.9275324
+                ]
+            }
+        },
+        {
+            "id": "7",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 351,
+                "duration_s": 49,
+                "roadName": "Massachusetts Ave NW",
+                "instructions": "right",
+                "text": "Turn right onto Waterside Dr NW. Go for 351 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.057333,
+                    38.9170396
+                ]
+            }
+        },
+        {
+            "id": "8",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 3021,
+                "duration_s": 275,
+                "roadName": "Waterside Dr NW",
+                "instructions": "continue",
+                "text": "Take ramp onto Rock Creek and Potomac Pkwy NW. Go for 3.0 km."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0559275,
+                    38.9146042
+                ]
+            }
+        },
+        {
+            "id": "9",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 748,
+                "duration_s": 90,
+                "roadName": "Rock Creek and Potomac Pkwy NW",
+                "text": "Keep left onto Ohio Dr SW. Go for 748 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0551014,
+                    38.8923419
+                ]
+            }
+        },
+        {
+            "id": "10",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 1155,
+                "duration_s": 107,
+                "roadName": "Ohio Dr SW",
+                "text": "Keep left onto Independence Ave SW. Go for 1.2 km."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0513678,
+                    38.8873851
+                ]
+            }
+        },
+        {
+            "id": "11",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 125,
+                "duration_s": 22,
+                "roadName": "Independence Ave SW",
+                "text": "Keep right onto Independence Ave SW. Go for 125 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0381391,
+                    38.8869452
+                ]
+            }
+        },
+        {
+            "id": "12",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 283,
+                "duration_s": 73,
+                "roadName": "Independence Ave SW",
+                "text": "Keep left onto Independence Ave SW. Go for 283 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0367014,
+                    38.8869452
+                ]
+            }
+        },
+        {
+            "id": "13",
+            "@type": [
+                "geojson:Feature",
+                "rte:Segment"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "segment",
+                "levelOfDetail": "visualization",
+                "length_m": 282,
+                "duration_s": 73,
+                "roadName": "Independence Ave SW",
+                "text": "Turn slightly left onto 15th St SW. Go for 282 m."
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0336866,
+                    38.8877714
+                ]
+            }
+        },
+        {
+            "id": "14",
+            "@type": [
+                "geojson:Feature",
+                "rte:Destination"
+            ],
+            "type": "Feature",
+            "properties": {
+                "type": "end"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.0352,
+                    38.8897
+                ]
+            }
+        }
+    ]
+}

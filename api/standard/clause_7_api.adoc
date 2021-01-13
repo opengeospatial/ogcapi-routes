@@ -1,0 +1,1345 @@
+[[routing-api]]
+== Routing API
+
+=== Overview
+
+This clause specifies the Routing API as a Web API for routing based on the OGC API principles and OGC API - Common as well as the Route Exchange Model. It
+consists of the following requirements/conformance classes, each with a unique Uniform Resource Identifier (URI):
+
+* Core: minimal routing capability (asynchronous routing based on start/end point)
+* Delete route: Cancel/delete routes
+* Callback: Support for call to a webhook after the route is computed
+* Result set: request parts of the Route Exchange Model, e.g., in DDIL situations
+* Synchronous execution: return the route in the response to the routing request
+* Intermediate waypoints: Pass through additional points along the route
+* Height restriction: Consider height restrictions
+* Load restriction: Consider load restrictions
+* Obstacles: Avoid obstacles
+* Temporal constraints: Specify departure/arrival time
+* Routing engine: Select a specific routing engine
+* Routing algorithm: Select the algorithm to use
+* Source dataset: Select the network dataset to use
+
+This API supports the resources and operations listed in Table 1.
+
+[#tldr,reftext='{table-caption} {counter:table-num}']
+.Overview of resources and applicable HTTP methods
+[cols="32,25,10,33",options="header"]
+!===
+|Resource |Path |HTTP method |Document reference
+|Landing page |`/` |GET |<<landing_page>>
+|Conformance declaration |`/conformance` |GET |<<conformance_declaration>>
+.2+|Routes .2+|`/routes` |GET |<<get_routes>>
+|POST |<<compute_route>>
+.2+|Route .2+|`/routes/{routeId}` |GET |<<get_route>>
+|DELETE |<<delete_route>>
+|Route definition |`/routes/{routeId}/definition` |GET |<<get_route_definition>>
+!===
+
+All resources are available in the 'Core' requirements class, i.e. all routing
+APIs will support them, with the exception of the operation to delete a route
+which is specified in the 'Delete route' requirements class.
+
+[[rc_core]]
+=== Requirements Class "Core"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/core
+|Target type |Web API
+|Dependency |OGC API - Common (Core)
+|Dependency |link:https://tools.ietf.org/rfc/rfc7946.txt[GeoJSON]
+|Dependency |http://www.opengis.net/spec/rem/1.0/req/rem-full
+|===
+
+==== OGC API Common (Core)
+
+At the time of writing, the OGC API - Common draft specification is not yet an approved standard. A draft is in development, based on the generic concepts of the OGC API - Features - Part 1: Core standard (OGC 17-069r3),
+but it is in an early stage of the standardization process. In order to avoid duplicating content this
+document does not copy the basic requirements, recommendations and permissions
+from OGC API Common/Features. The following normative statements are by reference
+part of this requirements class:
+
+* Landing page
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_root-op[Requirement /req/core/root-op]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_root-success[Requirement /req/core/root-success]
+*** Change: No `data` link to `/collections` is required, but the `data` link has to point to the `/routes` resource
+* API definition
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_api-definition-op[Requirement /req/core/api-definition-op]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#per_core_api-definition-uri[Permission /per/core/api-definition-uri]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_api-definition-success[Requirement /req/core/api-definition-success]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_api-definition-oas[Recommendation /rec/core/api-definition-oas]
+* Conformance declaration
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_conformance-op[Requirement /req/core/conformance-op]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_conformance-success[Requirement /req/core/conformance-success]
+* Web API
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_http[Requirement /req/core/http]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_head[Recommendation /rec/core/head]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#per_core_additional-status-codes[Permission /per/core/additional-status-codes]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_query-param-unknown[Requirement /req/core/query-param-unknown]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_query-param-invalid[Requirement /req/core/query-param-invalid]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_etag[Recommendation /rec/core/etag]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_cross-origin[Recommendation /rec/core/cross-origin]
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_link-header[Recommendation /rec/core/link-header]
+* Geometries
+** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_crs84[Requirement /req/core/crs84]
+
+The link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_string-i18n[recommendation /rec/core/string-i18n]
+is mainly implemented by the Content-Language header in the response to
+requests returning a route.
+
+[[landing_page]]
+==== API landing page
+
+The following is an example of the landing page of a routing API.
+
+[[example_lp]]
+.Landing page
+=================
+[source,JSON]
+----
+{
+  "links": [
+    {
+      "href": "https://example.org/api/routing/v1",
+      "rel": "self",
+      "type": "application/json",
+      "title": "this document"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/api",
+      "rel": "service-desc",
+      "type": "application/vnd.oai.openapi+json;version=3.0",
+      "title": "the API definition in OpenAPI JSON"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/api.html",
+      "rel": "service-doc",
+      "type": "text/html",
+      "title": "the API documentation in HTML"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/conformance",
+      "rel": "conformance",
+      "type": "application/json",
+      "title": "list of conformance classes implemented by this API"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes",
+      "rel": "data",
+      "type": "application/json",
+      "title": "the routes"
+    }
+  ]
+}
+----
+=================
+
+[[conformance_declaration]]
+==== Declaration of conformance classes
+
+The following is an example of the conformance declaration of a routing API
+that implements all requirements classes.
+
+Some requirements classes support options and parsing the OpenAPI definition
+may be unnecessarily costly for clients to determine the options. The conformance
+declaration, therefore, is extended to support stating the options implemented.
+
+[[example_cc]]
+.Conformance declaration
+=================
+[source,JSON]
+----
+{
+  "conformsTo": [
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/intermediate-waypoints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-height",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-weight",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/obstacles",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/time",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/callback",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/result-set",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/sync-mode",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/delete-route"
+  ],
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
+    "values": [
+      "fastest",
+      "shortest"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine": {
+    "values": [
+      "Skymantics",
+      "Ecere",
+      "HERE"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm": {
+    "values": [
+      "Dikjstra",
+      "Floyd Marshall",
+      "A*"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset": {
+    "values": [
+      "NSG",
+      "OSM",
+      "HERE"
+    ]
+  }
+}
+----
+=================
+
+[[geometries]]
+==== Geometries
+
+All geometries used in the API are GeoJSON geometries.
+This includes the waypoints in the route definition and the
+geometries of all features in the route exchange model
+(overview, start, end, segments).
+
+All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum i.e. the coordinate reference system used by Global Positioning System (GPS). In GeoJSON, a coordinate is an array of numbers. The first two
+elements are longitude and latitude, or easting and northing,
+precisely in that order and using decimal numbers. Elevation
+may be included as an optional third element.
+
+[[routes]]
+==== Routes
+
+[[get_routes]]
+===== Fetch routes
+
+This operation returns a list of routes that are currently available.
+
+[[req_core_routes-op]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/routes-op*
+^|A |The server SHALL support the HTTP GET operation at the path `/routes`.
+|===
+
+[[req_core_routes-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/routes-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
+^|B |The content of that response SHALL be based upon the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  links:
+    type: array
+    items:
+      type: object
+      required:
+        - href
+      properties:
+        href:
+          type: string
+        rel:
+          type: string
+        type:
+          type: string
+        hreflang:
+          type: string
+        title:
+          type: string
+----
+^|C |The links SHALL include a link (link relation `item`) to each route currently on the server.
+^|D |If a route has a name, the name SHALL be used in the link title.
+|===
+
+
+[[example_routes]]
+.Routes
+=================
+[source,JSON]
+----
+{
+  "links": [
+    {
+      "href": "https://example.org/api/routing/v1/routes",
+      "rel": "self",
+      "type": "application/json",
+      "title": "this document"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes/5hsb32",
+      "rel": "item",
+      "type": "application/geo+json",
+      "title": "Lincoln Memorial to hotel"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes/9fg3dh",
+      "rel": "item",
+      "type": "application/geo+json",
+      "title": "Lafayette Square to Zoo"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes/j6gdg3",
+      "rel": "item",
+      "type": "application/geo+json",
+      "title": "DCA to hotel"
+    }
+  ]
+}
+----
+=================
+
+[[compute_route]]
+===== Compute a new route
+
+This operation creates a new route. The payload of the request specifies the
+definition of the new route.
+
+The core requirements class supports a minimum route definition
+by two `waypoints`, the start and end point of the route.
+
+In addition, clients can select 'fastest' or 'shortest' as the
+routing `preference`. The default value is 'fastest'.
+
+An optional `name` for the route may be provided. The name will be
+used as the title in links to the route and is also included in the
+route itself.
+
+[[req_core_compute-route-op]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/compute-route-op*
+^|A |The server SHALL support the HTTP POST operation at the path `/routes`.
+^|B |The server SHALL accept a route definition in the content of the request
+based upon the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+required:
+  - waypoints
+properties:
+  name:
+    type: string
+  waypoints:
+    type: object
+    required:
+      - type
+      - coordinates
+    properties:
+      type:
+        type: string
+        enum:
+          - MultiPoint
+      coordinates:
+        type: array
+        minItems: 2
+        maxItems: 2
+        items:
+          title: Points along the route
+          type: array
+          minItems: 2
+          items:
+            type: number
+  preference:
+    type: string
+    default: fastest
+    enum:
+      - fastest
+      - shortest
+----
+|===
+
+[[per_core_preference]]
+[width="90%",cols="2,6a"]
+|===
+^|*Permission {counter:per-id}* |*/per/core/preference*
+^|C |The `enum` and `default` values of `preference` in the schema MAY be
+extended to reflect the routing options supported by the server.
+|===
+
+Note that additional members in the route definition can be ignored.
+
+[[req_core_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `preference` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+[[req_core_compute-route-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `201`.
+^|B |The response SHALL include a header `Location` with the URI of the new route.
+|===
+
+[[req_core_error]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/error*
+^|A |If the request does not conform to the requirements (e.g., the route
+definition is invalid) a response with status code `400` SHALL be returned.
+^|A |If the request is valid, but the server is not able to process the request
+(e.g., the server has insufficient route network data for the request),
+a response with status code `422` SHALL be returned.
+|===
+
+[[example_route_definition]]
+.Route definition
+=================
+This requests the fastest route from Reagan Airport to the U.S. Captiol
+in Washington, D.C.
+
+[source,JSON]
+----
+{
+  "name": "Reagan Airport to Capitol",
+  "waypoints": {
+    "type": "MultiPoint",
+    "coordinates": [
+      [
+        -77.037722,
+        38.851444
+      ],
+      [
+        -77.009003,
+        38.889931
+      ]
+    ]
+  },
+  "preference": "fastest"
+}
+----
+=================
+
+[[example_route_location]]
+.New route response
+=================
+The URI of the new route is `https://example.org/api/routing/v1/routes/hdg6g`.
+
+[source]
+----
+HTTP/1.1 201 Created
+Date: Fri, 26 Jul 2019 08:29:45 GMT
+Location: https://example.org/api/routing/v1/routes/hdg6g
+----
+=================
+
+[[per_core_purge-routes]]
+[width="90%",cols="2,6a"]
+|===
+^|*Permission {counter:per-id}* |*/per/core/purge-routes*
+^|A |Routing APIs may purge routes automatically.
+|===
+
+Typically, routes will be removed after a reasonable time, for example, twelve
+hours after the route has last been accessed.
+
+[[route]]
+==== Route
+
+[[get_route]]
+===== Fetch a route
+
+This operation returns the route with id `routeId`. The route content is
+described by the "Route Exchange Model (full)".
+
+[[req_core_route-op]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/route-op*
+^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}`
+for each route referenced from the Routes resource at `/routes`.
+|===
+
+[[req_core_route-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/route-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
+^|B |The content of that response SHALL conform to a requirements class of the Route Exchange Model.
+^|C |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model (full)".
+^|D |If elevation is provided for one coordinate in a route, all coordinates in the route SHALL include elevation information.
+^|E |If the request included an `Accept-Language` header, the server SHALL try to honor the request and otherwise fall back
+to an available language.
+^|F |The response SHALL include a `Content-Language` header with the language
+used for instructions and names, in particular road/street names.
+|===
+
+A route is represented as a GeoJSON feature collection.
+Its contents will depend on the `status` of the route processing.
+
+If the status is 'successful' the feature collection consists
+of the following information:
+
+* A `name`, if one was provided with the route definition.
+* A link to the canonical URI of the route and its definition (link relations `self` and `describedBy`)
+* An array of features (the properties of each is to be decided)
+** The route overview feature. This has a LineString geometry of the complete route from start to end location.
+** The start point of the route with a Point geometry.
+** A feature for every segment of the route. This has a Point geometry representing the last point of the segment.
+** The end point of the route with a Point geometry.
+
+If the status is 'accepted' (the request has been received, but processing
+has not yet started), 'running' (the routing is being computed) or 'failed'
+(there was an unspecified error computing the route) the feature collection
+has less information:
+
+* The route overview has a `null` geometry.
+* No segment features are included.
+
+[[example_route]]
+.A route
+=================
+[source,JSON]
+----
+{
+  "type": "FeatureCollection",
+  "name": "Reagan Airport to Capitol",
+  "status": "successful",
+  "links": [
+    {
+      "href": "https://example.com/routes/hdg6g",
+      "rel": "self",
+      "type": "application/geo+json",
+      "title": "this document"
+    },
+    {
+      "href": "https://example.com/routes/hdg6g/definition",
+      "rel": "describedBy",
+      "type": "application/json",
+      "title": "the route definition for this route"
+    }
+  ],
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          ...,
+          [
+            -77.012520,
+            38.889780
+          ]
+        ]
+      },
+      "properties": {
+        "type": "route overview",
+        "length_m": 8213,
+        "duration_s": 483
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.037722,
+          38.851444
+        ]
+      },
+      "properties": {
+        "type": "start"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 3,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.041674,
+          38.871088
+        ]
+      },
+      "properties": {
+        "type": "segment",
+        "length_m": 3314,
+        "duration_s": 213,
+        "instruction": "turn right",
+        "roadName": "George Washington Memorial Pkwy",
+        "maxHeight": 4.5,
+        "speedLimit": 55,
+        "speedLimitUnit": "mph"
+      }
+    },
+    ...,
+    {
+      "type": "Feature",
+      "id": 17,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.012520,
+          38.889780
+        ]
+      },
+      "properties": {
+        "type": "segment",
+        "length_m": 517,
+        "duration_s": 73,
+        "roadName": "First Street",
+        "speedLimit": 35,
+        "speedLimitUnit": "mph"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 18,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.012520,
+          38.889780
+        ]
+      },
+      "properties": {
+        "type": "end"
+      }
+    }
+  ]
+}
+----
+=================
+
+[[example_route_processing]]
+.A route that is still being computed
+=================
+[source,JSON]
+----
+{
+  "type": "FeatureCollection",
+  "name": "Reagan Airport to Capitol",
+  "status": "running",
+  "links": [
+    {
+      "href": "https://example.com/routes/hdg6g",
+      "rel": "self",
+      "type": "application/geo+json",
+      "title": "this document"
+    },
+    {
+      "href": "https://example.com/routes/hdg6g/definition",
+      "rel": "describedBy",
+      "type": "application/json",
+      "title": "the route definition for this route"
+    }
+  ],
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "geometry": null,
+      "properties": {
+        "type": "route overview"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.037722,
+          38.851444
+        ]
+      },
+      "properties": {
+        "type": "start"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 18,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.009003,
+          38.889931
+        ]
+      },
+      "properties": {
+        "type": "end"
+      }
+    }
+  ]
+}
+----
+=================
+
+[[route_definition]]
+==== Route definition
+
+[[get_route_definition]]
+===== Fetch the definition of a route
+
+This operation returns the input parameters used to create the route
+with id `routeId`.
+
+[[req_core_route-definition-op]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/route-definition-op*
+^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}/definition`
+for each route referenced from the Routes resource at `/routes`.
+|===
+
+[[req_core_route-definition-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/route-definition-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
+^|B |The content of that response SHALL be identical to the content of the
+POST request to `/routes` when the route was created.
+|===
+
+[[rc_delete-route]]
+=== Requirements Class "Delete route"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/delete-route
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+==== Route
+
+[[delete_route]]
+===== Delete a route
+
+This operation deletes the route with identifier `routeId`.
+If the route is still in processing, the routing process is canceled.
+
+[[req_delete-route_op]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/delete-route/op*
+^|A |The server SHALL support the HTTP DELETE operation at the path `/routes/{routeId}`
+for each route referenced from the Routes resource at `/routes`.
+|===
+
+[[req_delete-route_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/delete-route/success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `204`.
+^|B |The route SHALL be removed from the Routes resource (path `/routes`).
+^|C |A GET request to `/routes/{routeId}` SHALL return a response with a HTTP status code `404`.
+|===
+
+[[rc_callback]]
+=== Requirements Class "Callback"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/callback
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_callback_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/callback/input*
+^|A |The server SHALL support a member with the name "subscriber" in the
+route definition in a HTTP POST request to the path `/routes` with the
+following schema:
+
+[source,YAML]
+----
+type: string
+format: uri
+----
+^|B |The value of "subscriber" SHALL be a webhook (a HTTP(S) URI that
+accepts POST requests).
+|===
+
+[[req_callback_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/callback/success*
+^|A |If a webhook has been provided in a HTTP POST request to the path `/routes`,
+the server SHALL, after the computation of the route is finished, send a POST
+request to the webhook URI with the route according to the "Route Exchange
+Model (full)" as the content.
+|===
+
+[[rc_result-set]]
+=== Requirements Class "Result set"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/result-set
+|Target type |Web API
+|Dependency |<<rc_core>>
+|Dependency |http://www.opengis.net/spec/rem/1.0/req/rem-segment-with-links
+|===
+
+[[req_result-set_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/result-set/input*
+^|A |The server SHALL support a parameter with the name "resultSet" in
+GET requests to the path `/routes/{routeId}` with the following schema:
+
+[source,YAML]
+----
+name: resultSet
+in: query
+schema:
+  type: string
+  enum:
+    - full
+    - overview
+    - segments
+  default: full
+----
+|===
+
+[[req_result-set_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/result-set/success*
+^|A |If the `resultSet` parameter has been provided in the request,
+the server SHALL return the following after a successful execution
+of the request depending on the parameter value:
+
+* 'full' (default): the complete representation of the route according to
+requirements class "Route Exchange Model (full)".
+* 'overview': the route overview feature according to
+requirements class "Route Exchange Model (overview)".
+* 'segments': the first segment feature according to
+requirements class "Route Exchange Model (segment with links)"
+|===
+
+If 'segments' is requested, the segment will include a link to the second segment
+(link relation `next`), if there is more than one segment. Every segment
+except the first and the last segment will include two links (link
+relations `prev` and `next`), except the last segment, which just has a
+`prev` link (unless there is only a single segment in which case there is
+no `prev` link).
+
+It is up to the server how this is implemented and how segment URIs are minted.
+Options include another parameter to identify the segment by index or
+temporary, opaque URIs.
+
+[[rc_sync-mode]]
+=== Requirements Class "Synchronous execution"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/sync-mode
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_sync-mode_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/sync-mode/input*
+^|A |The server SHALL support a parameter with the name "mode" in
+POST requests to the path `/routes` with the following schema:
+
+[source,YAML]
+----
+name: mode
+in: query
+schema:
+  type: string
+  enum:
+    - async
+    - sync
+  default: async
+----
+|===
+
+[[req_sync-mode_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/sync-mode/success*
+^|A |If the `mode` parameter has been provided in the request
+with the value 'sync', the server SHALL return the following
+after a successful computation of the requested route:
+
+* A response with the HTTP status code `200`.
+* The same content as to a GET request to path `/routes/{routeId}`
+once the route has the status 'successful'.
+^|B |The computed route SHALL NOT be persistent on the server. No `routeId`
+will be assigned to the route.
+|===
+
+If no parameter `mode` is provided or the parameter has the value 'async', the
+standard response is returned: a `201` response with the `Location` header
+pointing to the new Route resource.
+
+If the route definition includes a member with name "subscriber" (see <<rc_callback>>),
+the information is ignored and no callback is executed.
+
+[[rc_intermediate-waypoints]]
+=== Requirements Class "Intermediate waypoints"
+
+Additional waypoints along the route between start and end to consider
+when computing the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/intermediate-waypoints
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_intermediate-waypoints_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/intermediate-waypoints/input*
+^|A |The server SHALL support more than two points in the member with the
+name "waypoints" in the route definition in a HTTP POST request to the
+path `/routes` (i.e. `maxItems` may be removed from the schema definition
+or increased to a value larger than '2').
+|===
+
+[[req_intermediate-waypoints_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/intermediate-waypoints/success*
+^|A |The computed route SHALL pass through all waypoints in the order
+in which they have been provided. "Pass through" means that the route
+overview line string geometry passes through the position or a position
+on the route network that is close to the waypoint.
+|===
+
+[[rc_max-height]]
+=== Requirements Class "Height restriction"
+
+A height restriction for vehicles in meters to consider when
+computing the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/max-height
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_max-height_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/max-height/input*
+^|A |The server SHALL support a member with the name "maxHeight"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+name: maxHeight
+in: query
+schema:
+  type: number
+----
+|===
+
+[[req_max-height_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/max-height/success*
+^|A |The computed route SHALL be passable by vehicles with a height up to
+the value of "maxHeight" in meters.
+|===
+
+[[rc_max-weight]]
+=== Requirements Class "Load restriction"
+
+A weight restriction for vehicles in tons to consider when computing
+the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/max-weight
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_max-weight_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/max-weight/input*
+^|A |The server SHALL support a member with the name "maxWeight"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+name: maxWeight
+in: query
+schema:
+  type: number
+----
+|===
+
+[[req_max-weight_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/max-weight/success*
+^|A |The computed route SHALL be passable by vehicles with a weight up to
+the value of "maxWeight" in tons.
+|===
+
+[[rc_obstacles]]
+=== Requirements Class "Obstacles"
+
+One or more polygons describing areas the route should avoid.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/obstacles
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_obstacles_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/obstacles/input*
+^|A |The server SHALL support a member with the name "obstacles"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema (a GeoJSON MultiPolygon):
+
+[source,YAML]
+----
+type: object
+required:
+  - type
+  - coordinates
+properties:
+  type:
+    type: string
+    enum:
+      - MultiPolygon
+  coordinates:
+    type: array
+    items:
+      type: array
+      items:
+        type: array
+        minItems: 4
+        items:
+          type: array
+          minItems: 2
+          items:
+            type: number
+----
+|===
+
+[[req_obstacles_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/obstacles/success*
+^|A |The computed route SHALL not pass through the polygons identified as obstacles.
+|===
+
+NOTE: This is a simple approach that is sufficient for the pilot.
+In general, the list of obstacles could also be a feature collection
+where every obstacle is a feature. Such a representation would be
+required, if the routing engine is able to handle obstacles with
+different characteristics/properties (for example, an obstacle is
+only valid for a certain time interval).
+
+[[rc_time]]
+=== Requirements Class "Temporal constraints"
+
+The time of departure or arrival. The default value is an immediate departure.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/time
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_time_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/time/input*
+^|A |The server SHALL support a member with the name "when"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: object
+required:
+  - timestamp
+properties:
+  timestamp:
+    type: string
+    format: date-time
+    example: "2019-05-23T19:06:32Z"
+  type:
+    type: string
+    default: departure
+    enum:
+      - departure
+      - arrival
+----
+|===
+
+[[req_time_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/time/success*
+^|A |All temporal information in the route SHALL be based on the values in
+the "when" member (the time of departure or arrival, the default value is
+an immediate departure).
+|===
+
+[[rec_time_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/time/success*
+^|A |The route SHOULD consider the expected traffic situation at the time
+specified in the "when" member.
+|===
+
+[[rc_routing-engine]]
+=== Requirements Class "Routing engine"
+
+Select the routing engine to use for calculating the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/routing-engine
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_routing-engine_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-engine/input*
+^|A |The server SHALL support a member with the name "engine"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: string
+enum:
+  - engineA
+  - engineB
+default: engineA
+----
+^|B |The `enum` and `default` values in the schema SHALL be changed to
+reflect the routing engines supported by the server.
+|===
+
+[[req_routing-engine_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-engine/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `engine` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+NOTE: In the pilot, the engines are "Skymantics", "Ecere", and "HERE".
+
+[[req_routing-engine_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-engine/success*
+^|A |The route SHALL be computed with the selected routing engine.
+|===
+
+[[rc_routing-algorithm]]
+=== Requirements Class "Routing algorithm"
+
+Select the routing / graph solving algorithm to use for calculating the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/routing-algorithm
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_routing-algorithm_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-algorithm/input*
+^|A |The server SHALL support a member with the name "algorithm"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: string
+enum:
+  - algorithmA
+  - algorithmB
+default: algorithmA
+----
+^|B |The `enum` and `default` values in the schema SHALL be changed to
+reflect the algorithms supported by the server.
+|===
+
+[[req_routing-algorithm_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-algorithm/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `algorithm` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+[[req_routing-algorithm_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-algorithm/success*
+^|A |The route SHALL be computed with the selected routing algorithm.
+|===
+
+[[rc_source-dataset]]
+=== Requirements Class "Source dataset"
+
+Select the source dataset for calculating the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/source-dataset
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_source-dataset_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/source-dataset/input*
+^|A |The server SHALL support a member with the name "dataset"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: string
+enum:
+  - datasetA
+  - datasetB
+default: datasetA
+----
+^|B |The `enum` and `default` values in the schema SHALL be changed to
+reflect the datasets supported by the server.
+|===
+
+[[req_source-dataset_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/source-dataset/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `dataset` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+NOTE: In the pilot, the datasets are "NSG", "OSM", and "HERE".
+
+[[req_source-dataset_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/source-dataset/success*
+^|A |The route SHALL be computed with the selected dataset.
+|===

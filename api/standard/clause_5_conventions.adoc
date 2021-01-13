@@ -1,0 +1,11 @@
+== Conventions
+This section provides details and examples for any conventions used in the document. 
+
+#TODO: add information about the use of OpenAPI 3.0, link relation types, etc.#
+
+=== Identifiers
+The normative provisions in this Standard are denoted by the URI
+
+http://www.opengis.net/spec/ogcapi-routes-1/1.0
+
+All requirements and conformance tests that appear in this document are denoted by partial URIs which are relative to this base.

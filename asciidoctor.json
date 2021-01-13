@@ -1,0 +1,32 @@
+{
+        "0":  {
+                "OGC_doc_number": "21-000",
+                "urn":"http://www.opengis.net/doc/IS/ogcapi-routes-1/1.0",
+                "title":"OGC API - Routes - Part 1: Core",
+                "path":"api/standard/21-000.adoc",
+                "options": ["--trace"],
+                "a":[
+                        "data-uri",
+                        "stylesdir=./resources/stylesheets",
+                        "dot=/usr/bin/dot"
+                ],
+                "r":[
+                        "asciidoctor-diagram"
+                ]
+        },
+        "1":  {
+                "OGC_doc_number": "21-001",
+                "urn":"http://www.opengis.net/doc/IS/rem/1.0",
+                "title":"Route Exchange Model",
+                "path":"rem/standard/21-001.adoc",
+                "options": ["--trace"],
+                "a":[
+                        "data-uri",
+                        "stylesdir=./resources/stylesheets",
+                        "dot=/usr/bin/dot"
+                ],
+                "r":[
+                        "asciidoctor-diagram"
+                ]
+        }
+}

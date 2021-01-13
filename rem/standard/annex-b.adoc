@@ -1,0 +1,15 @@
+[appendix]
+:appendix-caption: Annex
+[[examples]]
+== Examples (Informative)
+
+The following example of a "full" route also includes JSON-LD annotations to associate the JSON structures with GeoJSON and Route vocabularies.
+
+[[rem-example-full]]
+.Sample route
+=================
+[source,JSON]
+----
+include::code/rem-example.json[]
+----
+=================

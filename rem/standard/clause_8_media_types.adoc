@@ -1,0 +1,3 @@
+== Media Types
+
+#TODO: Use application/geo+json and do not register a new media type (for interoperability with consumers that know GeoJSON and its media type).#

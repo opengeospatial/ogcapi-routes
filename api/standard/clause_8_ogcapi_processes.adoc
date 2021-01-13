@@ -1,0 +1,469 @@
+[[processes-profile]]
+== Routing API as a profile of OGC API Processes
+
+This clause specifies a second API option for a Routing API that supports more-or-less the same capabilities as the Routing API defined in the previous clause and re-uses the Route Exchange Model. However, it is based on the OGC API Processes standards and defined as a profile of that standard.
+
+#TODO: Do we want to keep the OGC API Processes option? If yes, we need to align with the latest draft. This is an old version based on an outdated draft of OGC API Processes. As discussed in the meeting on 2021-01-12, the preference is for a single API with explicit Route resources as described in <<routing-api>>. We will analyse, if the changes to OGC API Processes in recent month support that we can basically merge the two approaches without complicating the API. If that is not possible, an OGC API Processes profile for routing could be specified as a separate document, if there is interest, potentially by another group.#
+
+NOTE: This option is to a large extent specified by the OGC API - Processes candidate standard. It has additional requirements and conformance classes that mirror the ones from the first option. To avoid a lot of repetition, this clause currently does not define each of these classes formally like for the first option, but describes how each class of the first option is mapped to the OGC API Processes option.
+
+=== Overview
+
+The profile has the following characteristics:
+
+* The resources are processes and jobs, consistent with the
+OGC API - Processes draft.
+* The input to routing tasks (jobs) will be the start and end location
+plus optional routing parameters (intermediate waypoints, constraints,
+etc.), based on the route definition schema specified above.
+* The output / result of routing tasks is using the Route
+Exchange Model in GeoJSON.
+
+Note that one characteristic of this API option is that the input/output
+descriptions as part of the processOffering schema add an additional
+schema layer and describe another (WPS-specific) schema description language
+in addition to the JSON schema description in the OpenAPI definition. This
+also has the effect, that the schema of the routing parameters is
+not part of the API definition, but described as a response to a
+process resource in the API (`/processes/routing`).
+
+The following table provides an overview of the resources. For details
+see the draft OGC API - Processes specification.
+
+Note that the OGC API Common requirements apply to this option, too.
+
+[#tldrwps,reftext='{table-caption} {counter:table-num}']
+.Overview of resources and applicable HTTP methods in the WPS profile
+[cols="32,25,10,33",options="header"]
+!===
+|Resource |Path |HTTP method |Document reference
+|Landing page |`/` |GET |<<wps_landing_page>>
+|Conformance declaration |`/conformance` |GET |<<wps_conformance>>
+|Processes |`/processes` |GET |<<wps_processes>>
+|Process |`/processes/routing` |GET |<<wps_process>>
+.2+|Jobs .2+|`/processes/routing/jobs` |GET |<<wps_jobs>>
+|POST |<<wps_new_job>>
+|Job |`/processes/routing/jobs/{jobId}` |GET |<<wps_job_status>>
+|Result |`/processes/routing/jobs/{jobId}/result` |GET |<<wps_result>>
+!===
+
+[[wps_landing_page]]
+=== Landing page
+
+See <<landing_page>>, except that the "data" link references `/processes`.
+
+[[wps_conformance]]
+=== Conformance declaration
+
+The following is an example of the conformance declaration for the WPS option
+that implements all requirements classes. Note that the following classes
+of the Routing API option are not available in the WPS option as OGC API Processes
+does not support the required capabilities:
+
+* Delete route
+* Callback
+* Result set
+* Synchronous execution
+
+[[example_wps_cc]]
+.Conformance declaration
+=================
+[source,JSON]
+----
+{
+  "conformsTo": [
+    "http://www.opengis.net/spec/WPS/2.0/req/service/binding/restjson/core",
+    "http://www.opengis.net/spec/WPS/2.0/req/service/binding/restjson/oas30",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-intermediate-waypoints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-max-height",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-max-weight",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-obstacles",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-routing-engine",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-routing-algorithm",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-source-dataset",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/wps-time",
+  ]
+}
+----
+=================
+
+Note that the URIs of OGC API - Processes specification are outdated, but no newer URIs
+for conformance classes are available.
+
+[[wps_processes]]
+=== Get processes
+
+A single process with id 'routing' is returned according to the link:https://raw.githubusercontent.com/opengeospatial/wps-rest-binding/master/core/openapi/schemas/processCollection.yaml[processCollection schema].
+
+[[example_wps_processes]]
+.List of processes
+=================
+[source,JSON]
+----
+{
+  "processes": [ {
+    "id": "routing",
+    "title": "Compute routes",
+    "description": "The process computes and creates a new route.
+
+ At a minimum, a route is defined by two `waypoints`, the start and end
+ point of the route.
+
+ Every process supports at least 'fastest' and 'shortest' as the
+ routing `preference`. The default value is 'fastest'.
+
+An optional `name` for the route may be provided. The name will be
+used as the title in links to the route and also included in the route
+itself.
+
+More parameters and routing constraints can optionally be provided
+with the routing request:
+* Source dataset to use when processing the route
+* Routing engine to use when processing the route
+* Routing algorithm to use when processing the route
+* Obstacle requirements
+* Height restriction
+* Maximum load restriction
+* Time of departure or arrival",
+    "keywords": [ "routing" ],
+    "version": "1.0",
+    "jobControlOptions": [ "async-execute" ],
+    "outputTransmission": [ "value" ],
+    "links": [ {
+      "href": "https://example.org/api/wps/v1/processes/routing",
+      "rel": "???",
+      "title": "execution endpoint"
+    } ]
+  } ]
+}
+----
+=================
+
+[[wps_process]]
+=== Describe routing process
+
+A description of the process with id 'routing' is returned according to the link:https://raw.githubusercontent.com/opengeospatial/wps-rest-binding/master/core/openapi/schemas/processOffering.yaml[processOffering schema].
+
+The `inputs` member will include all parameters that the WPS profile supports
+according to the declared conformance classes.
+
+[[example_wps_process]]
+.Process description
+=================
+[source,JSON]
+----
+{
+  "inputs": [
+    {
+      "id": "waypoints",
+      "title": "Waypoints",
+      "description": "A list of points along the route. At least two points have to be provided (start and end point).",
+      "formats": [
+        {
+          "mimeType": "application/geo+json",
+          "schema": "https://geojson.org/schema/MultiPoint.json"
+        }
+      ],
+      "minOccurs": 1,
+      "maxOccurs": 1
+    },
+    {
+      "id": "preference",
+      "title": "Routing preference",
+      "description": "The routing preference.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "string",
+        "defaultValue": "fastest",
+        "allowedValues": [
+          "fastest",
+          "shortest"
+        ]
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "maxHeight",
+      "title": "Maximum height",
+      "description": "A height restriction for vehicles in meters \nto consider when computing the route.\n\nSupport for this parameter is not required and the parameter may be\nremoved from the API definition.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "double",
+        "uom": {
+          "name": "meter"
+        }
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "maxWeight",
+      "title": "Maximum weight",
+      "description": "A weight restriction for vehicles in tons \nto consider when computing the route.\n\nSupport for this parameter is not required and the parameter may be\nremoved from the API definition.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "double",
+        "uom": {
+          "name": "tons"
+        }
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "obstacle",
+      "title": "???",
+      "description": "???.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "string",
+        "defaultValue": "???",
+        "allowedValues": [
+          "???"
+        ]
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "dataset",
+      "title": "source dataset",
+      "description": "The source dataset to use for calculating the route.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "string",
+        "allowedValues": [
+          "NSG",
+          "OSM",
+          "HERE"
+        ]
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "engine",
+      "title": "routing engine",
+      "description": "The routing engine to use for calculating the route.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "string",
+        "allowedValues": [
+          "Skymantics",
+          "Ecere",
+          "HERE"
+        ]
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "algorithm",
+      "title": "graph solving algorithm",
+      "description": "The routing / graph solving algorithm to use for calculating the route.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "string",
+        "defaultValue": "Dikjstra",
+        "allowedValues": [
+          "Dikjstra",
+          "Floyd Marshall",
+          "A*"
+        ]
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "when",
+      "title": "time of departure or arrival",
+      "description": "The time of departure or arrival. Default is \"now\".",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "dateTime"
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    },
+    {
+      "id": "deparr",
+      "title": "departure",
+      "description": "Specifies whether the value of `when` refers to the\ntime of departure or arrival. Default is departure.",
+      "formats": [
+        {
+          "mimeType": "text/plain"
+        }
+      ],
+      "literalDataDomain": {
+        "dataType": "string",
+        "defaultValue": "departure",
+        "allowedValues": [
+          "departure",
+          "arrival"
+        ]
+      },
+      "minOccurs": 0,
+      "maxOccurs": 1
+    }
+  ],
+  "outputs": [
+    {
+      "id": "route",
+      "title": "the route",
+      "description": "The route is represented by a GeoJSON feature collection\nthat contains the following information:\n\n* A `name`, if one was provided with the route definition.\n* A link to the canonical URI of the route and its definition\n(link relations `self` and `describedBy`)\n* An array of features (the properties of each is to be decided)\n* The route overview feature. This has a LineString \ngeometry of the complete route from start to end location.\n* The start point of the route with a Point geometry.\n* A feature for every segment of the route. This has a \nLineString geometry starting at the end of the previous \nsegment (or, for the first segment, the start point).\n* The end point of the route with a Point geometry.",
+      "formats": [
+        {
+          "mimeType": "application/geo+json",
+          "schema": "https://geojson.org/schema/FeatureCollection.json",
+          "default": true
+        }
+      ]
+    }
+  ]
+}
+----
+=================
+
+[[wps_jobs]]
+=== Get routing jobs
+
+This operation just returns an object with a `jobs` member, which is an
+array of existing `jobId` values.
+
+[[wps_new_job]]
+=== Create new route
+
+This operation creates a new route. It is similar to the request in the
+Routing API option, except that the input/output descriptions according
+to OGC API Processes are used.
+
+[[example_wps_new_job]]
+.New route
+=================
+[source,JSON]
+----
+{
+  "inputs": [
+    {
+      "id": "waypoints",
+      "input": {
+        "format": {
+          "mimeType": "application/geo+json"
+        },
+        "value": {
+          "inlineValue": {
+            "type": "MultiPoint",
+            "coordinates": [
+              [
+                36.1234515,
+                32.6453783
+              ],
+              [
+                36.1214698,
+                32.655952
+              ],
+              [
+                36.1247213,
+                32.7106286
+              ]
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "preference",
+      "input": {
+        "value": "fastest"
+      }
+    },
+    {
+      "id": "maxHeight",
+      "input": {
+        "value": "4.5",
+        "uom": {
+          "name": "meter"
+        }
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "route",
+      "output": {
+        "format": {
+          "mimeType": "application/geo+json"
+        }
+      },
+      "transmissionMode": "value"
+    }
+  ]
+}
+----
+=================
+
+[[wps_job_status]]
+=== Get routing job status
+
+This operation informs about the status of the job with id `jobId`. It returns
+the status plus optionally a message and a progress estimate in percent.
+
+The Routing API option currently does not support the message and the percent
+estimate.
+
+[[wps_result]]
+=== Get route
+
+The route according to the Route Exchange Model is returned, wrapped into
+objects and arrays according to OGC API Processes.
+
+[[example_wps_result]]
+.A route
+=================
+[source,JSON]
+----
+{
+  "outputs": [
+    {
+      "id": "1",
+      "value": {
+        "inlineValue": { ... the route according to the Route Exchange Model ... }
+      }
+    }
+  ]
+}
+----
+=================
