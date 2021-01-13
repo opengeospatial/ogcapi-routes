@@ -45,8 +45,8 @@ The contributor understands that any contributions, if accepted by the OGC Membe
 
 The OGC Routing Standards Working Group (SWG) is the group at OGC responsible for the stewardship of the standard, but is working to do as much work in public as possible.
 
-* [Open issues](https://github.com/opengeospatial/ogcapi-routing/issues)
-* [Copy of License Language](https://raw.githubusercontent.com/opengeospatial/ogcapi-styles/master/api/LICENSE)
+* [Open issues](https://github.com/opengeospatial/ogcapi-routes/issues)
+* [Copy of License Language](https://raw.githubusercontent.com/opengeospatial/ogcapi-routes/master/api/LICENSE)
 
 For more information, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
