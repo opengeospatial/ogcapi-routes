@@ -12,4 +12,4 @@ All requirements and conformance tests that appear in this document are denoted 
 
 This document uses JSON Schema to document the syntax of the Route Exchange Model.
 
-#TODO: add JSON schema and change OpenAPI 3.0 schemas to JSON Schema.#
+The complete schema is available in <<rem-json-schema>>.

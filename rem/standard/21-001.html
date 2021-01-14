@@ -613,9 +613,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_media_types">8. Media Types</a></li>
 <li><a href="#_conformance_class_abstract_test_suite_normative">Annex A: Conformance Class Abstract Test Suite (Normative)</a></li>
-<li><a href="#examples">Annex B: Examples (Informative)</a></li>
-<li><a href="#_revision_history">Annex C: Revision History</a></li>
-<li><a href="#Bibliography">Annex D: Bibliography</a></li>
+<li><a href="#json-schema">Annex B: JSON Schema (Normative)</a></li>
+<li><a href="#examples">Annex C: Examples (Informative)</a></li>
+<li><a href="#_revision_history">Annex D: Revision History</a></li>
+<li><a href="#Bibliography">Annex E: Bibliography</a></li>
 </ul>
 </div>
 <div style="page-break-after: always;"></div>
@@ -794,7 +795,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>This document uses JSON Schema to document the syntax of the Route Exchange Model.</p>
 </div>
 <div class="paragraph">
-<p><mark>TODO: add JSON schema and change OpenAPI 3.0 schemas to JSON Schema.</mark></p>
+<p>The complete schema is available in <a href="#rem-json-schema">JSON schema of the Route Exchange Model in GeoJSON</a>.</p>
 </div>
 </div>
 </div>
@@ -1786,7 +1787,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="ulist">
 <ul>
 <li>
-<p>Full: All route information is encoded in a GeoJSON feature collection. This is the default model and must be supported by all Routing API server-side and client-side components.</p>
+<p>Full: All route information is encoded in a GeoJSON feature collection.</p>
 </li>
 <li>
 <p>Overview: A single GeoJSON feature detailing the route geometry along the network and the main properties of the route.</p>
@@ -1810,8 +1811,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 representations of a route.</p>
 </div>
 <div class="paragraph">
-<p>The normative statements use the JSON Schema variant defined by
-OpenAPI 3.0 to specify schema components.</p>
+<p>The normative statements use JSON Schema to specify schema components.</p>
 </div>
 <table class="tableblock frame-all grid-all" style="width: 90%;">
 <colgroup>
@@ -1956,12 +1956,14 @@ feature collection.</p>
 <td class="tableblock halign-center valign-top" style="background-color: #FFFFFF;"><p class="tableblock">A</p></td>
 <td class="tableblock halign-left valign-top" style="background-color: #FFFFFF;"><div class="content"><div class="paragraph">
 <p>The feature collection SHOULD have a member with the name "name"
-that is a title of the route with the following OpenAPI 3.0
+that is a title of the route with the following
 schema:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="YAML"><span></span>type: string</code></pre>
+<pre class="pygments highlight"><code data-lang="JSON"><span></span>{
+  &quot;type&quot;: &quot;string&quot;
+}</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -1986,17 +1988,14 @@ schema:</p>
 <td class="tableblock halign-center valign-top" style="background-color: #FFFFFF;"><p class="tableblock">A</p></td>
 <td class="tableblock halign-left valign-top" style="background-color: #FFFFFF;"><div class="content"><div class="paragraph">
 <p>The feature collection SHALL have a member with the name "status"
-describing the processing status of the route with the following OpenAPI 3.0
-schema:</p>
+describing the processing status of the route with the following schema:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="YAML"><span></span>type: string
-enum:
-  - accepted
-  - running
-  - successful
-  - failed</code></pre>
+<pre class="pygments highlight"><code data-lang="JSON"><span></span>{
+  &quot;type&quot;: &quot;string&quot;,
+  &quot;enum&quot;: [ &quot;accepted&quot;, &quot;running&quot;, &quot;successful&quot;, &quot;failed&quot; ]
+}</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -2084,26 +2083,24 @@ depending on the status:</p>
 <td class="tableblock halign-center valign-top" style="background-color: #FFFFFF;"><p class="tableblock">A</p></td>
 <td class="tableblock halign-left valign-top" style="background-color: #FFFFFF;"><div class="content"><div class="paragraph">
 <p>The feature collection SHOULD have a member with the name "links"
-with the following OpenAPI 3.0 schema:</p>
+with the following schema:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="YAML"><span></span>type: array
-items:
-  type: object
-  required:
-    - href
-  properties:
-    href:
-      type: string
-    rel:
-      type: string
-    type:
-      type: string
-    hreflang:
-      type: string
-    title:
-      type: string</code></pre>
+<pre class="pygments highlight"><code data-lang="JSON"><span></span>{
+  &quot;type&quot;: &quot;array&quot;,
+  &quot;items&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;required&quot;: [ &quot;href&quot; ],
+    &quot;properties&quot;: {
+      &quot;href&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;rel&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;type&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;hreflang&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;title&quot;: { &quot;type&quot;: &quot;string&quot; }
+    }
+  }
+}</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -2364,7 +2361,7 @@ start point to the end point of the route.</p>
 <tr>
 <td class="tableblock halign-center valign-top" style="background-color: #FFFFFF;"><p class="tableblock">B</p></td>
 <td class="tableblock halign-left valign-top" style="background-color: #FFFFFF;"><div class="content"><div class="paragraph">
-<p>If the API has access to the information, the route overview SHOULD have the properties <code>maxHeight_m</code>, <code>maxLoad_t</code>, and <code>obstacles</code>.</p>
+<p>If the process that creates the route has access to the information, the route overview SHOULD have the properties <code>maxHeight_m</code>, <code>maxLoad_t</code>, and <code>obstacles</code>.</p>
 </div></div></td>
 </tr>
 </tbody>
@@ -2533,26 +2530,24 @@ start point to the end point of the route.</p>
 <td class="tableblock halign-center valign-top" style="background-color: #FFFFFF;"><p class="tableblock">A</p></td>
 <td class="tableblock halign-left valign-top" style="background-color: #FFFFFF;"><div class="content"><div class="paragraph">
 <p>Each segment SHALL have a member with the name `links
-with the following OpenAPI 3.0 schema:</p>
+with the following schema:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="YAML"><span></span>type: array
-items:
-  type: object
-  required:
-    - href
-  properties:
-    href:
-      type: string
-    rel:
-      type: string
-    type:
-      type: string
-    hreflang:
-      type: string
-    title:
-      type: string</code></pre>
+<pre class="pygments highlight"><code data-lang="JSON"><span></span>{
+  &quot;type&quot;: &quot;array&quot;,
+  &quot;items&quot;: {
+    &quot;type&quot;: &quot;object&quot;,
+    &quot;required&quot;: [ &quot;href&quot; ],
+    &quot;properties&quot;: {
+      &quot;href&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;rel&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;type&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;hreflang&quot;: { &quot;type&quot;: &quot;string&quot; },
+      &quot;title&quot;: { &quot;type&quot;: &quot;string&quot; }
+    }
+  }
+}</code></pre>
 </div>
 </div></div></td>
 </tr>
@@ -2618,13 +2613,34 @@ items:
 </div>
 </div>
 <div class="sect1">
-<h2 id="examples"><a class="anchor" href="#examples"></a>Annex B: Examples (Informative)</h2>
+<h2 id="json-schema"><a class="anchor" href="#json-schema"></a>Annex B: JSON Schema (Normative)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This annex contains the JSON Schema of the Route Exchange Model in GeoJSON.</p>
+</div>
+<div id="rem-json-schema" class="exampleblock">
+<div class="title">Example 1. JSON schema of the Route Exchange Model in GeoJSON</div>
+<div class="content">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="JSON"><span></span>{
+   &quot;TODO&quot;: true
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="examples"><a class="anchor" href="#examples"></a>Annex C: Examples (Informative)</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The following example of a "full" route also includes JSON-LD annotations to associate the JSON structures with GeoJSON and Route vocabularies.</p>
 </div>
 <div id="rem-example-full" class="exampleblock">
-<div class="title">Example 1. Sample route</div>
+<div class="title">Example 2. Sample route</div>
 <div class="content">
 <div class="listingblock">
 <div class="content">
@@ -3694,7 +3710,7 @@ items:
 </div>
 </div>
 <div class="sect1">
-<h2 id="_revision_history"><a class="anchor" href="#_revision_history"></a>Annex C: Revision History</h2>
+<h2 id="_revision_history"><a class="anchor" href="#_revision_history"></a>Annex D: Revision History</h2>
 <div class="sectionbody">
 <table class="tableblock frame-all grid-all" style="width: 90%;">
 <colgroup>
@@ -3727,7 +3743,7 @@ items:
 </div>
 </div>
 <div class="sect1">
-<h2 id="Bibliography"><a class="anchor" href="#Bibliography"></a>Annex D: Bibliography</h2>
+<h2 id="Bibliography"><a class="anchor" href="#Bibliography"></a>Annex E: Bibliography</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p><mark>TODO</mark></p>
@@ -3737,7 +3753,7 @@ items:
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-01-13 15:54:20 +0100
+Last updated 2021-01-14 09:51:12 +0100
 </div>
 </div>
 <style>

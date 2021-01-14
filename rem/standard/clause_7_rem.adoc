@@ -17,7 +17,7 @@ GeoJSON is used for the following reasons:
 
 The Route Exchange Model supports three variants:
 
-* Full: All route information is encoded in a GeoJSON feature collection. This is the default model and must be supported by all Routing API server-side and client-side components.
+* Full: All route information is encoded in a GeoJSON feature collection.
 * Overview: A single GeoJSON feature detailing the route geometry along the network and the main properties of the route.
 * Segments: The first segment of a route and a link to the second segment, if there is more than one segment in the route. Subsequent segments will contain a link to the previous and next segment. The final segment contains only a link to the previous segment. Each segment is a GeoJSON feature.
 
@@ -31,8 +31,7 @@ The following sections in this clause below specifies the requirements classes t
 This requirement class states requirements that apply to all
 representations of a route.
 
-The normative statements use the JSON Schema variant defined by
-OpenAPI 3.0 to specify schema components.
+The normative statements use JSON Schema to specify schema components.
 
 [cols="1,4",width="90%"]
 |===
@@ -88,12 +87,14 @@ feature collection.
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/rem-full/fc-name*
 ^|A |The feature collection SHOULD have a member with the name "name"
-that is a title of the route with the following OpenAPI 3.0
+that is a title of the route with the following 
 schema:
 
-[source,YAML]
+[source,JSON]
 ----
-type: string
+{
+  "type": "string"
+}
 ----
 |===
 
@@ -104,17 +105,14 @@ Typically the name will be provided by the requester of the route.
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem-full/fc-status*
 ^|A |The feature collection SHALL have a member with the name "status"
-describing the processing status of the route with the following OpenAPI 3.0
-schema:
+describing the processing status of the route with the following schema:
 
-[source,YAML]
+[source,JSON]
 ----
-type: string
-enum:
-  - accepted
-  - running
-  - successful
-  - failed
+{
+  "type": "string",
+  "enum": [ "accepted", "running", "successful", "failed" ]
+}
 ----
 |===
 
@@ -148,26 +146,24 @@ depending on the status:
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/rem-full/fc-links*
 ^|A |The feature collection SHOULD have a member with the name "links"
-with the following OpenAPI 3.0 schema:
+with the following schema:
 
-[source,YAML]
+[source,JSON]
 ----
-type: array
-items:
-  type: object
-  required:
-    - href
-  properties:
-    href:
-      type: string
-    rel:
-      type: string
-    type:
-      type: string
-    hreflang:
-      type: string
-    title:
-      type: string
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [ "href" ],
+    "properties": {
+      "href": { "type": "string" },
+      "rel": { "type": "string" },
+      "type": { "type": "string" },
+      "hreflang": { "type": "string" },
+      "title": { "type": "string" }
+    }
+  }
+}
 ----
 ^|B |There SHOULD be a link with
 
@@ -240,7 +236,7 @@ start point to the end point of the route.
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/rem-overview/properties*
 ^|A |The route overview SHOULD have the property `processingTime`.
-^|B |If the API has access to the information, the route overview SHOULD have the properties `maxHeight_m`, `maxLoad_t`, and `obstacles`.
+^|B |If the process that creates the route has access to the information, the route overview SHOULD have the properties `maxHeight_m`, `maxLoad_t`, and `obstacles`.
 |===
 
 [[rc_rem-segment]]
@@ -289,26 +285,24 @@ start point to the end point of the route.
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem-segment-with-links/next-prev*
 ^|A |Each segment SHALL have a member with the name `links
-with the following OpenAPI 3.0 schema:
+with the following schema:
 
-[source,YAML]
+[source,JSON]
 ----
-type: array
-items:
-  type: object
-  required:
-    - href
-  properties:
-    href:
-      type: string
-    rel:
-      type: string
-    type:
-      type: string
-    hreflang:
-      type: string
-    title:
-      type: string
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [ "href" ],
+    "properties": {
+      "href": { "type": "string" },
+      "rel": { "type": "string" },
+      "type": { "type": "string" },
+      "hreflang": { "type": "string" },
+      "title": { "type": "string" }
+    }
+  }
+}
 ----
 ^|B |Unless the segment is the last segment of the route, the segment SHALL have a link
 
