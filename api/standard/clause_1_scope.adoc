@@ -1,3 +1,7 @@
 == Scope
 
-#TODO: Insert Scope text here. Give the subject of the document and the aspects of that scope covered by the document.#
+This document specifies the behavior of Web APIs that allow applications to request routes in a manner independent of the underlying data store, routing engine or algorithm. This standard defines discovery and query operations.
+
+Discovery operations enable clients to interrogate the API and retrieve the API definition, metadata about the API and a list of conformance classes supported by the API.
+
+Query operations enable, at a minimum, clients to send a request consisting of two waypoints, the start and end point of the route, to the API and to retrieve from the API a route represented as a GeoJSON feature collection.
