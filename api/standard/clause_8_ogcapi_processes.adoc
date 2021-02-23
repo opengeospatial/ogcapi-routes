@@ -1,9 +1,9 @@
 [[processes-profile]]
 == Routing API as a profile of _OGC API - Processes_
 
-This clause specifies a second API option for a Routing API that supports more-or-less the same capabilities as the Routing API defined in the previous clause and re-uses the Route Exchange Model. However, it is based on the _OGC API - Processes_ standards and defined as a profile of that standard.
+This clause specifies a second API option for a Routing API that supports more-or-less the same capabilities as the Routing API defined in the previous clause and re-uses the Route Exchange Model. However, it is based on the _OGC API - Processes_ standards and is defined as a profile of that standard.
 
-#TODO: Do we want to keep the _OGC API - Processes_ option? (Yes!) If yes, we need to align with the latest draft (Done). This is an old version based on an outdated draft of _OGC API - Processes_. As discussed in the meeting on 2021-01-12, the preference is for a single API with explicit Route resources as described in <<routing-api>>. We will analyse, if the changes to _OGC API - Processes_ in recent month support that we can basically merge the two approaches without complicating the API. If that is not possible, an _OGC API - Processes_ profile for routing could be specified as a separate document, if there is interest, potentially by another group.#
+NOTE: See https://github.com/opengeospatial/ogcapi-routes/issues/15[open issue #15].
 
 NOTE: This option is to a large extent specified by the _OGC API - Processes_ candidate standard. It has additional requirements and conformance classes that mirror the ones from the first option. To avoid a lot of repetition, this clause currently does not define each of these classes formally like for the first option, but describes how each class of the first option is mapped to the _OGC API - Processes_ option.
 
@@ -61,8 +61,6 @@ See <<landing_page>>, except that the "data" link references `/processes`.
 The following is an example of the conformance declaration for the _OGC API - Processes_ option
 that implements all requirements classes. The ResultSet class has no equivalent functionality with _OGC API - Processes_.
 
-Suggestion: Define a single specific conformance class for the OGC API - Processes variants, and re-use the existing Routing conformance classes?
-
 [[example_oaproc_cc]]
 .Conformance declaration
 =================
@@ -74,9 +72,9 @@ Suggestion: Define a single specific conformance class for the OGC API - Process
     "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/oas30",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/core",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/ogc-process-description",
-    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/req/job-list",
-    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/req/callback",
-    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/req/dismiss",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/job-list",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/callback",
+    "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/dismiss",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/oaproc-routing",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/intermediate-waypoints",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-height",
@@ -102,7 +100,7 @@ equivalent to the Routing API options:
 [[oaproc_processes]]
 === List processes
 
-A process with id 'routing' is included in the list of process available according to the link:https://github.com/opengeospatial/ogcapi-processes/blob/master/core/openapi/schemas/processList.yaml[process list schema].
+A process with id 'routing' is included in the list of processes available according to the link:https://github.com/opengeospatial/ogcapi-processes/blob/master/core/openapi/schemas/processList.yaml[process list schema].
 
 [[example_oaproc_processes]]
 .List of processes
