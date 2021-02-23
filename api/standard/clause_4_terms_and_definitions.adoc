@@ -5,10 +5,23 @@ This document also uses terms defined in the OGC Standard for Modular specificat
 
 For the purposes of this document, the following additional terms and definitions apply.
 
-#TODO#
+feature::
+abstraction of real world phenomena 
+[ISO 19101-1:2014]
 
-term name::
-text of the definition
+geojson::
+A geospatial data interchange format based on JavaScript Object Notation (JSON).
+[IETF RFC 7946]
 
-term name::
-text of the definition
+route::
+feature consisting of a sequence of waypoints, usually between two positions, within a network
+[adapted from ISO 19134:2007]
+
+waypoint::
+a geographic position together with its associated data
+[IEC 62065:2002]
+
+Web API::
+API using an architectural style that is founded on the technologies of the Web
+[derived from the W3C Data on the Web Best Practices] 
+
