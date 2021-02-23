@@ -1,6 +1,6 @@
 == Scope
 
-This document specifies the behavior of Web APIs that allow applications to request routes in a manner independent of the underlying data store, routing engine or algorithm. This standard defines discovery and query operations.
+This document specifies the behavior of a Web API that allows applications to request routes in a manner independent of the underlying data store, routing engine or algorithm. This standard defines discovery and query operations.
 
 Discovery operations enable clients to interrogate the API and retrieve the API definition, metadata about the API and a list of conformance classes supported by the API.
 
