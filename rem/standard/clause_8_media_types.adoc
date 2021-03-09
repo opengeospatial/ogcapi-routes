@@ -1,3 +1,4 @@
 == Media Types
 
-#TODO: Use application/geo+json and do not register a new media type (for interoperability with consumers that know GeoJSON and its media type).#
+The Media Type applicable to this specification is application/geo+json. This specification uses application/geo+json and does not register a new media type. This provides interoperability with consumers that know GeoJSON and its media type.
+
