@@ -3,23 +3,26 @@
 
 === Overview
 
-This clause specifies the Routing API as a Web API for routing based on the OGC API principles and OGC API - Common as well as the Route Exchange Model. It consists of the following requirements/conformance classes, each with a unique Uniform Resource Identifier (URI):
+This clause specifies the Routing API as a Web API for routing based on the OGC API principles and OGC API - Common as well as the Route Exchange Model. It consists of the following requirements/conformance classes:
 
-* Core: Minimal routing capability (routing based on start/end point)
-* Asynchronous execution: Return the route in the response to the routing request
-* Callback: Support for call to a webhook after the route is computed
-* Delete route: Cancel/delete routes
-* Result set: request parts of the Route Exchange Model, e.g., in DDIL situations
-* Intermediate waypoints: Pass through additional points along the route
-* Height restriction: Consider height restrictions
-* Load restriction: Consider load restrictions
-* Obstacles: Avoid obstacles
-* Temporal constraints: Specify departure/arrival time
-* Routing engine: Select a specific routing engine
-* Routing algorithm: Select the algorithm to use
-* Source dataset: Select the network dataset to use
+* Minimal routing capability:
+  * **Core**: Routing based on start/end point
+* Additional API capabilities:
+  * **Asynchronous execution**: Return the route in the response to the routing request
+  * **Callback**: Support for call to a webhook after the route is computed
+  * **Delete route**: Cancel/delete routes
+  * **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
+* Additional routing parameters:
+  * **Intermediate waypoints**: Pass through additional points along the route
+  * **Height restriction**: Consider height restrictions
+  * **Load restriction**: Consider load restrictions
+  * **Obstacles**: Avoid obstacles
+  * **Temporal constraints**: Specify departure/arrival time
+  * **Routing engine**: Select a specific routing engine
+  * **Routing algorithm**: Select the algorithm to use
+  * **Source dataset**: Select the network dataset to use
 
-This API supports the resources and operations listed in Table 1.
+The API building blocks support the resources and operations listed in Table 1.
 
 [#tldr,reftext='{table-caption} {counter:table-num}']
 .Overview of resources and applicable HTTP methods
@@ -48,48 +51,24 @@ which is specified in the 'Delete route' requirements class.
 2+|*Requirements Class*
 2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/core
 |Target type |Web API
-|Dependency |OGC API - Common (Core)
-|Dependency |link:https://tools.ietf.org/rfc/rfc7946.txt[GeoJSON]
-|Dependency |http://www.opengis.net/spec/rem/1.0/req/rem-full
+|Dependency |<<CommonCore,OGC API - Common - Part 1: Core, Requirements Classes "Core", "JSON">>
+|Dependency |<<GeoJSON,GeoJSON>>
+|Dependency |<<REM,OGC Route Exchange Model, Requirements Class "Route Exchange Model (full)">>
 |===
 
-==== OGC API Common (Core)
+==== OGC API - Common - Part 1: Core
 
-At the time of writing, the OGC API - Common draft specification is not yet an approved standard. A draft is in development, based on the generic concepts of the OGC API - Features - Part 1: Core standard (OGC 17-069r3). In order to avoid duplicating content this
-document does not copy the basic requirements, recommendations and permissions
-from OGC API Common/Features. The following normative statements are by reference
-part of this requirements class:
-
-* Landing page
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_root-op[Requirement /req/core/root-op]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_root-success[Requirement /req/core/root-success]
-*** Change: No `data` link to `/collections` is required, but a `http://www.opengis.net/def/rel/OGC/1.0/routes` link has to point to the `/routes` resource
-* API definition
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_api-definition-op[Requirement /req/core/api-definition-op]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#per_core_api-definition-uri[Permission /per/core/api-definition-uri]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_api-definition-success[Requirement /req/core/api-definition-success]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_api-definition-oas[Recommendation /rec/core/api-definition-oas]
-* Conformance declaration
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_conformance-op[Requirement /req/core/conformance-op]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_conformance-success[Requirement /req/core/conformance-success]
-* Web API
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_http[Requirement /req/core/http]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_head[Recommendation /rec/core/head]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#per_core_additional-status-codes[Permission /per/core/additional-status-codes]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_query-param-unknown[Requirement /req/core/query-param-unknown]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_query-param-invalid[Requirement /req/core/query-param-invalid]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_etag[Recommendation /rec/core/etag]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_cross-origin[Recommendation /rec/core/cross-origin]
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_link-header[Recommendation /rec/core/link-header]
-* Geometries
-** link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#req_core_crs84[Requirement /req/core/crs84]
-
-The link:http://www.opengis.net/doc/IS/ogcapi-features-1/1.0#rec_core_string-i18n[recommendation /rec/core/string-i18n]
-is mainly implemented by the Content-Language header in the response to
-requests returning a route.
+At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a candidate standard and not yet an approved standard. The requirements classes "Core" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition.
 
 [[landing_page]]
 ==== API landing page
+
+[[req_core_root-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/compute-route-op*
+^|A |The content of the response SHALL include a link to the Routes resource at path `/routes` (link relation type 'http://www.opengis.net/def/rel/OGC/1.0/routes').
+|===
 
 The following is an example of the landing page of a routing API.
 
@@ -141,7 +120,7 @@ The following is an example of the landing page of a routing API.
 The following is an example of the conformance declaration of a routing API
 that implements all requirements classes.
 
-Some requirements classes support options and parsing the OpenAPI definition
+Some requirements classes support options and parsing the API definition
 may be unnecessarily costly for clients to determine the options. The conformance
 declaration, therefore, is extended to support stating the options implemented.
 
@@ -205,10 +184,15 @@ This includes the waypoints in the route definition and the
 geometries of all features in the route exchange model
 (overview, start, end, segments).
 
-All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum i.e. the coordinate reference system used by Global Positioning System (GPS). In GeoJSON, a coordinate is an array of numbers. The first two
+All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum,
+i.e., the coordinate reference system used by Global Positioning System (GPS). 
+In GeoJSON, a coordinate is an array of numbers. The first two
 elements are longitude and latitude, or easting and northing,
-precisely in that order and using decimal numbers. Elevation
+precisely in that order and using decimal numbers. Height
 may be included as an optional third element.
+
+Extensions to this standard can be specified to support additional
+encodings or additional coordinate reference systems.
 
 [[routes]]
 ==== Routes
@@ -319,16 +303,16 @@ properties:
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
 ^|A |A successful, synchronous execution of the operation SHALL be reported as a response with a HTTP status code `200`.
-^|B |The content of that response SHALL conform to a requirements class of the Route Exchange Model.
+^|B |The content of a synchronous response SHALL conform to a requirements class of the Route Exchange Model.
 ^|C |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model (full)".
-^|D |Elevation SHALL be provided for all coordinates in the route or for no coordinates in the route.
+^|D |Height SHALL be provided for all coordinates in the route or for no coordinates in the route.
 ^|E |If the request included an `Accept-Language` header, the server SHALL try to honor the request and otherwise fall back
 to an available language.
 ^|F |The response SHALL include a `Content-Language` header with the language
 used for instructions and names, in particular road/street names.
 |===
 
-NOTE: This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution is added in a separate requirements class.
+This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution is added in a <<rc_async,separate requirements class>>.
 
 [[req_core_error]]
 [width="90%",cols="2,6a"]
@@ -344,7 +328,7 @@ a response with status code `422` SHALL be returned.
 [[example_route_definition]]
 .Route definition
 =================
-This requests the fastest route from Reagan Airport to the U.S. Captiol
+This requests the fastest route from Reagan Airport to the U.S. Capitol
 in Washington, D.C.
 
 [source,JSON]
@@ -485,12 +469,12 @@ in Washington, D.C.
 2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/async
 |Target type |Web API
 |Dependency |<<rc_core>>
-|Dependency |link:https://tools.ietf.org/rfc/rfc7240.txt[Prefer Header for HTTP]
+|Dependency |<<rfc7240,RFC 7240 "Prefer Header for HTTP">>
 |===
 
 Clients requesting routes from servers that implement this requirements class have to be prepared to receive routes asynchronously. If a route is processed synchronously (the route content is returned in the response to the POST request as specified in <<rc_core>>) or asynchronously (the URI of the new route is returned in the response to the POST request as specified in this requirements class) is a decision of the server.
 
-At the same time, clients can express their preferences by using the `Prefer` header specified in RFC 7240 "Prefer Header for HTTP" and servers should respect the hints sent by the clients.
+At the same time, clients can express their preferences by using the `Prefer` header specified in <<rfc7240,RFC 7240 "Prefer Header for HTTP">> and servers should respect the hints sent by the clients.
 
 [[route2]]
 ==== Routes
@@ -513,6 +497,8 @@ At the same time, clients can express their preferences by using the `Prefer` he
 ^|A |If the server responds asynchronously, a successful execution of the operation SHALL be reported as a response with a HTTP status code `202`.
 ^|B |The response SHALL include a header `Location` with the URI of the new route that is a sub-resource of `/routes`.
 |===
+
+Note that Servers can also create a route resource as a sub-resource of `/routes` for a routing request that is executed synchronously. 
 
 [[example_route_location]]
 .New route request
@@ -585,9 +571,12 @@ properties:
         title:
           type: string
 ----
-^|C |The links SHALL include a link (link relation `item`) to each route currently on the server.
+^|C |The links SHALL include a link (link relation `item`) to a route currently on the server.
 ^|D |If a route has a name, the name SHALL be used in the link title.
 |===
+
+Access to this resource will typically require authentication. The server will only include links 
+to routes that the client is authorized to access.
 
 [[example_routes]]
 .Routes
@@ -671,7 +660,7 @@ has less information:
 * The route overview has a `null` geometry.
 * No segment features are included.
 
-[[example_route]]
+[[example_route_successful]]
 .A route
 =================
 [source,JSON]
@@ -953,6 +942,10 @@ After the execution of the request, the route will no longer be included in the 
 ^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriberFailure` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
 |===
 
+#TODO: Two different link relation types have been used, because this is what Processes does. In general, shouldn't a single subscriber for success or failure callbacks be sufficient?#
+
+In addition to support for the subscriber links, a server can also support other mechanisms to support callbacks, for example, a query parameter.
+
 [[rc_result-set]]
 === Requirements Class "Result set"
 
@@ -1012,7 +1005,6 @@ no `prev` link).
 It is up to the server how this is implemented and how segment URIs are minted.
 Options include another parameter to identify the segment by index or
 temporary, opaque URIs.
-
 
 [[rc_intermediate-waypoints]]
 === Requirements Class "Intermediate waypoints"
@@ -1180,12 +1172,7 @@ properties:
 ^|A |The computed route SHALL not pass through the polygons identified as obstacles.
 |===
 
-NOTE: This is a simple approach that is sufficient for the pilot.
-In general, the list of obstacles could also be a feature collection
-where every obstacle is a feature. Such a representation would be
-required, if the routing engine is able to handle obstacles with
-different characteristics/properties (for example, an obstacle is
-only valid for a certain time interval).
+#TODO: This is a simple approach. In general, the list of obstacles could also be a feature collection where every obstacle is a feature. Such a representation would be required, if the routing engine is able to handle obstacles with different characteristics/properties (for example, an obstacle is only valid for a certain time interval).#
 
 [[rc_time]]
 === Requirements Class "Temporal constraints"
@@ -1301,8 +1288,6 @@ properties:
           type: string
 ----
 |===
-
-NOTE: In the pilot, the engines are "Skymantics", "Ecere", and "HERE".
 
 [[req_routing-engine_success]]
 [width="90%",cols="2,6a"]
@@ -1433,8 +1418,6 @@ properties:
           type: string
 ----
 |===
-
-NOTE: In the pilot, the datasets are "NSG", "OSM", and "HERE".
 
 [[req_source-dataset_success]]
 [width="90%",cols="2,6a"]

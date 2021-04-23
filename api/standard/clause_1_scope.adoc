@@ -1,9 +1,16 @@
 == Scope
 
-This document specifies the behavior of a Web API that allows applications to request routes in a manner independent of the underlying data store, routing engine or algorithm. This standard defines discovery and query operations.
+This document specifies the behavior of a Web API that allows applications to request routes in a manner independent of the underlying routing data set, routing engine or algorithm. 
 
-Discovery operations enable clients to interrogate the API and retrieve the API definition, metadata about the API and a list of conformance classes supported by the API.
+This standard defines modular API building blocks to 
 
-Query operations enable, at a minimum, clients to send a request consisting of two waypoints, the start and end point of the route, to the API and to retrieve from the API a route represented as a GeoJSON feature collection.
+* compute new routes,
+* specify additional, commonly used routing parameters in addition to the start and end point of the route,
+* communicate routes synchronously or asynchronously to clients,
+* support callbacks,
+* delete routes stored on the server,
+* request different profiles of the route (complete, overview, by segment).
 
-WE NEED TO SAY MORE
+Routes are represented as a GeoJSON feature collection according to the OGC Route Exchange Model.
+
+In addition, the API supports building blocks that enable clients to interrogate the API and retrieve the API definition, and a list of conformance classes supported by the API.
