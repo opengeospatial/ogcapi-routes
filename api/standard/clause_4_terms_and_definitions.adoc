@@ -1,27 +1,23 @@
 == Terms and Definitions
-This document used the terms defined in https://portal.ogc.org/public_ogc/directives/directives.php[OGC Policy Directive 49], which is based on the ISO/IEC Directives, Part 2, Rules for the structure and drafting of International Standards. In particular, the word “shall” (not “must”) is the verb form used to indicate a requirement to be strictly followed to conform to this standard and OGC documents do not use the equivalent phrases in the ISO/IEC Directives, Part 2.
+This document used the terms defined in https://portal.ogc.org/public_ogc/directives/directives.php[OGC Policy Directive 49], which is based on the ISO/IEC Directives, Part 2, Rules for the structure and drafting of International Standards. In particular, the word "shall" (not “must”) is the verb form used to indicate a requirement to be strictly followed to conform to this standard and OGC documents do not use the equivalent phrases in the ISO/IEC Directives, Part 2.
 
 This document also uses terms defined in the OGC Standard for Modular specifications (https://portal.opengeospatial.org/files/?artifact_id=34762[OGC 08-131r3]), also known as the 'ModSpec'. The definitions of terms such as standard, specification, requirement, and conformance test are provided in the ModSpec.
 
 For the purposes of this document, the following additional terms and definitions apply.
 
 feature::
-abstraction of real world phenomena 
-from ISO 19101-1:2014
+abstraction of real world phenomena [ISO 19101-1:2014]
 
-geojson::
-A geospatial data interchange format based on JavaScript Object Notation (JSON).
-from IETF RFC 7946
+GeoJSON::
+geospatial data interchange format based on JavaScript Object Notation (JSON) [IETF RFC 7946]
 
 route::
 sequence of connected segments providing directions to travel between specific waypoints
 
-This definition doesn't use ISO 19134:2007 because of use of terms such as "links" and "network"
+NOTE: This definition doesn't use the definition from ISO 19134:2007 because of use of terms such as "links" and "network".
 
 waypoint::
-location that plays a role in choosing candidate routes potentially satisfying a routing request
-from 19133:2005
+location that plays a role in choosing candidate routes potentially satisfying a routing request [ISO 19133:2005]
 
 Web API::
-API using an architectural style that is founded on the technologies of the Web
-derived from OGC API - Features - Part 1: Core
+API using an architectural style that is founded on the technologies of the Web [OGC API - Features - Part 1: Core]

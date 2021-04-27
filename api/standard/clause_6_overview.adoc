@@ -1,22 +1,22 @@
 == Overview
 
-#TODO: add more context#
+#TODO: add more context?#
 
 [[Requirements]]
 === Requirements for Web-based Routing
 
 This section describes the requirements that this standard supports.
 
-The bare minimum requirement for a Routing API is to asynchronously compute a route based on a start and end point. The resulting route is encoded using the Route Exchange Model. This requirement enables implementations to work in all types of connectivity situations, including Denied, Disrupted, Intermittent, and Limited (DDIL) bandwidth communications networks.
+The bare minimum requirement for a Routing API is to compute a route based on a start and end point. The resulting route is encoded using the Route Exchange Model. This requirement enables implementations to work in all types of connectivity situations, including Denied, Disrupted, Intermittent, and Limited (DDIL) bandwidth communications networks.
 
 Besides this basic requirement, additional optional requirements to the API are the following:
 
-* Deletion of a computed route
+* Asynchronous route computation
 * Support to call a webhook once the route calculation is completed
-* Synchronous route computation
+* Deletion of a computed route
 * Request parts of the Route Exchange Model, e.g. only the overview
 
-Additionally, an API may support the following optional input parameters:
+Additionally, an API may support the following optional routing parameters:
 
 * Capability to add additional intermediate waypoints
 * Apply a height restriction to the route computation
