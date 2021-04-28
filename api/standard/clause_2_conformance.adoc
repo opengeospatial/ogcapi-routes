@@ -3,21 +3,21 @@
 This Standard defines the following requirements and conformance classes:
 
 * Minimal routing capability:
-  * **Core**: Routing based on start/end point
+** **Core**: Routing based on start/end point
 * Additional API capabilities:
-  * **Asynchronous execution**: Return the route in the response to the routing request
-  * **Callback**: Support for call to a webhook after the route is computed
-  * **Delete route**: Cancel/delete routes
-  * **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
+** **Asynchronous execution**: Return the route in the response to the routing request
+** **Callback**: Support for call to a webhook after the route is computed
+** **Delete route**: Cancel/delete routes
+** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
-  * **Intermediate waypoints**: Pass through additional points along the route
-  * **Height restriction**: Consider height restrictions
-  * **Load restriction**: Consider load restrictions
-  * **Obstacles**: Avoid obstacles
-  * **Temporal constraints**: Specify departure/arrival time
-  * **Routing engine**: Select a specific routing engine
-  * **Routing algorithm**: Select the algorithm to use
-  * **Source dataset**: Select the network dataset to use
+** **Intermediate waypoints**: Pass through additional points along the route
+** **Height restriction**: Consider height restrictions
+** **Load restriction**: Consider load restrictions
+** **Obstacles**: Avoid obstacles
+** **Temporal constraints**: Specify departure/arrival time
+** **Routing engine**: Select a specific routing engine
+** **Routing algorithm**: Select the algorithm to use
+** **Source dataset**: Select the network dataset to use
 
 Requirements for a single standardization target types are considered: Web API.
 
