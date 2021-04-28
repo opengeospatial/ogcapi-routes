@@ -6,12 +6,12 @@
 This clause specifies following requirements/conformance classes:
 
 * Additional API capabilities:
-  * (none)
+** (none)
 * Additional routing parameters:
-  * **Routing engine**: Select a specific routing engine
-  * **Routing algorithm**: Select the algorithm to use
-  * **Source dataset**: Select the network dataset to use
-  * **Elevation model**: Specify an elevation model to use
+** **Routing engine**: Select a specific routing engine
+** **Routing algorithm**: Select the algorithm to use
+** **Source dataset**: Select the network dataset to use
+** **Elevation model**: Specify an elevation model to use
 
 [[conformance_declaration]]
 ==== Declaration of conformance classes

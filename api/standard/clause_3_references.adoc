@@ -12,5 +12,3 @@ The following normative documents contain provisions that, through reference in 
 * [[REM]] Open Geospatial Consortium (OGC). OGC 21-001: **OGC Route Exchange Model (DRAFT)** [online]. Edited by C. Portele. 2021 [viewed 2021-04-23]. Available at https://docs.ogc.org/DRAFTS/21-001.html
 
 * [[OpenAPI]] OpenAPI Initiative (OAI). **OpenAPI Specification 3.0** [online]. 2020 [viewed 2020-03-16]. The latest patch version at the time of publication of this standard was 3.0.3, available at http://spec.openapis.org/oas/v3.0.3
-
-#TODO: Route Exchange Model, ...#
