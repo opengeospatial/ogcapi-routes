@@ -15,9 +15,6 @@ This Standard defines the following requirements and conformance classes:
 ** **Load restriction**: Consider load restrictions
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
-** **Routing engine**: Select a specific routing engine
-** **Routing algorithm**: Select the algorithm to use
-** **Source dataset**: Select the network dataset to use
 
 Requirements for a single standardization target types are considered: Web API.
 

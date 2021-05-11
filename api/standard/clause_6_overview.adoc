@@ -23,6 +23,3 @@ Additionally, an API may support the following optional routing parameters:
 * Apply a load restriction to the route computation
 * Ability to define obstacles that have to be avoided
 * Specify departure or arrival times
-* Select a specific routing engine
-* Select the routing algorithm to use
-* Select the source dataset to use

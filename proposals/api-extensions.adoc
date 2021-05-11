@@ -1,0 +1,268 @@
+[[routing-api]]
+== Routing API Extensions
+
+=== Overview
+
+This clause specifies following requirements/conformance classes:
+
+* Additional API capabilities:
+** (none)
+* Additional routing parameters:
+** **Routing engine**: Select a specific routing engine
+** **Routing algorithm**: Select the algorithm to use
+** **Source dataset**: Select the network dataset to use
+** **Elevation model**: Specify an elevation model to use
+
+[[conformance_declaration]]
+==== Declaration of conformance classes
+
+The following is an example of the conformance declaration of a routing API
+that implements all requirements classes specified in this extension.
+
+Some requirements classes support options and parsing the API definition
+may be unnecessarily costly for clients to determine the options. The conformance
+declaration, therefore, is extended to support stating the options implemented.
+
+[[example_cc]]
+.Conformance declaration
+=================
+[source,JSON]
+----
+{
+  "conformsTo": [
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/routing-engine",
+    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/routing-algorithm",
+    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/source-dataset",
+    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/elevation-model"
+  ],
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
+    "values": [
+      "fastest",
+      "shortest"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine": {
+    "values": [
+      "Skymantics",
+      "Ecere",
+      "HERE"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm": {
+    "values": [
+      "Dikjstra",
+      "Floyd Marshall",
+      "A*"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset": {
+    "values": [
+      "NSG",
+      "OSM",
+      "HERE"
+    ]
+  }
+}
+----
+=================
+
+[[rc_routing-engine]]
+=== Requirements Class "Routing engine"
+
+Select the routing engine to use for calculating the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/routing-engine
+|Target type |Web API
+|Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
+|===
+
+[[req_routing-engine_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-engine/input*
+^|A |The server SHALL support a member with the name "engine"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: string
+enum:
+  - engineA
+  - engineB
+default: engineA
+----
+^|B |The `enum` and `default` values in the schema SHALL be changed to
+reflect the routing engines supported by the server.
+|===
+
+[[req_routing-engine_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-engine/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `engine` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+[[req_routing-engine_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-engine/success*
+^|A |The route SHALL be computed with the selected routing engine.
+|===
+
+[[rc_routing-algorithm]]
+=== Requirements Class "Routing algorithm"
+
+Select the routing / graph solving algorithm to use for calculating the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/routing-algorithm
+|Target type |Web API
+|Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
+|===
+
+[[req_routing-algorithm_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-algorithm/input*
+^|A |The server SHALL support a member with the name "algorithm"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: string
+enum:
+  - algorithmA
+  - algorithmB
+default: algorithmA
+----
+^|B |The `enum` and `default` values in the schema SHALL be changed to
+reflect the algorithms supported by the server.
+|===
+
+[[req_routing-algorithm_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-algorithm/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `algorithm` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+[[req_routing-algorithm_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/routing-algorithm/success*
+^|A |The route SHALL be computed with the selected routing algorithm.
+|===
+
+[[rc_source-dataset]]
+=== Requirements Class "Source dataset"
+
+Select the source dataset for calculating the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/source-dataset
+|Target type |Web API
+|Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
+|===
+
+[[req_source-dataset_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/source-dataset/input*
+^|A |The server SHALL support a member with the name "dataset"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following schema:
+
+[source,YAML]
+----
+type: string
+enum:
+  - datasetA
+  - datasetB
+default: datasetA
+----
+^|B |The `enum` and `default` values in the schema SHALL be changed to
+reflect the datasets supported by the server.
+|===
+
+[[req_source-dataset_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/source-dataset/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance`
+SHALL list all values that the `dataset` parameter supports, based upon
+the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset:
+    type: object
+    required:
+      - values
+    properties:
+      values:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+|===
+
+[[req_source-dataset_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/source-dataset/success*
+^|A |The route SHALL be computed with the selected dataset.
+|===
+
+[[rc_elevation-model]]
+=== Requirements Class "Elevation model"
+
+#TODO#
