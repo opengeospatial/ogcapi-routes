@@ -14,8 +14,8 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 ** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
 ** **Intermediate waypoints**: Pass through additional points along the route
-** **Height restriction**: Consider height restrictions
-** **Load restriction**: Consider load restrictions
+** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
+** **Load restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
 
@@ -130,8 +130,8 @@ declaration, therefore, is extended to support stating the options implemented.
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/intermediate-waypoints",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-height",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-weight",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/height",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/weight",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/obstacles",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/time",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/callback",
@@ -1013,82 +1013,80 @@ overview line string geometry passes through the position or a position
 on the route network that is close to the waypoint.
 |===
 
-[[rc_max-height]]
-=== Requirements Class "Height restriction"
+[[rc_height]]
+=== Requirements Class "Height restrictions"
 
-A height restriction for vehicles in meters to consider when
-computing the route.
+Consider a specified vehicle height in meters against known height restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/max-height
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/height
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_max-height_input]]
+[[req_height_input]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-height/input*
-^|A |The server SHALL support a member with the name "maxHeight"
+^|*Requirement {counter:req-id}* |*/req/height/input*
+^|A |The server SHALL support a member with the name "height"
 in the route definition in a HTTP POST request to the path `/routes`
 with the following schema:
 
 [source,YAML]
 ----
-name: maxHeight
+name: height
 in: query
 schema:
   type: number
 ----
 |===
 
-[[req_max-height_success]]
+[[req_height_success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-height/success*
+^|*Requirement {counter:req-id}* |*/req/height/success*
 ^|A |The computed route SHALL be passable by vehicles with a height up to
-the value of "maxHeight" in meters.
+the value of "height" in meters.
 |===
 
-[[rc_max-weight]]
-=== Requirements Class "Load restriction"
+[[rc_weight]]
+=== Requirements Class "Load restrictions"
 
-A weight restriction for vehicles in tons to consider when computing
-the route.
+Consider a specified vehicle weight in tons against known weight restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/max-weight
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/weight
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_max-weight_input]]
+[[req_weight_input]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-weight/input*
-^|A |The server SHALL support a member with the name "maxWeight"
+^|*Requirement {counter:req-id}* |*/req/weight/input*
+^|A |The server SHALL support a member with the name "weight"
 in the route definition in a HTTP POST request to the path `/routes`
 with the following schema:
 
 [source,YAML]
 ----
-name: maxWeight
+name: weight
 in: query
 schema:
   type: number
 ----
 |===
 
-[[req_max-weight_success]]
+[[req_weight_success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-weight/success*
+^|*Requirement {counter:req-id}* |*/req/weight/success*
 ^|A |The computed route SHALL be passable by vehicles with a weight up to
-the value of "maxWeight" in tons.
+the value of "weight" in tons.
 |===
 
 [[rc_obstacles]]
