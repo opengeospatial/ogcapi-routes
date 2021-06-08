@@ -13,6 +13,7 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 ** **Delete route**: Cancel/delete routes
 ** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
+** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
 ** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
 ** **Load restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
@@ -129,6 +130,7 @@ declaration, therefore, is extended to support stating the options implemented.
 {
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/intermediate-waypoints",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/height",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/weight",
@@ -143,6 +145,12 @@ declaration, therefore, is extended to support stating the options implemented.
     "values": [
       "fastest",
       "shortest"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode": {
+    "modes": [
+      "on-road",
+      "off-road"
     ]
   }
 }
@@ -1012,6 +1020,67 @@ in which they have been provided. "Pass through" means that the route
 overview line string geometry passes through the position or a position
 on the route network that is close to the waypoint.
 |===
+
+[[rc_mode]]
+=== Requirements Class "Modes"
+
+Mode is a restriction based on the type of transport desired when computing the route. For instance, "On Road", "Off Road". The API declares the modes it can support.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/mode
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_mode_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/mode/input*
+^|A |The server SHALL support a member with the name "mode"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following base schema:
+
+[source,YAML]
+----
+name: mode
+in: query
+schema:
+  type: string
+----
+^|B |The schema of the `mode` member SHALL be extended with `enum` and `default` values to declare the mode options supported by the server.
+|===
+
+[[req_mode_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance` SHALL list all values that the `mode` parameter supports, based upon the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode:
+    type: object
+    required:
+      - modes
+    properties:
+      modes:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+^|B |The first value listed in the array SHALL be the default mode, if no mode is specified in the route definition.
+|===
+
+See <<example_cc>> for an example.
+
+NOTE: It is planned to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated.
+
+The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route.
 
 [[rc_height]]
 === Requirements Class "Height restrictions"
