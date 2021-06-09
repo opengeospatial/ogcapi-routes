@@ -187,10 +187,11 @@ definition of the new route.
 The core requirements class supports a minimum route definition
 by two `waypoints`, the start and end point of the route.
 
-In addition, clients can select 'fastest' or 'shortest' as the
-routing `preference`. The default value is 'fastest'.
+In addition, clients can select a cost function as the routing `preference`.
+The API declares the cost functions that it supports in the Conformance Declaration
+resource and in the API definition.
 
-An optional `name` for the route may be provided. The name will be
+An optional `name` for the route can be provided. The name will be
 used as the title in links to the route and is also included in the
 route itself.
 
@@ -237,19 +238,8 @@ properties:
                 type: number
       preference:
         type: string
-        default: fastest
-        enum:
-          - fastest
-          - shortest
 ----
-|===
-
-[[per_core_preference]]
-[width="90%",cols="2,6a"]
-|===
-^|*Permission {counter:per-id}* |*/per/core/preference*
-^|C |The `enum` and `default` values of `preference` in the schema MAY be
-extended to reflect the routing options supported by the server.
+^|C |The schema of the `preference` member SHALL be extended with `enum` and `default` values to declare the cost functions supported by the server.
 |===
 
 Note that additional members in the route definition can be ignored.
@@ -269,15 +259,22 @@ properties:
   http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core:
     type: object
     required:
-      - values
+      - preference
     properties:
-      values:
+      preference:
         type: array
         items:
           minItems: 1
           type: string
 ----
+^|B |The first value listed in the array SHALL be the default cost function, if no preference is specified in the route definition.
 |===
+
+See <<example_cc>> for an example.
+
+NOTE: It is planned to register well-known cost functions with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated. Until then, please use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
+
+The preference is a client hint and it is the decision of the server how to consider the preference in the computation of the route.
 
 [[req_core_compute-route-success]]
 [width="90%",cols="2,6a"]
@@ -1024,7 +1021,7 @@ on the route network that is close to the waypoint.
 [[rc_mode]]
 === Requirements Class "Modes"
 
-Mode is a restriction based on the type of transport desired when computing the route. For instance, "On Road", "Off Road". The API declares the modes it can support.
+Mode is a restriction based on the type of transport desired when computing the route. For instance, "On Road", "Off Road". The API declares the modes that it supports.
 
 [cols="1,4",width="90%"]
 |===
