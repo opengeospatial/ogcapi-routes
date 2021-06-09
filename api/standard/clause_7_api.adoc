@@ -950,6 +950,7 @@ schema:
   enum:
     - full
     - overview
+    - no-geometry
     - segments
   default: full
 ----
@@ -967,6 +968,9 @@ of the request depending on the parameter value:
 requirements class "Route Exchange Model (full)".
 * 'overview': the route overview feature according to
 requirements class "Route Exchange Model (overview)".
+* 'no-geometry': the route overview feature according to
+requirements class "Route Exchange Model (overview)", 
+but geometry set to `null`.
 * 'segments': the first segment feature according to
 requirements class "Route Exchange Model (segment with links)"
 |===
