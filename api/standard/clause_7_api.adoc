@@ -142,7 +142,7 @@ declaration, therefore, is extended to support stating the options implemented.
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/delete-route"
   ],
   "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
-    "values": [
+    "preferences": [
       "fastest",
       "shortest"
     ]
@@ -259,9 +259,9 @@ properties:
   http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core:
     type: object
     required:
-      - preference
+      - preferences
     properties:
-      preference:
+      preferences:
         type: array
         items:
           minItems: 1
