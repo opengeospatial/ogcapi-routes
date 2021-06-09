@@ -1,3 +1,5 @@
 == Media Types
 
-#TODO: List media types. For Route Exchange Model media types reference 21-001.#
+For the media types of routes according to the Route Exchange Model, see <<REM>>.
+
+For all other resources, `application/json` applies for JSON documents and `text/html` for HTML documents.
