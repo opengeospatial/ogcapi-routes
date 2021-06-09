@@ -656,7 +656,7 @@ has less information:
     },
     {
       "href": "https://example.com/routes/hdg6g/definition",
-      "rel": "describedBy",
+      "rel": "describedby",
       "type": "application/json",
       "title": "the route definition for this route"
     }
@@ -777,7 +777,7 @@ has less information:
     },
     {
       "href": "https://example.com/routes/hdg6g/definition",
-      "rel": "describedBy",
+      "rel": "describedby",
       "type": "application/json",
       "title": "the route definition for this route"
     }
@@ -910,17 +910,15 @@ After the execution of the request, the route will no longer be included in the 
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/callback/success*
-^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriberSuccess` with a link target in the "http" or "https" scheme and if the computation of the route has been completed successfully, the server SHALL send a POST request to the link target with the route according to the "Route Exchange Model (full)" as the content.
+^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has been completed successfully, the server SHALL send a POST request to the link target with the route according to the "Route Exchange Model (full)" as the content.
 |===
 
 [[req_callback_failure]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/callback/failure*
-^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriberFailure` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
+^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
 |===
-
-#TODO: Two different link relation types have been used, because this is what Processes does. In general, shouldn't a single subscriber for success or failure callbacks be sufficient?#
 
 In addition to support for the subscriber links, a server can also support other mechanisms to support callbacks, for example, a query parameter.
 
