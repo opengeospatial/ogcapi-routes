@@ -210,23 +210,28 @@ properties:
       waypoints:
         type: object
         required:
-          - type
-          - coordinates
+          - value
         properties:
-          type:
-            type: string
-            enum:
-              - MultiPoint
-          coordinates:
-            type: array
-            minItems: 2
-            maxItems: 2
-            items:
-              title: Points along the route
-              type: array
-              minItems: 2
-              items:
-                type: number
+          value:
+            type: object
+            required:
+              - type
+              - coordinates
+            properties:
+              type:
+                type: string
+                enum:
+                  - MultiPoint
+              coordinates:
+                type: array
+                minItems: 2
+                maxItems: 2
+                items:
+                  title: Points along the route
+                  type: array
+                  minItems: 2
+                  items:
+                    type: number
       preference:
         type: string
         default: fastest
@@ -244,7 +249,9 @@ properties:
 extended to reflect the routing options supported by the server.
 |===
 
-Note that additional members in the route definition can be ignored.
+Additional members in the route definition can be ignored.
+
+NOTE: The content model of the route definition object has been designed so that it can be a valid request to an process execution request according to OGC API - Processes. This adds additional members "inputs" and "value" that would otherwise be unnecessary.
 
 [[req_core_conformance-values]]
 [width="90%",cols="2,6a"]
@@ -307,21 +314,25 @@ in Washington, D.C.
 [source,JSON]
 ----
 {
-  "name": "Reagan Airport to Capitol",
-  "waypoints": {
-    "type": "MultiPoint",
-    "coordinates": [
-      [
-        -77.037722,
-        38.851444
-      ],
-      [
-        -77.009003,
-        38.889931
-      ]
-    ]
-  },
-  "preference": "fastest"
+  "inputs": {
+    "name": "Reagan Airport to Capitol",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          [
+            -77.009003,
+            38.889931
+          ]
+        ]
+      }
+    },
+    "preference": "fastest"
+  }
 }
 ----
 =================
@@ -1110,31 +1121,37 @@ One or more polygons describing areas the route should avoid.
 ^|*Requirement {counter:req-id}* |*/req/obstacles/input*
 ^|A |The server SHALL support a member with the name "obstacles"
 in the route definition in a HTTP POST request to the path `/routes`
-with the following schema (a GeoJSON MultiPolygon):
+with the following schema (a GeoJSON MultiPolygon, wrapped into a 
+"value" member):
 
 [source,YAML]
 ----
 type: object
 required:
-  - type
-  - coordinates
+  - value
 properties:
-  type:
-    type: string
-    enum:
-      - MultiPolygon
-  coordinates:
-    type: array
-    items:
-      type: array
-      items:
+  value:
+    type: object
+    required:
+      - type
+      - coordinates
+    properties:
+      type:
+        type: string
+        enum:
+          - MultiPolygon
+      coordinates:
         type: array
-        minItems: 4
         items:
           type: array
-          minItems: 2
           items:
-            type: number
+            type: array
+            minItems: 4
+            items:
+              type: array
+              minItems: 2
+              items:
+                type: number
 ----
 |===
 
@@ -1172,18 +1189,23 @@ with the following schema:
 ----
 type: object
 required:
-  - timestamp
+  - value
 properties:
-  timestamp:
-    type: string
-    format: date-time
-    example: "2019-05-23T19:06:32Z"
-  type:
-    type: string
-    default: departure
-    enum:
-      - departure
-      - arrival
+  value:
+    type: object
+    required:
+      - timestamp
+    properties:
+      timestamp:
+        type: string
+        format: date-time
+        example: "2019-05-23T19:06:32Z"
+      type:
+        type: string
+        default: departure
+        enum:
+          - departure
+          - arrival
 ----
 |===
 
