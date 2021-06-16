@@ -50,3 +50,10 @@ In the case above, the following changes to the pre-defined OpenAPI component ar
 * If the server supports an XML encoding, `xml` properties may be added to the relevant OpenAPI schema components.
 
 For API definitions that do not conform to the OpenAPI Specification 3.0, the normative statement should be interpreted in the context of the API definition language used.
+
+=== Alignment with OGC API - Processes
+
+The computation of a route is a process that operates on geospatial data typically including a routing network. This document specifies the OGC API building blocks for Routes as API resources. An alternate implementation option for a Routing API is to implement routing as a process using the building blocks specified in the OGC API Processes standard. Both building blocks have been aligned so that the same route definition can be sent to both API options. The alignment between the two OGC API standards is mostly transparent to developers, except for two extensions to the Route Definition object that is submitted in a POST request to the Routes resource (path `/routes`) that would not be necessary for the Routes API:
+
+* an extra "inputs" member that contains the route definition object;
+* extra "value" members in the waypoints, obstacles and temporal constraints objects.
