@@ -13,9 +13,10 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 ** **Delete route**: Cancel/delete routes
 ** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
+** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
-** **Height restriction**: Consider height restrictions
-** **Load restriction**: Consider load restrictions
+** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
+** **Load restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
 
@@ -129,9 +130,10 @@ declaration, therefore, is extended to support stating the options implemented.
 {
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/intermediate-waypoints",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-height",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-weight",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/height",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/weight",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/obstacles",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/time",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/callback",
@@ -140,9 +142,15 @@ declaration, therefore, is extended to support stating the options implemented.
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/delete-route"
   ],
   "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
-    "values": [
+    "preferences": [
       "fastest",
       "shortest"
+    ]
+  },
+  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode": {
+    "modes": [
+      "on-road",
+      "off-road"
     ]
   }
 }
@@ -179,10 +187,11 @@ definition of the new route.
 The core requirements class supports a minimum route definition
 by two `waypoints`, the start and end point of the route.
 
-In addition, clients can select 'fastest' or 'shortest' as the
-routing `preference`. The default value is 'fastest'.
+In addition, clients can select a cost function as the routing `preference`.
+The API declares the cost functions that it supports in the Conformance Declaration
+resource and in the API definition.
 
-An optional `name` for the route may be provided. The name will be
+An optional `name` for the route can be provided. The name will be
 used as the title in links to the route and is also included in the
 route itself.
 
@@ -229,19 +238,8 @@ properties:
                 type: number
       preference:
         type: string
-        default: fastest
-        enum:
-          - fastest
-          - shortest
 ----
-|===
-
-[[per_core_preference]]
-[width="90%",cols="2,6a"]
-|===
-^|*Permission {counter:per-id}* |*/per/core/preference*
-^|C |The `enum` and `default` values of `preference` in the schema MAY be
-extended to reflect the routing options supported by the server.
+^|C |The schema of the `preference` member SHALL be extended with `enum` and `default` values to declare the cost functions supported by the server.
 |===
 
 Note that additional members in the route definition can be ignored.
@@ -261,15 +259,22 @@ properties:
   http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core:
     type: object
     required:
-      - values
+      - preferences
     properties:
-      values:
+      preferences:
         type: array
         items:
           minItems: 1
           type: string
 ----
+^|B |The first value listed in the array SHALL be the default cost function, if no preference is specified in the route definition.
 |===
+
+See <<example_cc>> for an example.
+
+NOTE: It is planned to register well-known cost functions with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated. Until then, please use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
+
+The preference is a client hint and it is the decision of the server how to consider the preference in the computation of the route.
 
 [[req_core_compute-route-success]]
 [width="90%",cols="2,6a"]
@@ -651,7 +656,7 @@ has less information:
     },
     {
       "href": "https://example.com/routes/hdg6g/definition",
-      "rel": "describedBy",
+      "rel": "describedby",
       "type": "application/json",
       "title": "the route definition for this route"
     }
@@ -772,7 +777,7 @@ has less information:
     },
     {
       "href": "https://example.com/routes/hdg6g/definition",
-      "rel": "describedBy",
+      "rel": "describedby",
       "type": "application/json",
       "title": "the route definition for this route"
     }
@@ -905,17 +910,15 @@ After the execution of the request, the route will no longer be included in the 
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/callback/success*
-^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriberSuccess` with a link target in the "http" or "https" scheme and if the computation of the route has been completed successfully, the server SHALL send a POST request to the link target with the route according to the "Route Exchange Model (full)" as the content.
+^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has been completed successfully, the server SHALL send a POST request to the link target with the route according to the "Route Exchange Model (full)" as the content.
 |===
 
 [[req_callback_failure]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/callback/failure*
-^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriberFailure` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
+^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
 |===
-
-#TODO: Two different link relation types have been used, because this is what Processes does. In general, shouldn't a single subscriber for success or failure callbacks be sufficient?#
 
 In addition to support for the subscriber links, a server can also support other mechanisms to support callbacks, for example, a query parameter.
 
@@ -947,6 +950,7 @@ schema:
   enum:
     - full
     - overview
+    - no-geometry
     - segments
   default: full
 ----
@@ -964,6 +968,9 @@ of the request depending on the parameter value:
 requirements class "Route Exchange Model (full)".
 * 'overview': the route overview feature according to
 requirements class "Route Exchange Model (overview)".
+* 'no-geometry': the route overview feature according to
+requirements class "Route Exchange Model (overview)", 
+but geometry set to `null`.
 * 'segments': the first segment feature according to
 requirements class "Route Exchange Model (segment with links)"
 |===
@@ -1013,82 +1020,141 @@ overview line string geometry passes through the position or a position
 on the route network that is close to the waypoint.
 |===
 
-[[rc_max-height]]
-=== Requirements Class "Height restriction"
+[[rc_mode]]
+=== Requirements Class "Modes"
 
-A height restriction for vehicles in meters to consider when
-computing the route.
+Mode is a restriction based on the type of transport desired when computing the route. For instance, "On Road", "Off Road". The API declares the modes that it supports.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/max-height
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/mode
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_max-height_input]]
+[[req_mode_input]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-height/input*
-^|A |The server SHALL support a member with the name "maxHeight"
+^|*Requirement {counter:req-id}* |*/req/mode/input*
+^|A |The server SHALL support a member with the name "mode"
+in the route definition in a HTTP POST request to the path `/routes`
+with the following base schema:
+
+[source,YAML]
+----
+name: mode
+in: query
+schema:
+  type: string
+----
+^|B |The schema of the `mode` member SHALL be extended with `enum` and `default` values to declare the mode options supported by the server.
+|===
+
+[[req_mode_conformance-values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/conformance-values*
+^|A |The content of the conformance declaration response at path `/conformance` SHALL list all values that the `mode` parameter supports, based upon the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+type: object
+properties:
+  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode:
+    type: object
+    required:
+      - modes
+    properties:
+      modes:
+        type: array
+        items:
+          minItems: 1
+          type: string
+----
+^|B |The first value listed in the array SHALL be the default mode, if no mode is specified in the route definition.
+|===
+
+See <<example_cc>> for an example.
+
+NOTE: It is planned to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated.
+
+The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route.
+
+[[rc_height]]
+=== Requirements Class "Height restrictions"
+
+Consider a specified vehicle height in meters against known height restrictions when computing the route.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/height
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_height_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/height/input*
+^|A |The server SHALL support a member with the name "height"
 in the route definition in a HTTP POST request to the path `/routes`
 with the following schema:
 
 [source,YAML]
 ----
-name: maxHeight
+name: height
 in: query
 schema:
   type: number
 ----
 |===
 
-[[req_max-height_success]]
+[[req_height_success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-height/success*
+^|*Requirement {counter:req-id}* |*/req/height/success*
 ^|A |The computed route SHALL be passable by vehicles with a height up to
-the value of "maxHeight" in meters.
+the value of "height" in meters.
 |===
 
-[[rc_max-weight]]
-=== Requirements Class "Load restriction"
+[[rc_weight]]
+=== Requirements Class "Load restrictions"
 
-A weight restriction for vehicles in tons to consider when computing
-the route.
+Consider a specified vehicle weight in tons against known weight restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/max-weight
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/weight
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_max-weight_input]]
+[[req_weight_input]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-weight/input*
-^|A |The server SHALL support a member with the name "maxWeight"
+^|*Requirement {counter:req-id}* |*/req/weight/input*
+^|A |The server SHALL support a member with the name "weight"
 in the route definition in a HTTP POST request to the path `/routes`
 with the following schema:
 
 [source,YAML]
 ----
-name: maxWeight
+name: weight
 in: query
 schema:
   type: number
 ----
 |===
 
-[[req_max-weight_success]]
+[[req_weight_success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/max-weight/success*
+^|*Requirement {counter:req-id}* |*/req/weight/success*
 ^|A |The computed route SHALL be passable by vehicles with a weight up to
-the value of "maxWeight" in tons.
+the value of "weight" in tons.
 |===
 
 [[rc_obstacles]]
