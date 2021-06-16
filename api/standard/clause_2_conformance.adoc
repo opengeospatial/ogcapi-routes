@@ -10,9 +10,10 @@ This Standard defines the following requirements and conformance classes:
 ** **Delete route**: Cancel/delete routes
 ** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
+** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
-** **Height restriction**: Consider height restrictions
-** **Load restriction**: Consider load restrictions
+** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
+** **Load restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
 
