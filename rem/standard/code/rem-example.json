@@ -1,58 +1,13 @@
 {
-    "@context": {
-        "@version": 1.1,
-        "geojson": "https://purl.org/geojson/vocab#",
-        "rem": "https://raw.githubusercontent.com/ogcincubator/route/master/route#",
-        "Feature": "geojson:Feature",
-        "FeatureCollection": "geojson:FeatureCollection",
-        "GeometryCollection": "geojson:GeometryCollection",
-        "LineString": "geojson:LineString",
-        "MultiLineString": "geojson:MultiLineString",
-        "MultiPoint": "geojson:MultiPoint",
-        "MultiPolygon": "geojson:MultiPolygon",
-        "Point": "geojson:Point",
-        "Polygon": "geojson:Polygon",
-        "bbox": {
-            "@container": "@list",
-            "@id": "geojson:bbox"
-        },
-        "coordinates": {
-            "@container": "@list",
-            "@id": "geojson:coordinates"
-        },
-        "features": {
-            "@container": "@set",
-            "@id": "geojson:features"
-        },
-        "geometry": "geojson:geometry",
-        "id": "@id",
-        "properties": "@nest",
-        "name": "rdfs:label",
-        "status": "rem:status",
-        "length_m": "rem:length",
-        "duration_s": "rem:duration",
-        "instructions": "rem:instructions",
-        "text": "rem:text",
-        "roadName": "rem:roadName"
-    },
     "type": "FeatureCollection",
     "id": "https://api.example.com/v1/routes/4711",
-    "@type": [
-        "geojson:FeatureCollection",
-        "rem:Route"
-    ],
     "name": "National Cathedral to Washington Monument",
-    "status": "successful",
     "features": [
         {
-            "id": "1",
-            "@type": [
-                "geojson:Feature",
-                "rem:RouteOverview"
-            ],
+            "id": 1,
             "type": "Feature",
             "properties": {
-                "type": "overview",
+                "featureType": "overview",
                 "length_m": 8290,
                 "duration_s": 1053
             },
@@ -761,14 +716,10 @@
             ]
         },
         {
-            "id": "2",
-            "@type": [
-                "geojson:Feature",
-                "rem:Start"
-            ],
+            "id": 2,
             "type": "Feature",
             "properties": {
-                "type": "start"
+                "featureType": "start"
             },
             "geometry": {
                 "type": "Point",
@@ -779,14 +730,10 @@
             }
         },
         {
-            "id": "3",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 3,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 70,
                 "duration_s": 46,
@@ -802,14 +749,10 @@
             }
         },
         {
-            "id": "4",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 4,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 372,
                 "duration_s": 75,
@@ -826,14 +769,10 @@
             }
         },
         {
-            "id": "5",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 5,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 131,
                 "duration_s": 28,
@@ -850,14 +789,10 @@
             }
         },
         {
-            "id": "6",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 6,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 1752,
                 "duration_s": 215,
@@ -874,14 +809,10 @@
             }
         },
         {
-            "id": "7",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 7,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 351,
                 "duration_s": 49,
@@ -898,14 +829,10 @@
             }
         },
         {
-            "id": "8",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 8,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 3021,
                 "duration_s": 275,
@@ -922,14 +849,10 @@
             }
         },
         {
-            "id": "9",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 9,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 748,
                 "duration_s": 90,
@@ -945,14 +868,10 @@
             }
         },
         {
-            "id": "10",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 10,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 1155,
                 "duration_s": 107,
@@ -968,14 +887,10 @@
             }
         },
         {
-            "id": "11",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 11,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 125,
                 "duration_s": 22,
@@ -991,14 +906,10 @@
             }
         },
         {
-            "id": "12",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 12,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 283,
                 "duration_s": 73,
@@ -1014,14 +925,10 @@
             }
         },
         {
-            "id": "13",
-            "@type": [
-                "geojson:Feature",
-                "rem:Segment"
-            ],
+            "id": 13,
             "type": "Feature",
             "properties": {
-                "type": "segment",
+                "featureType": "segment",
                 "levelOfDetail": "visualization",
                 "length_m": 282,
                 "duration_s": 73,
@@ -1037,14 +944,10 @@
             }
         },
         {
-            "id": "14",
-            "@type": [
-                "geojson:Feature",
-                "rem:Destination"
-            ],
+            "id": 14,
             "type": "Feature",
             "properties": {
-                "type": "end"
+                "featureType": "end"
             },
             "geometry": {
                 "type": "Point",

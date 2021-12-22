@@ -20,7 +20,7 @@ GeoJSON is used for the following reasons:
 
 This requirement class states requirements that apply to all representations of a route.
 
-See <<rem-example-full>> for an example of a route.
+See <<rem-example>> for an example of a route.
 
 The normative statements use JSON Schema to specify schema components.
 
@@ -148,7 +148,7 @@ Typically the name will be provided by the requester of the route.
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/overview*
 ^|A |The route overview SHALL be a GeoJSON feature with a LineString geometry.
-^|B |The feature SHALL have a property `type` with the value `overview`.
+^|B |The feature SHALL have a property `featureType` with the value `overview`.
 ^|C |The line string geometry of the feature SHALL be the path from the start point to the end point of the route.
 ^|D |The feature SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
 ^|E |If the feature has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
