@@ -1,18 +1,18 @@
 == Conformance
 
-This Standard defines the following requirements and conformance classes:
+This Standard defines the following eight requirements and conformance classes:
 
 * Minimal routing capability:
-** **Core**: Routing based on start/end point
+** <<rc_core,**Core**>>: Routing based on start/end point
 * Additional API capabilities:
-** **Manage route**: Store, fetch and delete routes stored on the server
+** <<rc_manage-routes,**Manage route**>>: Store, fetch and delete routes stored on the server
 * Additional routing parameters:
-** **Mode**: Specify the type of transport desired when computing the route
-** **Intermediate waypoints**: Pass through additional points along the route
-** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
-** **Weight restrictions**: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
-** **Obstacles**: Avoid obstacles
-** **Temporal constraints**: Specify departure/arrival time
+** <<rc_mode,**Modes**>>: Specify the type of transport desired when computing the route
+** <<rc_intermediate-waypoints,**Intermediate waypoints**>>: Pass through additional points along the route
+** <<rc_height,**Height restrictions**>>: Consider a specified vehicle height in meters against known height restrictions when computing the route
+** <<rc_weight,**Weight restrictions**>>: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
+** <<rc_obstacles,**Obstacles**>>: Avoid obstacles
+** <<rc_time,**Temporal constraints**>>: Specify departure/arrival time
 
 Requirements for a single standardization target types are considered: Web API.
 
@@ -20,6 +20,21 @@ Conformance with this Standard shall be checked using all the relevant tests spe
 
 In order to conform to this OGC® Standard, a software implementation shall choose to implement:
 
-* Any one of the conformance classes specified in Annex A (normative).
+* Any one of the conformance classes specified in Annex A (normative). 
 
-All requirements-classes and conformance-classes described in this document are owned by the Standard(s) identified.
+Note that at all implementations must implement the Core conformance class. 
+
+[#conf_class_uris,reftext='{table-caption} {counter:table-num}']
+.Conformance class URIs
+[cols="40,60",options="header"]
+!===
+|Conformance class |URI
+|<<conf_core,Core>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core`
+|<<conf_manage-routes,Manage routes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes`
+|<<conf_mode,Modes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/mode`
+|<<conf_intermediate-waypoints,Intermediate waypoints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints`
+|<<conf_height,Height restrictions>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/height`
+|<<conf_weight,Weight restrictions>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/weight`
+|<<conf_obstacles,Obstacles>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/obstacles`
+|<<conf_time,Temporal constraints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time`
+!===

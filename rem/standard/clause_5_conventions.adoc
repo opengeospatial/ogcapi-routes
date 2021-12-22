@@ -4,9 +4,11 @@ This section provides details and examples for any conventions used in the docum
 === Identifiers
 The normative provisions in this Standard are denoted by the URI
 
-http://www.opengis.net/spec/rem/1.0
+http://www.opengis.net/spec/rem/1.0.0-draft.1
 
 All requirements and conformance tests that appear in this document are denoted by partial URIs which are relative to this base.
+
+The URI is temporary during the development of this specification.
 
 === JSON schema
 

@@ -18,6 +18,10 @@ This clause specifies following requirements/conformance classes:
 ** **Source dataset**: Select the network dataset to use
 ** **Elevation model**: Specify an elevation model to use
 
+=== References
+
+* [[rfc7240]] Internet Engineering Task Force (IETF). RFC 7240: **Prefer Header for HTTP** [online]. Edited by J. Snell. 2014 [viewed 2021-04-13]. Available at http://tools.ietf.org/rfc/rfc7240.txt
+
 === Link relations
 
 * **next**: Indicates that the link's context is a part of a series, and that the next in the series is the link target.
@@ -47,11 +51,11 @@ declaration, therefore, is extended to support stating the options implemented.
 {
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/routing-engine",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/routing-algorithm",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/source-dataset",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/elevation-model",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/result-set"
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-engine",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-algorithm",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/source-dataset",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/elevation-model",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/result-set"
   ],
   "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
     "values": [
@@ -59,21 +63,21 @@ declaration, therefore, is extended to support stating the options implemented.
       "shortest"
     ]
   },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine": {
+  "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-engine": {
     "values": [
       "Skymantics",
       "Ecere",
       "HERE"
     ]
   },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm": {
+  "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-algorithm": {
     "values": [
       "Dikjstra",
       "Floyd Marshall",
       "A*"
     ]
   },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset": {
+  "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/source-dataset": {
     "values": [
       "NSG",
       "OSM",
@@ -90,7 +94,7 @@ declaration, therefore, is extended to support stating the options implemented.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/async
+2+|http://www.opengis.net/spec/ogcapi-routes-n/0.0/req/async
 |Target type |Web API
 |Dependency |<<rc_core>>
 |Dependency |<<rfc7240,RFC 7240 "Prefer Header for HTTP">>
@@ -216,7 +220,7 @@ Location: https://example.org/api/routing/v1/routes/hdg6g
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/callback
+2+|http://www.opengis.net/spec/ogcapi-routes-n/0.0/req/callback
 |Target type |Web API
 |Dependency |<<rc_async>>
 |Dependency |link:https://tools.ietf.org/rfc/rfc8288.txt[Web Linking]
@@ -253,7 +257,7 @@ Select the routing engine to use for calculating the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/routing-engine
+2+|http://www.opengis.net/spec/ogcapi-routes-n/1.0/req/routing-engine
 |Target type |Web API
 |Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
 |===
@@ -290,7 +294,7 @@ the following OpenAPI 3.0 schema:
 ----
 type: object
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine:
+  http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-engine:
     type: object
     required:
       - values
@@ -318,7 +322,7 @@ Select the routing / graph solving algorithm to use for calculating the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/routing-algorithm
+2+|http://www.opengis.net/spec/ogcapi-routes-n/1.0/req/routing-algorithm
 |Target type |Web API
 |Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
 |===
@@ -355,7 +359,7 @@ the following OpenAPI 3.0 schema:
 ----
 type: object
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm:
+  http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-algorithm:
     type: object
     required:
       - values
@@ -383,7 +387,7 @@ Select the source dataset for calculating the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/source-dataset
+2+|http://www.opengis.net/spec/ogcapi-routes-n/1.0/req/source-dataset
 |Target type |Web API
 |Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
 |===
@@ -420,7 +424,7 @@ the following OpenAPI 3.0 schema:
 ----
 type: object
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset:
+  http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/source-dataset:
     type: object
     required:
       - values
@@ -443,7 +447,7 @@ properties:
 [[rc_elevation-model]]
 === Requirements Class "Elevation model"
 
-#TODO#
+TODO
 
 [[rc_result-set]]
 === Requirements Class "Result set"
@@ -451,10 +455,10 @@ properties:
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/result-set
+2+|http://www.opengis.net/spec/ogcapi-routes-n/0.0/req/result-set
 |Target type |Web API
 |Dependency |<<rc_core>>
-|Dependency |http://www.opengis.net/spec/rem/1.0/req/rem-segment-with-links
+|Dependency |http://www.opengis.net/spec/rem-2/0.0/req/rem-segment-with-links
 |===
 
 [[req_result-set_input]]

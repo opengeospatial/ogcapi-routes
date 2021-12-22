@@ -17,7 +17,7 @@ The following sections in this clause below specifies the requirements classes t
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/rem/1.0/req/rem-segment-with-links
+2+|http://www.opengis.net/spec/rem-2/0.0/req/rem-segment-with-links
 |Target type |JSON object
 |Dependency |<<rc_rem-segment>>
 |===

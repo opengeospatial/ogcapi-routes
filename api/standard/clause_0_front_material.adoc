@@ -1,16 +1,32 @@
 [big]*i.     Abstract*
 
-#TODO#
+<<OGCAPI,OGC API standards>> define modular API building blocks to spatially enable Web APIs in a consistent way. The <<OpenAPI,OpenAPI specification>> is used to define the API building blocks.
+
+The OGC API family of standards is organized by resource type. 
+
+This standard specifies the fundamental API building blocks for routes. Routing is one of the most widely used geospatial operations in the world today. However, so far, OGC does not currently have a modern API and methods for routing.
+ 
+This standard uses the Route Exchange Model to represent routes.
+ 
+For providers of routes, the API building blocks and the Route Exchange Model provide a simple model to publish and offer those routes as resources for use by other systems.
+ 
+For developers building infrastructures, the API building blocks provide a thin abstraction layer to leverage existing routing engines and algorithms using modern APIs - saving development and deployment time and costs.
+ 
+For users, applications, and enterprises, the capability to get routes across a common API, regardless of the underlying routing data, engines, or algorithms, represents a significant step forward in geospatial interoperability.
+ 
+Finally, it is recognized there are many environments for implementing open routing including on road, off road, air, sea, and many others. In addition, some communities may require specialized parameters in their Routing API.
+ 
+Accordingly, the proposed API will accept starting and ending positions that may be in many environments, return paths and waypoints between those positions, and be extensible to support parameters required by diverse implementation communities.
 
 [big]*ii.    Keywords*
 
 The following are keywords to be used by search engines and document catalogues.
 
-OGC, Routing, Routing API
+OGC, Routing, Routing API, Route Exchange Model
 
 [big]*iii.   Preface*
 
-#TODO: Insert Preface Text here. Give OGC specific commentary: describe the technical content, reason for document, history of the document and precursors, and plans for future work.#
+The work on this Standard started in the [OGC Open Routing Pilot](https://www.ogc.org/projects/initiatives/routingpilot). After the pilot, the work on the specification continued in the [OGC Routing Standards Working Group](https://www.ogc.org/projects/groups/routingswg).
 
 Attention is drawn to the possibility that some of the elements of this document may be the subject of patent rights. The Open Geospatial Consortium shall not be held responsible for identifying any or all such patent rights.
 
@@ -20,14 +36,23 @@ Recipients of this document are requested to submit, with their comments, notifi
 
 The following organizations submitted this Document to the Open Geospatial Consortium (OGC):
 
-Organization name(s)
+* US Army Geospatial Center (AGC)
+* Ecere Corporation
+* interactive instruments GmbH
+* Skymantics LLC
 
-#TODO#
-
+[[submitters]]
 [big]*v.     Submitters*
 
 All questions regarding this submission should be directed to the editor or the submitters:
 
-Name  Affiliation
+|===
+|*Name* |*Affiliation*
 
-#TODO#
+|Clemens Portele _(editor)_ |interactive instruments GmbH
+|Jeff Harrison |US Army Geospatial Center (AGC)
+|Amy Youmans |US Army Geospatial Center (AGC)
+|Jérôme Jacovella-St-Louis |Ecere Corporation
+|Ignacio Correas |Skymantics LLC
+|===
+

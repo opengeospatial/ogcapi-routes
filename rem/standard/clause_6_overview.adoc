@@ -29,8 +29,6 @@ An operator uses the routing functionality provided by the client to create a ro
 
 === The Route model
 
-#TODO: update UML model and description#
-
 [#rem-classes]
 .UML class diagram of the Route model
 image::UML/rem-route.png[alt=UML diagram,width=100%]

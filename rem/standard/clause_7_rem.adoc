@@ -27,7 +27,7 @@ The normative statements use JSON Schema to specify schema components.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/rem/1.0/req/rem
+2+|http://www.opengis.net/spec/rem/1.0.0-draft.1/req/rem
 |Target type |JSON object
 |Dependency |link:https://tools.ietf.org/rfc/rfc7946.txt[GeoJSON]
 |Dependency |link:https://tools.ietf.org/rfc/rfc3339.txt[Date and Time on the Internet: Timestamps]
