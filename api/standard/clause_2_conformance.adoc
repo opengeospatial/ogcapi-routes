@@ -13,7 +13,7 @@ This Standard defines the following requirements and conformance classes:
 ** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
 ** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
-** **Load restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
+** **Weight restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
 

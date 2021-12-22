@@ -21,6 +21,6 @@ Additionally, an API may support the following optional routing parameters:
 * Capability to add additional intermediate waypoints
 * Select a transport mode for the route computation
 * Apply a height restriction to the route computation
-* Apply a load restriction to the route computation
+* Apply a weight restriction to the route computation
 * Ability to define obstacles that have to be avoided
 * Specify departure or arrival times

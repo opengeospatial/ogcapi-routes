@@ -130,7 +130,7 @@ with the routing request:
 * Routing algorithm to use when processing the route
 * Obstacle requirements
 * Height restriction
-* Maximum load restriction
+* Weight restriction
 * Time of departure or arrival",
     "keywords": [ "routing" ],
     "version": "1.0",

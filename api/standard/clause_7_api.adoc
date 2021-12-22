@@ -16,7 +16,7 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 ** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
 ** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
-** **Load restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
+** **Weight restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
 
@@ -1131,7 +1131,7 @@ the value of "height" in meters.
 |===
 
 [[rc_weight]]
-=== Requirements Class "Load restrictions"
+=== Requirements Class "Weight restrictions"
 
 Consider a specified vehicle weight in tons against known weight restrictions when computing the route.
 
