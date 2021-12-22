@@ -117,7 +117,7 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 ** multiplicity: 0..1
 ** value: `Measure`
 * attribute `maxWeight`
-** definition: A weight restriction for vehicles in tons to consider when computing the route.
+** definition: A weight restriction for vehicles in metric tons (tonnes) to consider when computing the route.
 ** multiplicity: 0..1
 ** value: `Measure`
 * attribute `obstacles`
@@ -149,19 +149,19 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 ** multiplicity: 0..1
 ** value: `CharacterString`
 * attribute `duration`
-** definition: Estimated amount of time required to travel the route (in seconds).
+** definition: Estimated amount of time required to travel the route in seconds.
 ** multiplicity: 1
 ** value: `Measure`
 * attribute `length`
-** definition: Length of the route (in meters).
+** definition: Length of the route in meters.
 ** multiplicity: 1
 ** value: `Measure`
 * attribute `maxHeight`
-** definition: A known height restriction on the route (in meters).
+** definition: A known height restriction on the route in meters.
 ** multiplicity: 0..1
 ** value: `Measure`
 * attribute `maxWeight`
-** definition: A known weight restriction on the route (in tons).
+** definition: A known weight restriction on the route in metric tons (tonnes).
 ** multiplicity: 0..1
 ** value: `Measure`
 * attribute `obstacles`
@@ -183,7 +183,7 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 * a subtype of `RouteComponent`
 * a `Feature`
 * attribute `duration`
-** definition: Estimated amount of time required to travel the segment (in seconds).
+** definition: Estimated amount of time required to travel the segment in seconds.
 ** multiplicity: 1
 ** value: `Measure`
 * attribute `instructions`
@@ -191,7 +191,7 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 ** multiplicity: 0..1
 ** value: `CharacterString`
 * attribute `length`
-** definition: Length of the segment(in meters).
+** definition: Length of the segment in meters.
 ** multiplicity: 1
 ** value: `Measure`
 * attribute `locationAtEnd`
@@ -199,11 +199,11 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 ** multiplicity: 1
 ** value: `GM_Point`
 * attribute `maxHeight`
-** definition: A known height restriction(in meters).
+** definition: A known height restriction in meters.
 ** multiplicity: 0..1
 ** value: `Measure`
 * attribute `maxWeight`
-** definition: A known weight restriction (in tons).
+** definition: A known weight restriction in metric tons (tonnes).
 ** multiplicity: 0..1
 ** value: `Measure`
 * association role `next`

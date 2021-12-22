@@ -217,7 +217,7 @@ NOTE: We are still trying to simplify process description in _OGC API - Processe
     {
       "id": "maxWeight",
       "title": "Maximum weight",
-      "description": "A weight restriction for vehicles in tons \nto consider when computing the route.\n\nSupport for this parameter is not required and the parameter may be\nremoved from the API definition.",
+      "description": "A weight restriction for vehicles in metric tons (tonnes) \nto consider when computing the route.\n\nSupport for this parameter is not required and the parameter may be\nremoved from the API definition.",
       "formats": [
         {
           "mediaType": "text/plain"

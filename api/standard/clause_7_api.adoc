@@ -15,7 +15,7 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 ** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
 ** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
-** **Weight restrictions**: Consider a specified vehicle weight in tons against known weight restrictions when computing the route
+** **Weight restrictions**: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
 ** **Obstacles**: Avoid obstacles
 ** **Temporal constraints**: Specify departure/arrival time
 
@@ -1067,7 +1067,7 @@ the value of "height" in meters.
 [[rc_weight]]
 === Requirements Class "Weight restrictions"
 
-Consider a specified vehicle weight in tons against known weight restrictions when computing the route.
+Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
@@ -1098,8 +1098,7 @@ schema:
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/weight/success*
-^|A |The computed route SHALL be passable by vehicles with a weight up to
-the value of "weight" in tons.
+^|A |The computed route SHALL be passable by vehicles with a weight up to the value of "weight" in metric tons (tonnes).
 |===
 
 [[rc_obstacles]]
