@@ -20,7 +20,7 @@ Therefore, the network cannot be relied upon to provide connectivity on demand a
 
 For example, only one of the clients had access to a routing engine. Therefore, the connected client had the ability to create routes, but other clients cannot. If the clients are able to communicate with each other via some other means (Bluetooth or some other peer-to-peer communication, for example), the clients could still share pre-defined routes, that is, the routing operation has been completed when a connection to the routing engine was established, but has now been lost. 
 
-Another approach to support in particular low-bandwidth situations is to not transmit the complete route definition to the client, but to return route information segment by segment as the vehicle moves along the route.
+Another approach to support in particular low-bandwidth situations is to not transmit the complete route definition to the client, but to return route information segment by segment as the vehicle moves along the route. This approach is not supported by this standard and might be added in a future extension or revision.
 
 ==== Offline scenario
 The Offline scenario assumes that there is no connectivity outside of a deviceâ€™s local network, this could be a desktop computer, mobile device or a mesh. In the real-world the scenario is modeling an instance where there is no connectivity and there is not going to be any connectivity for the duration of an operation. 
@@ -28,6 +28,8 @@ The Offline scenario assumes that there is no connectivity outside of a deviceâ€
 An operator uses the routing functionality provided by the client to create a route. The operator then shares this route with other local clients using the route exchange model. To enable the required functionality, all of the capability has to be tightly coupled in a single location. Practically, this involves installing all of the components on the same machine to remove communication dependencies with the wider network.
 
 === The Route model
+
+#TODO: update UML model and description#
 
 [#rem-classes]
 .UML class diagram of the Route model

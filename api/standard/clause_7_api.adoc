@@ -11,7 +11,6 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 ** **Asynchronous execution**: Return the route in the response to the routing request
 ** **Callback**: Support for call to a webhook after the route is computed
 ** **Delete route**: Cancel/delete routes
-** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
 ** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
@@ -137,7 +136,6 @@ declaration, therefore, is extended to support stating the options implemented.
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/obstacles",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/time",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/callback",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/result-set",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/async",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/delete-route"
   ],
@@ -932,70 +930,6 @@ After the execution of the request, the route will no longer be included in the 
 |===
 
 In addition to support for the subscriber links, a server can also support other mechanisms to support callbacks, for example, a query parameter.
-
-[[rc_result-set]]
-=== Requirements Class "Result set"
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/result-set
-|Target type |Web API
-|Dependency |<<rc_core>>
-|Dependency |http://www.opengis.net/spec/rem/1.0/req/rem-segment-with-links
-|===
-
-[[req_result-set_input]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/result-set/input*
-^|A |The server SHALL support a parameter with the name "resultSet" in
-GET requests to the path `/routes/{routeId}` with the following schema:
-
-[source,YAML]
-----
-name: resultSet
-in: query
-schema:
-  type: string
-  enum:
-    - full
-    - overview
-    - no-geometry
-    - segments
-  default: full
-----
-|===
-
-[[req_result-set_success]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/result-set/success*
-^|A |If the `resultSet` parameter has been provided in the request,
-the server SHALL return the following after a successful execution
-of the request depending on the parameter value:
-
-* 'full' (default): the complete representation of the route according to
-requirements class "Route Exchange Model (full)".
-* 'overview': the route overview feature according to
-requirements class "Route Exchange Model (overview)".
-* 'no-geometry': the route overview feature according to
-requirements class "Route Exchange Model (overview)", 
-but geometry set to `null`.
-* 'segments': the first segment feature according to
-requirements class "Route Exchange Model (segment with links)"
-|===
-
-If 'segments' is requested, the segment will include a link to the second segment
-(link relation `next`), if there is more than one segment. Every segment
-except the first and the last segment will include two links (link
-relations `prev` and `next`), except the last segment, which just has a
-`prev` link (unless there is only a single segment in which case there is
-no `prev` link).
-
-It is up to the server how this is implemented and how segment URIs are minted.
-Options include another parameter to identify the segment by index or
-temporary, opaque URIs.
 
 [[rc_intermediate-waypoints]]
 === Requirements Class "Intermediate waypoints"

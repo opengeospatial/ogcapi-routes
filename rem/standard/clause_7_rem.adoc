@@ -12,24 +12,15 @@ GeoJSON is used for the following reasons:
 * lightweight
 * extensible
 * widely supported in libraries and tools
-* consistent with the emerging http://www.ogcapi.org/[OGC API standards]
+* consistent with the emerging https://www.ogcapi.ogc.org/[OGC API standards]
 * an https://tools.ietf.org/html/rfc7946[open standard]
 
-The Route Exchange Model supports three variants:
-
-* Full: All route information is encoded in a GeoJSON feature collection.
-* Overview: A single GeoJSON feature detailing the route geometry along the network and the main properties of the route.
-* Segments: The first segment of a route and a link to the second segment, if there is more than one segment in the route. Subsequent segments will contain a link to the previous and next segment. The final segment contains only a link to the previous segment. Each segment is a GeoJSON feature.
-
-All implementations need to support the first variant (Full). The other two variants provide additional functionality to support a variety of use cases, specifically the Denied, Degraded, Intermittent and Low Bandwidth (DDIL) network use cases. Both options allow the user to retrieve the minimal information required for their use case. This could be the current step of the route, or an overview to assess the suggested route. In both cases only small GeoJSON objects are passed over the DDIL network. These variants also provide the option to conduct a comprehensive assessment of routes thereby allowing the user to request a number of route overviews in quick succession, choose the route which is most preferable and then reuse the route definition of the chosen route to request the full route.
-
-The following sections in this clause below specifies the requirements classes that implementations need to conform to.
-
 [[rc_rem]]
-=== Requirements class "Route Exchange Model (core)"
+=== Requirements class "Route Exchange Model"
 
-This requirement class states requirements that apply to all
-representations of a route.
+This requirement class states requirements that apply to all representations of a route.
+
+See <<rem-example-full>> for an example of a route.
 
 The normative statements use JSON Schema to specify schema components.
 
@@ -46,7 +37,7 @@ The normative statements use JSON Schema to specify schema components.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/geojson*
-^|A |Every representation of a route SHALL be a valid GeoJSON object.
+^|A |Every representation of a route or route component SHALL be a valid GeoJSON object.
 |===
 
 [[req_rem_date-time]]
@@ -56,39 +47,18 @@ The normative statements use JSON Schema to specify schema components.
 ^|A |Every representation of a timestamp SHALL be a valid `date-time` value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6].
 |===
 
-[[rc_rem-full]]
-=== Requirements class "Route Exchange Model (full)"
-
-This requirements class specifies the complete representation of a route,
-i.e., a representation that includes all information about the route.
-
-See <<rem-example-full>> for an example of a full route.
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/rem/1.0/req/rem-full
-|Target type |JSON object
-|Dependency |<<rc_rem>>
-|Dependency |<<rc_rem-overview>>
-|Dependency |<<rc_rem-segment>>
-|===
-
-[[req_rem-full_fc]]
+[[req_rem_fc]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem-full/fc*
-^|A |The complete representation of a route SHALL be a valid GeoJSON
-feature collection.
+^|*Requirement {counter:req-id}* |*/req/rem/fc*
+^|A |The representation of a route SHALL be a valid GeoJSON feature collection.
 |===
 
-[[rec_rem-full_fc-name]]
+[[rec_rem_fc-name]]
 [width="90%",cols="2,6a"]
 |===
-^|*Recommendation {counter:rec-id}* |*/rec/rem-full/fc-name*
-^|A |The feature collection SHOULD have a member with the name "name"
-that is a title of the route with the following 
-schema:
+^|*Recommendation {counter:rec-id}* |*/rec/rem/fc-name*
+^|A |The feature collection SHOULD have a member with the name "name" that is a title of the route with the following schema:
 
 [source,JSON]
 ----
@@ -100,53 +70,24 @@ schema:
 
 Typically the name will be provided by the requester of the route.
 
-[[req_rem-full_fc-status]]
+[[req_rem_fc-features]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem-full/fc-status*
-^|A |The feature collection SHALL have a member with the name "status"
-describing the processing status of the route with the following schema:
+^|*Requirement {counter:req-id}* |*/req/rem/fc-features*
+^|A |The feature collection SHALL contain the following features:
 
-[source,JSON]
-----
-{
-  "type": "string",
-  "enum": [ "accepted", "running", "successful", "failed" ]
-}
-----
-|===
-
-The values are defined as follows:
-
-accepted::
-  The routing job is queued for execution.
-running::
-  The route is being computed.
-successful::
-  The route is available.
-failed::
-  The route could not be computed.
-
-[[req_rem-full_fc-features]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/rem-full/fc-features*
-^|A |The feature collection SHALL contain the following features,
-depending on the status:
-
-* a route overview (see <<rc_rem-overview>>, only for status `successful`)
-* the start point of the route (see <<req_rem-full_start,Requirement "start point">>)
-* the end point of the route (see <<req_rem-full_end,Requirement "end point">>)
-* one or more segments (see <<rc_rem-segment>>, only for status `successful`)
+* a route overview
+* the start point of the route
+* the end point of the route
+* one or more segments
 ^|B |The sequence of the segments SHALL be in their order along the route.
 |===
 
-[[rec_rem-full_fc-links]]
+[[rec_rem_fc-links]]
 [width="90%",cols="2,6a"]
 |===
-^|*Recommendation {counter:rec-id}* |*/rec/rem-full/fc-links*
-^|A |The feature collection SHOULD have a member with the name "links"
-with the following schema:
+^|*Recommendation {counter:rec-id}* |*/rec/rem/fc-links*
+^|A |The feature collection SHOULD have a member with the name "links" with the following schema:
 
 [source,JSON]
 ----
@@ -154,7 +95,7 @@ with the following schema:
   "type": "array",
   "items": {
     "type": "object",
-    "required": [ "href" ],
+    "required": [ "rel", "href" ],
     "properties": {
       "href": { "type": "string" },
       "rel": { "type": "string" },
@@ -167,61 +108,48 @@ with the following schema:
 ----
 ^|B |There SHOULD be a link with
 
-* `rel` with value `self`
-* `type` with value `application/geo+json`
-*  a URI to fetch the route in `href`
+* `rel` with value `self`;
+* `type` with value `application/geo+json`;
+*  a URI to fetch the route in `href`.
 ^|C |There SHOULD be a link with
 
-* `rel` with value `describedBy`
-* `type` with value `application/json`
-*  a URI to fetch information about the definition of the route (start and end point, constraints) in `href`
+* `rel` with value `describedby`;
+* `type` with value `application/json`;
+*  a URI to fetch information about the definition of the route (start and end point, constraints) in `href`.
+^|D |There SHOULD be a link with
+
+* `rel` with value `describedby`;
+* `type` with value `application/schema+json`;
+*  a URI to fetch the JSON Schema of the route in `href`.
 |===
 
-[[req_rem-full_start]]
+[[req_rem_start]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem-full/start*
+^|*Requirement {counter:req-id}* |*/req/rem/start*
 ^|A |The start point of the route SHALL be a GeoJSON feature with a Point geometry.
-^|B |The feature SHALL have a property `type` with the value `start`.
-^|C |The point geometry of the feature SHALL depend on the status of the route:
-
-* "successful": identical to the first point of the route overview.
-* otherwise: identical to the start point in the definition of the route.
+^|B |The feature SHALL have a property `featureType` with the value `start`.
+^|C |The point geometry of the feature SHALL be identical to the first point of the route overview.
 ^|D |If the feature has a property `timestamp`, it SHALL be of type `string`, format `date-time`, and indicate the (estimated) departure time.
 |===
 
-[[req_rem-full_end]]
+[[req_rem_end]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem-full/end*
+^|*Requirement {counter:req-id}* |*/req/rem/end*
 ^|A |The end point of the route SHALL be a GeoJSON feature with a Point geometry.
-^|B |The feature SHALL have a property `type` with the value `end`.
-^|C |The point geometry of the feature SHALL depend on the status of the route:
-
-* "successful": identical to the last point of the route overview and identical to the point in the last segment.
-* otherwise: identical to the end point in the definition of the route.
+^|B |The feature SHALL have a property `featureType` with the value `end`.
+^|C |The point geometry of the feature SHALL be identical to the last point of the route overview and identical to the point in the last segment.
 ^|D |If the feature has a property `timestamp`, it SHALL be of type `string`, format `date-time`, and indicate the (estimated) arrival time.
 |===
 
-[[rc_rem-overview]]
-=== Requirements class "Route Exchange Model (overview)"
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/rem/1.0/req/rem-overview
-|Target type |JSON object
-|Dependency |<<rc_rem>>
-|===
-
-[[req_rem-overview_feature]]
+[[req_rem_overview]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem-overview/feature*
+^|*Requirement {counter:req-id}* |*/req/rem/overview*
 ^|A |The route overview SHALL be a GeoJSON feature with a LineString geometry.
 ^|B |The feature SHALL have a property `type` with the value `overview`.
-^|C |The line string geometry of the feature SHALL be the path from the
-start point to the end point of the route.
+^|C |The line string geometry of the feature SHALL be the path from the start point to the end point of the route.
 ^|D |The feature SHALL have a property `length_m` (type: `number`) with the length of the segment (in meters).
 ^|E |The feature SHALL have a property `duration_s` (type: `number`) with the estimated amount of time required to travel the segment (in seconds).
 ^|F |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the route (in meters).
@@ -231,29 +159,18 @@ start point to the end point of the route.
 ^|J |If the feature has a property `comment`, the value SHALL be of type `string` and explain any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
 |===
 
-[[rec_rem-overview_properties]]
+[[rec_rem_overview-properties]]
 [width="90%",cols="2,6a"]
 |===
-^|*Recommendation {counter:rec-id}* |*/rec/rem-overview/properties*
+^|*Recommendation {counter:rec-id}* |*/rec/rem/overview-properties*
 ^|A |The route overview SHOULD have the property `processingTime`.
 ^|B |If the process that creates the route has access to the information, the route overview SHOULD have the properties `maxHeight_m`, `maxWeight_t`, and `obstacles`.
 |===
 
-[[rc_rem-segment]]
-=== Requirements class "Route Exchange Model (segment)"
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/rem/1.0/req/rem-segment
-|Target type |JSON object
-|Dependency |<<rc_rem>>
-|===
-
-[[req_rem-segment_feature]]
+[[req_rem_segments]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem-segment/feature*
+^|*Requirement {counter:req-id}* |*/req/rem/segments*
 ^|A |Each segment of the route SHALL be a GeoJSON feature with a Point geometry.
 ^|B |The segment feature SHALL have a property `type` with the value `segment`.
 ^|C |The point geometry of the feature SHALL be the last position of the segment and be on the line string geometry of the route overview.
@@ -268,50 +185,4 @@ start point to the end point of the route.
 ^|L |If the feature has a property `roadName`, the value SHALL be of type `string` with the road/street name of the segment.
 ^|M |If the feature has a property `roadName` and the feature is part of a response to a HTTP(S) request, the language SHALL be specified in the `Content-Language` header.
 ^|N |If the feature has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
-|===
-
-[[rc_rem-segment-with-links]]
-=== Requirements class "Route Exchange Model (segment with links)"
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/rem/1.0/req/rem-segment-with-links
-|Target type |JSON object
-|Dependency |<<rc_rem-segment>>
-|===
-[[req_rem-segment-with-links_next-prev]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/rem-segment-with-links/next-prev*
-^|A |Each segment SHALL have a member with the name `links
-with the following schema:
-
-[source,JSON]
-----
-{
-  "type": "array",
-  "items": {
-    "type": "object",
-    "required": [ "href" ],
-    "properties": {
-      "href": { "type": "string" },
-      "rel": { "type": "string" },
-      "type": { "type": "string" },
-      "hreflang": { "type": "string" },
-      "title": { "type": "string" }
-    }
-  }
-}
-----
-^|B |Unless the segment is the last segment of the route, the segment SHALL have a link
-
-* `rel` with value `next`
-* `type` with value `application/geo+json`
-*  a URI to fetch the next segment along the route in `href`
-^|C |Unless the segment is the first segment of the route, the segment SHALL have a link
-
-* `rel` with value `prev`
-* `type` with value `application/geo+json`
-*  a URI to fetch the previous segment along the route in `href`
 |===
