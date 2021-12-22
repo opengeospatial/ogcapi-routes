@@ -151,20 +151,22 @@ Typically the name will be provided by the requester of the route.
 ^|B |The feature SHALL have a property `type` with the value `overview`.
 ^|C |The line string geometry of the feature SHALL be the path from the start point to the end point of the route.
 ^|D |The feature SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
-^|E |The feature SHALL have a property `duration_s` (type: `number`) with the estimated amount of time required to travel the segment in seconds.
-^|F |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the route in meters.
-^|G |If the feature has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the route in metric tons (tonnes).
-^|H |If the feature has a property `obstacles`, the value SHALL be of type `string` and describe how obstacles were taken into account in the route calculation.
-^|I |If the feature has a property `processingTime`, it SHALL be a `date-time` as specified by link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] and state the time when the route was calculated.
-^|J |If the feature has a property `comment`, the value SHALL be of type `string` and explain any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
+^|E |If the feature has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
+^|F |The feature SHALL have a property `duration_s`, if the route segments have a property with the same name.
+^|G |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the route in meters.
+^|H |If the feature has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the route in metric tons (tonnes).
+^|I |If the feature has a property `obstacles`, the value SHALL be of type `string` and describe how obstacles were taken into account in the route calculation.
+^|J |If the feature has a property `processingTime`, it SHALL be a `date-time` as specified by link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] and state the time when the route was calculated.
+^|K |If the feature has a property `comment`, the value SHALL be of type `string` and explain any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
 |===
 
 [[rec_rem_overview-properties]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/rem/overview-properties*
-^|A |The route overview SHOULD have the property `processingTime`.
-^|B |If the process that creates the route has access to the information, the route overview SHOULD have the properties `maxHeight_m`, `maxWeight_t`, and `obstacles`.
+^|A |The route overview SHOULD have the property `duration_s`. The information about the estimated duration for travelling a route is important for users.
+^|B |The route overview SHOULD have the property `processingTime`.
+^|C |If the process that creates the route has access to the information, the route overview SHOULD have the properties `maxHeight_m`, `maxWeight_t`, and `obstacles`.
 |===
 
 [[req_rem_segments]]
@@ -175,13 +177,21 @@ Typically the name will be provided by the requester of the route.
 ^|B |The segment feature SHALL have a property `type` with the value `segment`.
 ^|C |The point geometry of the feature SHALL be the last position of the segment and be on the line string geometry of the route overview.
 ^|D |The feature SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
-^|E |The feature SHALL have a property `duration_s` (type: `number`) with the estimated amount of time required to travel the segment in seconds.
-^|F |The sum of all `length_m` values of segments SHALL be identical to the `length_m` value in the route overview.
-^|G |The sum of all `duration_s` values of segments SHALL be identical to the `duration_s` value in the route overview.
-^|H |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the segment in meters.
-^|I |If the feature has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the segment in metric tons (tonnes).
-^|J |If the feature has a property `speedLimit`, the value SHALL be of type `integer` with a known speed limit on the segment.
-^|K |If the feature has a property `speedLimit`, the unit of the speed limit SHALL be specified in a property `speedLimitUnit`; the allowed values are `kmph` (kilometers per hour) and `mph` (miles per hour).
-^|L |If the feature has a property `roadName`, the value SHALL be of type `string` with the road/street name of the segment.
-^|M |If the feature has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
+^|E |The sum of all `length_m` values of segments SHALL be identical to the `length_m` value in the route overview.
+^|F |If the feature has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
+^|G |Either all segments or no segment SHALL have a property `duration_s`.
+^|H |The sum of all `duration_s` values of segments SHALL be identical to a `duration_s` value in the route overview.
+^|I |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the segment in meters.
+^|J |If the feature has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the segment in metric tons (tonnes).
+^|K |If the feature has a property `speedLimit`, the value SHALL be of type `integer` with a known speed limit on the segment.
+^|L |If the feature has a property `speedLimit`, the unit of the speed limit SHALL be specified in a property `speedLimitUnit`; the allowed values are `kmph` (kilometers per hour) and `mph` (miles per hour).
+^|M |If the feature has a property `roadName`, the value SHALL be of type `string` with the road/street name of the segment.
+^|N |If the feature has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
+|===
+
+[[rec_rem_segment-properties]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/rem/segment-properties*
+^|A |Segments SHOULD have the property `duration_s`. The information about the estimated duration for travelling a route is important for users.
 |===

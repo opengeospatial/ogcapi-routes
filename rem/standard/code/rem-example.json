@@ -2,7 +2,7 @@
     "@context": {
         "@version": 1.1,
         "geojson": "https://purl.org/geojson/vocab#",
-        "rte": "https://raw.githubusercontent.com/ogcincubator/route/master/route#",
+        "rem": "https://raw.githubusercontent.com/ogcincubator/route/master/route#",
         "Feature": "geojson:Feature",
         "FeatureCollection": "geojson:FeatureCollection",
         "GeometryCollection": "geojson:GeometryCollection",
@@ -28,18 +28,18 @@
         "id": "@id",
         "properties": "@nest",
         "name": "rdfs:label",
-        "status": "rte:status",
-        "length_m": "rte:length",
-        "duration_s": "rte:duration",
-        "instructions": "rte:instructions",
-        "text": "rte:text",
-        "roadName": "rte:roadName"
+        "status": "rem:status",
+        "length_m": "rem:length",
+        "duration_s": "rem:duration",
+        "instructions": "rem:instructions",
+        "text": "rem:text",
+        "roadName": "rem:roadName"
     },
     "type": "FeatureCollection",
     "id": "https://api.example.com/v1/routes/4711",
     "@type": [
         "geojson:FeatureCollection",
-        "rte:Route"
+        "rem:Route"
     ],
     "name": "National Cathedral to Washington Monument",
     "status": "successful",
@@ -48,7 +48,7 @@
             "id": "1",
             "@type": [
                 "geojson:Feature",
-                "rte:RouteOverview"
+                "rem:RouteOverview"
             ],
             "type": "Feature",
             "properties": {
@@ -764,7 +764,7 @@
             "id": "2",
             "@type": [
                 "geojson:Feature",
-                "rte:Start"
+                "rem:Start"
             ],
             "type": "Feature",
             "properties": {
@@ -782,7 +782,7 @@
             "id": "3",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -805,7 +805,7 @@
             "id": "4",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -829,7 +829,7 @@
             "id": "5",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -853,7 +853,7 @@
             "id": "6",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -877,7 +877,7 @@
             "id": "7",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -901,7 +901,7 @@
             "id": "8",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -925,7 +925,7 @@
             "id": "9",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -948,7 +948,7 @@
             "id": "10",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -971,7 +971,7 @@
             "id": "11",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -994,7 +994,7 @@
             "id": "12",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -1017,7 +1017,7 @@
             "id": "13",
             "@type": [
                 "geojson:Feature",
-                "rte:Segment"
+                "rem:Segment"
             ],
             "type": "Feature",
             "properties": {
@@ -1040,7 +1040,7 @@
             "id": "14",
             "@type": [
                 "geojson:Feature",
-                "rte:Destination"
+                "rem:Destination"
             ],
             "type": "Feature",
             "properties": {

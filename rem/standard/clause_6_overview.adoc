@@ -150,7 +150,7 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 ** value: `CharacterString`
 * attribute `duration`
 ** definition: Estimated amount of time required to travel the route in seconds.
-** multiplicity: 1
+** multiplicity: 0..1
 ** value: `Measure`
 * attribute `length`
 ** definition: Length of the route in meters.
@@ -184,7 +184,7 @@ image::UML/rem-classes.png[alt=UML diagram,width=100%]
 * a `Feature`
 * attribute `duration`
 ** definition: Estimated amount of time required to travel the segment in seconds.
-** multiplicity: 1
+** multiplicity: 0..1
 ** value: `Measure`
 * attribute `instructions`
 ** definition: An instruction for the maneuver at the end of the segment.
