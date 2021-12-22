@@ -289,10 +289,14 @@ The preference is a client hint and it is the decision of the server how to cons
 ^|B |The content of a synchronous response SHALL conform to a requirements class of the Route Exchange Model.
 ^|C |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model (full)".
 ^|D |Height SHALL be provided for all coordinates in the route or for no coordinates in the route.
-^|E |If the request included an `Accept-Language` header, the server SHALL try to honor the request and otherwise fall back
-to an available language.
-^|F |The response SHALL include a `Content-Language` header with the language
-used for instructions and names, in particular road/street names.
+^|E |If the request included an `Accept-Language` header, the server SHALL try to honor the request and otherwise fall back to an available language.
+|===
+
+[[rec_core_compute-route-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/core/compute-route-success*
+^|A |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
 |===
 
 This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution is added in a <<rc_async,separate requirements class>>.
@@ -301,11 +305,8 @@ This requirements class only specifies requirements for the synchronous executio
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/error*
-^|A |If the request does not conform to the requirements (e.g., the route
-definition is invalid) a response with status code `400` SHALL be returned.
-^|B |If the request is valid, but the server is not able to process the request
-(e.g., the server has insufficient route network data for the request),
-a response with status code `422` SHALL be returned.
+^|A |If the request does not conform to the requirements (e.g., the route definition is invalid) a response with status code `400` SHALL be returned.
+^|B |If the request is valid, but the server is not able to process the request (e.g., the server has insufficient route network data for the request), a response with status code `422` SHALL be returned.
 |===
 
 [[example_route_definition]]

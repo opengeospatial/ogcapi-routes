@@ -183,6 +183,5 @@ Typically the name will be provided by the requester of the route.
 ^|J |If the feature has a property `speedLimit`, the value SHALL be of type `integer` with a known speed limit on the segment.
 ^|K |If the feature has a property `speedLimit`, the unit of the speed limit SHALL be specified in a property `speedLimitUnit`; the allowed values are `kmph` (kilometers per hour) and `mph` (miles per hour).
 ^|L |If the feature has a property `roadName`, the value SHALL be of type `string` with the road/street name of the segment.
-^|M |If the feature has a property `roadName` and the feature is part of a response to a HTTP(S) request, the language SHALL be specified in the `Content-Language` header.
-^|N |If the feature has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
+^|M |If the feature has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
 |===
