@@ -8,9 +8,7 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 * Minimal routing capability:
 ** **Core**: Routing based on start/end point
 * Additional API capabilities:
-** **Asynchronous execution**: Return the route in the response to the routing request
-** **Callback**: Support for call to a webhook after the route is computed
-** **Delete route**: Cancel/delete routes
+** **Manage route**: Store, fetch and delete routes stored on the server
 * Additional routing parameters:
 ** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
@@ -37,8 +35,7 @@ The API building blocks support the resources and operations listed in Table 1.
 
 The first three operations are available in the 'Core' requirements class, i.e. all routing
 APIs will support them. The other operations are implemented by routing APIs implementing the
-'Asynchronous execution' requirements class, with the exception of the operation to delete a route
-which is specified in the 'Delete route' requirements class.
+'Manage routes' requirements class.
 
 [[rc_core]]
 === Requirements Class "Core"
@@ -48,14 +45,14 @@ which is specified in the 'Delete route' requirements class.
 2+|*Requirements Class*
 2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/core
 |Target type |Web API
-|Dependency |<<CommonCore,OGC API - Common - Part 1: Core, Requirements Classes "Core", "JSON">>
+|Dependency |<<CommonCore,OGC API - Common - Part 1: Core, Requirements Classes "Core", "Landing Page", "JSON">>
 |Dependency |<<GeoJSON,GeoJSON>>
-|Dependency |<<REM,OGC Route Exchange Model, Requirements Class "Route Exchange Model (full)">>
+|Dependency |<<REM,OGC Route Exchange Model, Requirements Class "Route Exchange Model">>
 |===
 
 ==== OGC API - Common - Part 1: Core
 
-At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a candidate standard and not yet an approved standard. The requirements classes "Core" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition.
+At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a candidate standard and not yet published. The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
 
 [[landing_page]]
 ==== API landing page
@@ -64,7 +61,7 @@ At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a cand
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-op*
-^|A |The content of the response SHALL include a link to the Routes resource at path `/routes` (link relation type 'http://www.opengis.net/def/rel/OGC/1.0/routes').
+^|A |The content of the response SHALL include a link to the Routes resource at path `/routes` (link relation type 'http://www.opengis.net/def/rel/ogc/1.0/routes').
 |===
 
 The following is an example of the landing page of a routing API.
@@ -80,31 +77,31 @@ The following is an example of the landing page of a routing API.
       "href": "https://example.org/api/routing/v1",
       "rel": "self",
       "type": "application/json",
-      "title": "this document"
+      "title": "This document"
     },
     {
       "href": "https://example.org/api/routing/v1/api",
       "rel": "service-desc",
       "type": "application/vnd.oai.openapi+json;version=3.0",
-      "title": "the API definition in OpenAPI JSON"
+      "title": "The API definition in OpenAPI JSON"
     },
     {
       "href": "https://example.org/api/routing/v1/api.html",
       "rel": "service-doc",
       "type": "text/html",
-      "title": "the API documentation in HTML"
+      "title": "The API documentation in HTML"
     },
     {
       "href": "https://example.org/api/routing/v1/conformance",
-      "rel": "http://www.opengis.net/def/rel/OGC/1.0/conformance",
+      "rel": "http://www.opengis.net/def/rel/ogc/1.0/conformance",
       "type": "application/json",
-      "title": "list of conformance classes implemented by this API"
+      "title": "The list of conformance classes implemented by this API"
     },
     {
       "href": "https://example.org/api/routing/v1/routes",
-      "rel": "http://www.opengis.net/def/rel/OGC/1.0/routes",
+      "rel": "http://www.opengis.net/def/rel/ogc/1.0/routes",
       "type": "application/json",
-      "title": "the routes"
+      "title": "Compute routes"
     }
   ]
 }
@@ -114,12 +111,9 @@ The following is an example of the landing page of a routing API.
 [[conformance_declaration]]
 ==== Declaration of conformance classes
 
-The following is an example of the conformance declaration of a routing API
-that implements all requirements classes.
+The following is an example of the conformance declaration of a routing API that implements all requirements classes.
 
-Requirements classes can support options and parsing the API definition
-may be unnecessarily costly for clients to determine the options. The conformance
-declaration, therefore, is extended to support stating the options implemented.
+Requirements classes can support options and parsing the API definition may be unnecessarily costly for clients to determine the options. The conformance declaration, therefore, is extended to support stating the options of a conformance class in a `properties` member where the conformance class URI is the key for the options of that conformance class.
 
 [[example_cc]]
 .Conformance declaration
@@ -135,21 +129,22 @@ declaration, therefore, is extended to support stating the options implemented.
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/weight",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/obstacles",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/time",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/callback",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/async",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/delete-route"
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/manage-routes"
   ],
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
-    "preferences": [
-      "fastest",
-      "shortest"
-    ]
-  },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode": {
-    "modes": [
-      "on-road",
-      "off-road"
-    ]
+  "properties": {
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
+      "preferences": [
+        "fastest",
+        "shortest"
+      ]
+    },
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode": {
+      "modes": [
+        "motor-vehicle",
+        "bicycle",
+        "pedestrian"
+      ]
+    }
   }
 }
 ----
@@ -158,20 +153,11 @@ declaration, therefore, is extended to support stating the options implemented.
 [[geometries]]
 ==== Geometries
 
-All geometries used in the API are GeoJSON geometries.
-This includes the waypoints in the route definition and the
-geometries of all features in the route exchange model
-(overview, start, end, segments).
+All geometries used in the API are GeoJSON geometries. This includes the waypoints in the route definition and the geometries of all features in the route exchange model (overview, start, end, segments).
 
-All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum,
-i.e., the coordinate reference system used by Global Positioning System (GPS). 
-In GeoJSON, a coordinate is an array of numbers. The first two
-elements are longitude and latitude, or easting and northing,
-precisely in that order and using decimal numbers. Height
-may be included as an optional third element.
+All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum, i.e., the coordinate reference system used by Global Positioning System (GPS). In GeoJSON, a coordinate is an array of numbers. The first two elements are longitude and latitude, or easting and northing, precisely in that order and using decimal numbers. Height may be included as an optional third element.
 
-Extensions to this standard can be specified to support additional
-encodings or additional coordinate reference systems.
+Support for additional encodings or additional coordinate reference systems can be specified in future extensions.
 
 [[routes]]
 ==== Routes
@@ -179,27 +165,20 @@ encodings or additional coordinate reference systems.
 [[compute_route]]
 ===== Compute a new route
 
-This operation creates a new route. The payload of the request specifies the
-definition of the new route.
+This operation creates a new route. The payload of the request specifies the definition of the new route.
 
-The core requirements class supports a minimum route definition
-by two `waypoints`, the start and end point of the route.
+The core requirements class supports a minimum route definition by two `waypoints`, the start and end point of the route.
 
-In addition, clients can select a cost function as the routing `preference`.
-The API declares the cost functions that it supports in the Conformance Declaration
-resource and in the API definition.
+In addition, clients can select a cost function as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
 
-An optional `name` for the route can be provided. The name will be
-used as the title in links to the route and is also included in the
-route itself.
+An optional `name` for the route can be provided. The name will be used as the title in links to the route and is also included in the route itself.
 
 [[req_core_compute-route-op]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-op*
 ^|A |The server SHALL support the HTTP POST operation at the path `/routes`.
-^|B |The server SHALL accept a route definition in the content of the request
-based upon the following OpenAPI 3.0 schema:
+^|B |The server SHALL accept a route definition in the content of the request based upon the following OpenAPI 3.0 schema:
 
 [source,YAML]
 ----
@@ -253,31 +232,36 @@ NOTE: The content model of the route definition object has been designed so that
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/conformance-values*
-^|A |The content of the conformance declaration response at path `/conformance`
-SHALL list all values that the `preference` parameter supports, based upon
-the following OpenAPI 3.0 schema:
+^|A |The content of the conformance declaration response at path `/conformance` SHALL list all values that the `preference` parameter supports, based upon the following OpenAPI 3.0 schema:
 
 [source,YAML]
 ----
 type: object
+required:
+  - properties
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core:
+  properties:
     type: object
     required:
-      - preferences
+      - http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core
     properties:
-      preferences:
-        type: array
-        items:
-          minItems: 1
-          type: string
+      http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core:
+        type: object
+        required:
+          - preferences
+        properties:
+          preferences:
+            type: array
+            items:
+              minItems: 1
+              type: string
 ----
 ^|B |The first value listed in the array SHALL be the default cost function, if no preference is specified in the route definition.
 |===
 
 See <<example_cc>> for an example.
 
-NOTE: It is planned to register well-known cost functions with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated. Until then, please use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
+NOTE: It is planned to register well-known cost functions with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated. Until then, use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
 
 The preference is a client hint and it is the decision of the server how to consider the preference in the computation of the route.
 
@@ -287,7 +271,7 @@ The preference is a client hint and it is the decision of the server how to cons
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
 ^|A |A successful, synchronous execution of the operation SHALL be reported as a response with a HTTP status code `200`.
 ^|B |The content of a synchronous response SHALL conform to a requirements class of the Route Exchange Model.
-^|C |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model (full)".
+^|C |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model".
 ^|D |Height SHALL be provided for all coordinates in the route or for no coordinates in the route.
 ^|E |If the request included an `Accept-Language` header, the server SHALL try to honor the request and otherwise fall back to an available language.
 |===
@@ -299,7 +283,7 @@ The preference is a client hint and it is the decision of the server how to cons
 ^|A |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
 |===
 
-This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution is added in a <<rc_async,separate requirements class>>.
+This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution can be added in a future extension.
 
 [[req_core_error]]
 [width="90%",cols="2,6a"]
@@ -349,7 +333,6 @@ in Washington, D.C.
 {
   "type": "FeatureCollection",
   "name": "Reagan Airport to Capitol",
-  "status": "successful",
   "features": [
     {
       "type": "Feature",
@@ -369,7 +352,7 @@ in Washington, D.C.
         ]
       },
       "properties": {
-        "type": "route overview",
+        "featureType": "route overview",
         "length_m": 8213,
         "duration_s": 483
       }
@@ -385,7 +368,7 @@ in Washington, D.C.
         ]
       },
       "properties": {
-        "type": "start"
+        "featureType": "start"
       }
     },
     {
@@ -399,7 +382,7 @@ in Washington, D.C.
         ]
       },
       "properties": {
-        "type": "segment",
+        "featureType": "segment",
         "length_m": 3314,
         "duration_s": 213,
         "instruction": "turn right",
@@ -421,7 +404,7 @@ in Washington, D.C.
         ]
       },
       "properties": {
-        "type": "segment",
+        "featureType": "segment",
         "length_m": 517,
         "duration_s": 73,
         "roadName": "First Street",
@@ -440,7 +423,7 @@ in Washington, D.C.
         ]
       },
       "properties": {
-        "type": "end"
+        "featureType": "end"
       }
     }
   ]
@@ -448,72 +431,56 @@ in Washington, D.C.
 ----
 =================
 
-[[rc_async]]
-=== Requirements Class "Asynchronous execution"
+[[rc_manage-routes]]
+=== Requirements Class "Manage routes"
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/async
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/manage-routes
 |Target type |Web API
 |Dependency |<<rc_core>>
-|Dependency |<<rfc7240,RFC 7240 "Prefer Header for HTTP">>
 |===
-
-Clients requesting routes from servers that implement this requirements class have to be prepared to receive routes asynchronously. If a route is processed synchronously (the route content is returned in the response to the POST request as specified in <<rc_core>>) or asynchronously (the URI of the new route is returned in the response to the POST request as specified in this requirements class) is a decision of the server.
-
-At the same time, clients can express their preferences by using the `Prefer` header specified in <<rfc7240,RFC 7240 "Prefer Header for HTTP">> and servers should respect the hints sent by the clients.
 
 [[route2]]
 ==== Routes
 
-[[compute_routes_async]]
-===== Compute a new route asynchronously
-
-[[rec_async_respond-async]]
+[[req_manage-routes_routes-success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Recommendation {counter:rec-id}* |*/rec/async/respond-async*
-^|A |If the client includes the `Prefer` header with a https://tools.ietf.org/html/rfc7240#section-4.1["respond-async" Preference], the server SHOULD honor the preference and respond asynchronously.
-^|B |If the client includes the `Prefer` header with a https://tools.ietf.org/html/rfc7240#section-4.3["wait" Preference], the server SHOULD honor that preference in the decision to respond synchronously or asynchronously.
+^|*Requirement {counter:req-id}* |*/req/manage-routes/routes-success*
+^|A |The response to a successful execution of the operation to compute a route SHALL include a header `Location` with the URI of the new route that is a sub-resource of `/routes`.
 |===
 
-[[req_async_success]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/async/success*
-^|A |If the server responds asynchronously, a successful execution of the operation SHALL be reported as a response with a HTTP status code `202`.
-^|B |The response SHALL include a header `Location` with the URI of the new route that is a sub-resource of `/routes`.
-|===
-
-Note that Servers can also create a route resource as a sub-resource of `/routes` for a routing request that is executed synchronously. 
+Servers can also create a route resource as a sub-resource of `/routes` for a routing request that is executed synchronously. 
 
 [[example_route_location]]
 .New route request
 =================
-The following request states a preference for an asynchronous response, if the processing is likely to take longer than 5 seconds. The server estimates that it would take more time and returns the URI of the new route (`https://example.org/api/routing/v1/routes/hdg6g`).
+In the response to a synchronous request to compute a route, the server returns the route in the payload, but also the URI of the new route (`https://example.org/api/routing/v1/routes/hdg6g`) on the server.
 
 [source]
 ----
 POST /api/routing/v1/routes HTTP/1.1
 Host: example.org
 Content-Type: application/json
-Prefer: respond-async, wait=5
 
 { ... the route definition ... }
 
-
-HTTP/1.1 202 Created
-Date: Tue, 13 Apr 2021 16:42:23 GMT
+HTTP/1.1 200 OK
+Date: Tue, 22 Dec 2021 16:42:23 GMT
 Location: https://example.org/api/routing/v1/routes/hdg6g
+Content-Type: application/geo+json
+
+{ ... the route ... }
 ----
 =================
 
-[[per_core_purge-routes]]
+[[per_manage-routes_purge-routes]]
 [width="90%",cols="2,6a"]
 |===
-^|*Permission {counter:per-id}* |*/per/async/purge-routes*
-^|A |Routing APIs may purge routes automatically.
+^|*Permission {counter:per-id}* |*/per/manage-routes/purge-routes*
+^|A |Routing APIs may purge routes stored on the server automatically.
 |===
 
 Typically, routes will be removed after a reasonable time, for example, a few hours after the route has last been accessed.
@@ -523,17 +490,17 @@ Typically, routes will be removed after a reasonable time, for example, a few ho
 
 This operation returns a list of routes that are currently available.
 
-[[req_core_routes-op]]
+[[req_manage-routes_get-routes-op]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/async/routes-op*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-routes-op*
 ^|A |The server SHALL support the HTTP GET operation at the path `/routes`.
 |===
 
-[[req_core_routes-success]]
+[[req_manage-routes_get-routes-success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/async/routes-success*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-routes-success*
 ^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
 ^|B |The content of that response SHALL be based upon the following OpenAPI 3.0 schema:
 
@@ -546,6 +513,7 @@ properties:
     items:
       type: object
       required:
+        - rel
         - href
       properties:
         href:
@@ -577,7 +545,7 @@ to routes that the client is authorized to access.
       "href": "https://example.org/api/routing/v1/routes",
       "rel": "self",
       "type": "application/json",
-      "title": "this document"
+      "title": "This document"
     },
     {
       "href": "https://example.org/api/routing/v1/routes/5hsb32",
@@ -609,269 +577,24 @@ to routes that the client is authorized to access.
 ===== Fetch a route
 
 This operation returns the route with id `routeId`. The route content is
-described by the "Route Exchange Model (full)".
+described by the "Route Exchange Model".
 
-[[req_core_route-op]]
+[[req_manage-routes_get-route-op]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/async/route-op*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-route-op*
 ^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}`
 for each route referenced from the Routes resource at `/routes`.
 |===
 
-[[req_core_route-success]]
+[[req_manage-routes_get-route-success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/async/route-success*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-route-success*
 ^|A |The response to the request SHALL conform to the requirement `/req/core/compute-route-success`.
 |===
 
-A route is represented as a GeoJSON feature collection.
-Its contents will depend on the `status` of the route processing.
-
-If the status is 'successful' the feature collection consists
-of the following information:
-
-* A `name`, if one was provided with the route definition.
-* A link to the canonical URI of the route and its definition (link relations `self` and `describedby`)
-* An array of features (the properties of each is to be decided)
-** The route overview feature. This has a LineString geometry of the complete route from start to end location.
-** The start point of the route with a Point geometry.
-** A feature for every segment of the route. This has a Point geometry representing the last point of the segment.
-** The end point of the route with a Point geometry.
-
-If the status is 'accepted' (the request has been received, but processing
-has not yet started), 'running' (the routing is being computed) or 'failed'
-(there was an unspecified error computing the route) the feature collection
-has less information:
-
-* The route overview has a `null` geometry.
-* No segment features are included.
-
-[[example_route_successful]]
-.A route
-=================
-[source,JSON]
-----
-{
-  "type": "FeatureCollection",
-  "name": "Reagan Airport to Capitol",
-  "status": "successful",
-  "links": [
-    {
-      "href": "https://example.com/routes/hdg6g",
-      "rel": "self",
-      "type": "application/geo+json",
-      "title": "this document"
-    },
-    {
-      "href": "https://example.com/routes/hdg6g/definition",
-      "rel": "describedby",
-      "type": "application/json",
-      "title": "the route definition for this route"
-    }
-  ],
-  "features": [
-    {
-      "type": "Feature",
-      "id": 1,
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -77.037722,
-            38.851444
-          ],
-          ...,
-          [
-            -77.012520,
-            38.889780
-          ]
-        ]
-      },
-      "properties": {
-        "type": "route overview",
-        "length_m": 8213,
-        "duration_s": 483
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 2,
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -77.037722,
-          38.851444
-        ]
-      },
-      "properties": {
-        "type": "start"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 3,
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -77.041674,
-          38.871088
-        ]
-      },
-      "properties": {
-        "type": "segment",
-        "length_m": 3314,
-        "duration_s": 213,
-        "instruction": "turn right",
-        "roadName": "George Washington Memorial Pkwy",
-        "maxHeight": 4.5,
-        "speedLimit": 55,
-        "speedLimitUnit": "mph"
-      }
-    },
-    ...,
-    {
-      "type": "Feature",
-      "id": 17,
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -77.012520,
-          38.889780
-        ]
-      },
-      "properties": {
-        "type": "segment",
-        "length_m": 517,
-        "duration_s": 73,
-        "roadName": "First Street",
-        "speedLimit": 35,
-        "speedLimitUnit": "mph"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 18,
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -77.012520,
-          38.889780
-        ]
-      },
-      "properties": {
-        "type": "end"
-      }
-    }
-  ]
-}
-----
-=================
-
-[[example_route_processing]]
-.A route that is still being computed
-=================
-[source,JSON]
-----
-{
-  "type": "FeatureCollection",
-  "name": "Reagan Airport to Capitol",
-  "status": "running",
-  "links": [
-    {
-      "href": "https://example.com/routes/hdg6g",
-      "rel": "self",
-      "type": "application/geo+json",
-      "title": "this document"
-    },
-    {
-      "href": "https://example.com/routes/hdg6g/definition",
-      "rel": "describedby",
-      "type": "application/json",
-      "title": "the route definition for this route"
-    }
-  ],
-  "features": [
-    {
-      "type": "Feature",
-      "id": 1,
-      "geometry": null,
-      "properties": {
-        "type": "route overview"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 2,
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -77.037722,
-          38.851444
-        ]
-      },
-      "properties": {
-        "type": "start"
-      }
-    },
-    {
-      "type": "Feature",
-      "id": 18,
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -77.009003,
-          38.889931
-        ]
-      },
-      "properties": {
-        "type": "end"
-      }
-    }
-  ]
-}
-----
-=================
-
-[[route_definition]]
-==== Route definition
-
-[[get_route_definition]]
-===== Fetch the definition of a route
-
-This operation returns the input parameters used to create the route
-with id `routeId`.
-
-[[req_core_route-definition-op]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/async/route-definition-op*
-^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}/definition`
-for each route referenced from the Routes resource at `/routes`.
-|===
-
-[[req_core_route-definition-success]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/async/route-definition-success*
-^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
-^|B |The content of that response SHALL be identical to the content of the
-POST request to `/routes` when the route was created.
-|===
-
-[[rc_delete-route]]
-=== Requirements Class "Delete route"
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/delete-route
-|Target type |Web API
-|Dependency |<<rc_async>>
-|===
-
-==== Route
+See <<example_route>> for an example of a route.
 
 [[delete_route]]
 ===== Delete a route
@@ -879,58 +602,45 @@ POST request to `/routes` when the route was created.
 This operation deletes the route with identifier `routeId`.
 If the route is still in processing, the routing process is canceled.
 
-[[req_delete-route_op]]
+[[req_manage-routes_delete-route-op]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/delete-route/op*
-^|A |The server SHALL support the HTTP DELETE operation at the path `/routes/{routeId}`
-for each route referenced from the Routes resource at `/routes`.
+^|*Requirement {counter:req-id}* |*/req/manage-routes/delete-route-op*
+^|A |The server SHALL support the HTTP DELETE operation at the path `/routes/{routeId}` for each route referenced from the Routes resource at `/routes`.
 |===
 
-[[req_delete-route_success]]
+[[req_manage-routes_delete-route-success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/delete-route/success*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/delete-route-success*
 ^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200` or `204`.
 ^|B |If the operation is not executed immediately, but is added to a processing queue, the response SHALL have a HTTP status code `202`.
 |===
 
 After the execution of the request, the route will no longer be included in the Routes resource (path `/routes`) and a GET request to `/routes/{routeId}` will return a response with a HTTP status code `404`.
 
-[[rc_callback]]
-=== Requirements Class "Callback"
+[[route_definition]]
+==== Route definition
 
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0/req/callback
-|Target type |Web API
-|Dependency |<<rc_async>>
-|Dependency |link:https://tools.ietf.org/rfc/rfc8288.txt[Web Linking]
-|===
+[[get_route_definition]]
+===== Fetch the definition of a route
 
-[[req_callback_input]]
+This operation returns the input parameters used to create the route with id `routeId`.
+
+[[req_core_route-definition-op]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/callback/input*
-^|A |The server SHALL process the `Link` header in HTTP POST request to the path `/routes`.
+^|*Requirement {counter:req-id}* |*/req/async/route-definition-op*
+^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}/definition` for each route referenced from the Routes resource at `/routes`.
 |===
 
-[[req_callback_success]]
+[[req_core_route-definition-success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/callback/success*
-^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has been completed successfully, the server SHALL send a POST request to the link target with the route according to the "Route Exchange Model (full)" as the content.
+^|*Requirement {counter:req-id}* |*/req/async/route-definition-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
+^|B |The content of that response SHALL be identical to the content of the POST request to `/routes` when the route was created.
 |===
-
-[[req_callback_failure]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/callback/failure*
-^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
-|===
-
-In addition to support for the subscriber links, a server can also support other mechanisms to support callbacks, for example, a query parameter.
 
 [[rc_intermediate-waypoints]]
 === Requirements Class "Intermediate waypoints"
@@ -1006,17 +716,24 @@ schema:
 [source,YAML]
 ----
 type: object
+required:
+  - properties
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode:
+  properties:
     type: object
     required:
-      - modes
+      - http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode
     properties:
-      modes:
-        type: array
-        items:
-          minItems: 1
-          type: string
+      http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/mode:
+        type: object
+        required:
+          - modes
+        properties:
+          modes:
+            type: array
+            items:
+              minItems: 1
+              type: string
 ----
 ^|B |The first value listed in the array SHALL be the default mode, if no mode is specified in the route definition.
 |===

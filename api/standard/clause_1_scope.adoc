@@ -6,10 +6,7 @@ This standard defines modular API building blocks to
 
 * compute new routes,
 * specify additional, commonly used routing parameters in addition to the start and end point of the route,
-* communicate routes synchronously or asynchronously to clients,
-* support callbacks,
-* delete routes stored on the server,
-* request different profiles of the route (complete, overview, by segment).
+* manage routes on the server.
 
 Routes are represented as a GeoJSON feature collection according to the OGC Route Exchange Model.
 

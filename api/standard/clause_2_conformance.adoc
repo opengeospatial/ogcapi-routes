@@ -5,10 +5,7 @@ This Standard defines the following requirements and conformance classes:
 * Minimal routing capability:
 ** **Core**: Routing based on start/end point
 * Additional API capabilities:
-** **Asynchronous execution**: Return the route in the response to the routing request
-** **Callback**: Support for call to a webhook after the route is computed
-** **Delete route**: Cancel/delete routes
-** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
+** **Manage route**: Store, fetch and delete routes stored on the server
 * Additional routing parameters:
 ** **Mode**: Specify the type of transport desired when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
