@@ -1,8 +1,8 @@
 [big]*i.     Abstract*
 
-This standard defines a Route Exchange Model to represent a route as a JSON document in standardized way that is independent of the underlying data, routing engine software, and algorithms that are used to compute the route.
+The Route Exchange Model represents a route as a JSON document in a standardized way that is independent of the underlying data, routing engine software, and algorithms that are used to compute the route.
 
-For example, the complementary standard OGC API - Routes - Part 1: Core uses the Route Exchange Model to represent and share routes with users.
+For example, the complementary standard OGC API - Routes - Part 1: Core uses the Route Exchange Model to represent and share routes with users on the web.
 
 For providers of routes, the API building blocks and the Route Exchange Model provide a simple model to publish and offer those routes as resources for use by other systems.
  
@@ -11,11 +11,12 @@ For users, applications, and enterprises, the capability to get routes in a comm
 [big]*ii.    Keywords*
 
 The following are keywords to be used by search engines and document catalogues.
+
 OGC, Routing, Routing API, Route Exchange Model
 
 [big]*iii.   Preface*
 
-The work on this Standard started in the [OGC Open Routing Pilot](https://www.ogc.org/projects/initiatives/routingpilot). After the pilot, the work on the specification continued in the [OGC Routing Standards Working Group](https://www.ogc.org/projects/groups/routingswg).
+The work on this Standard started in the https://www.ogc.org/projects/initiatives/routingpilot[OGC Open Routing Pilot]. After the pilot, the work on the specification continued in the https://www.ogc.org/projects/groups/routingswg[OGC Routing Standards Working Group].
 
 Attention is drawn to the possibility that some of the elements of this document may be the subject of patent rights. The Open Geospatial Consortium shall not be held responsible for identifying any or all such patent rights.
 

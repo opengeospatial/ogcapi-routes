@@ -8,9 +8,9 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 * Minimal routing capability:
 ** **Core**: Routing based on start/end point
 * Additional API capabilities:
-** **Manage route**: Store, fetch and delete routes stored on the server
+** **Manage routes**: Store, fetch and delete routes stored on the server
 * Additional routing parameters:
-** **Mode**: Specify the type of transport desired when computing the route
+** **Mode**: Specify the type of transport when computing the route
 ** **Intermediate waypoints**: Pass through additional points along the route
 ** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
 ** **Weight restrictions**: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
@@ -20,21 +20,21 @@ This clause specifies the Routing API as a Web API for routing based on the OGC 
 The API building blocks support the resources and operations listed in Table 1.
 
 [#tldr,reftext='{table-caption} {counter:table-num}']
-.Overview of resources and applicable HTTP methods
-[cols="32,25,10,33",options="header"]
+.Overview of resources and applicable HTTP methods and media types
+[cols="16,20,10,18,18,18",options="header"]
 !===
-|Resource |Path |HTTP method |Document reference
-|Landing page |`/` |GET |<<landing_page>>
-|Conformance declaration |`/conformance` |GET |<<conformance_declaration>>
-.2+|Routes .2+|`/routes` |POST |<<compute_route>>
-|GET |<<get_routes>>
-.2+|Route .2+|`/routes/{routeId}` |GET |<<get_route>>
-|DELETE |<<delete_route>>
-|Route definition |`/routes/{routeId}/definition` |GET |<<get_route_definition>>
+|Resource |Path |HTTP method |Request media type |Response media type |Document reference
+|Landing page |`/` |GET |n/a |`application/json` |<<landing_page>>
+|Conformance declaration |`/conformance` |GET |n/a |`application/json` |<<conformance_declaration>>
+.2+|Routes .2+|`/routes` |POST |`application/json` |`application/geo+json` |<<compute_route>>
+|GET |n/a |`application/json` |<<get_routes>>
+.2+|Route .2+|`/routes/{routeId}` |GET |n/a |`application/geo+json` |<<get_route>>
+|DELETE |n/a |n/a |<<delete_route>>
+|Route definition |`/routes/{routeId} /definition` |GET |n/a |`application/json` |<<get_route_definition>>
 !===
 
 The first three operations are available in the 'Core' requirements class, i.e. all routing
-APIs will support them. The other operations are implemented by routing APIs implementing the
+APIs will support them. The other four operations are implemented by routing APIs implementing the
 'Manage routes' requirements class.
 
 [[rc_core]]
@@ -62,7 +62,7 @@ At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a cand
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-op*
-^|A |The content of the response SHALL include a link to the Routes resource at path `/routes` (link relation type 'http://www.opengis.net/def/rel/ogc/1.0/routes').
+^|A |The content of the response SHALL include a link to the Routes resource at path `/routes` (link relation type `\http://www.opengis.net/def/rel/ogc/1.0/routes``).
 |===
 
 The following is an example of the landing page of a routing API.
@@ -172,7 +172,7 @@ The core requirements class supports a minimum route definition by two `waypoint
 
 In addition, clients can select a cost function as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
 
-An optional `name` for the route can be provided. The name will be used as the title in links to the route and is also included in the route itself.
+An optional `name` for the route can be provided. The name can be used as the title in links to the route and is also included in the route itself.
 
 [[req_core_compute-route-op]]
 [width="90%",cols="2,6a"]
@@ -271,17 +271,16 @@ The preference is a client hint and it is the decision of the server how to cons
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
 ^|A |A successful, synchronous execution of the operation SHALL be reported as a response with a HTTP status code `200`.
-^|B |The content of a synchronous response SHALL conform to a requirements class of the Route Exchange Model.
-^|C |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model".
-^|D |Height SHALL be provided for all coordinates in the route or for no coordinates in the route.
-^|E |If the request included an `Accept-Language` header, the server SHALL try to honor the request and otherwise fall back to an available language.
+^|B |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model".
+^|C |Height SHALL be provided for all coordinates in the route or for no coordinates in the route.
 |===
 
 [[rec_core_compute-route-success]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/core/compute-route-success*
-^|A |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
+^|A |If the request included an `Accept-Language` header, the server SHOULD try to honor the request and otherwise fall back to an available language.
+^|B |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
 |===
 
 This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution can be added in a future extension.
@@ -450,10 +449,8 @@ in Washington, D.C.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/manage-routes/routes-success*
-^|A |The response to a successful execution of the operation to compute a route SHALL include a header `Location` with the URI of the new route that is a sub-resource of `/routes`.
+^|A |The response to a successful execution of the operation to compute a route SHALL include a header `Location` with the URI of the new route that is a direct sub-resource of `/routes`.
 |===
-
-Servers can also create a route resource as a sub-resource of `/routes` for a routing request that is executed synchronously. 
 
 [[example_route_location]]
 .New route request

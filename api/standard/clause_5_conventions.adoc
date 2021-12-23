@@ -4,11 +4,11 @@
 
 The normative provisions in this Standard are denoted by the URI
 
-http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1
+`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1`
 
 All requirements and conformance tests that appear in this document are denoted by partial URIs which are relative to this base.
 
-The URI is temporary during the development of this specification.
+NOTE: The URI is temporary during the development of this specification. The final URI in the published standard will be `\http://www.opengis.net/spec/ogcapi-routes-1/1.0`.
 
 === Link relations
 

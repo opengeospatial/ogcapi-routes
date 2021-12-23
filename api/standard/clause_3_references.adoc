@@ -4,4 +4,4 @@ The following normative documents contain provisions that, through reference in 
 * [[GeoJSON]] Internet Engineering Task Force (IETF). RFC 7946: **The GeoJSON Format** [online]. Edited by H. Butler, M. Daly, A. Doyle, S. Gillies, S. Hagen, T. Schaub. 2016 [viewed 2020-03-16]. Available at http://tools.ietf.org/rfc/rfc7946.txt
 * [[rfc8288]] Internet Engineering Task Force (IETF). RFC 8288: **Web Linking** [online]. Edited by M. Nottingham. 2017 [viewed 2020-03-16]. Available at http://tools.ietf.org/rfc/rfc8288.txt
 * [[CommonCore]] Open Geospatial Consortium (OGC). OGC 19-072: **OGC API - Common - Part 1: Core (DRAFT)** [online]. Edited by Ch. Heazel. 2021 [viewed 2021-12-22]. Available at https://docs.ogc.org/DRAFTS/19-072.html
-* [[REM]] Open Geospatial Consortium (OGC). OGC 21-001: **OGC Route Exchange Model (DRAFT)** [online]. Edited by C. Portele. 2021 [viewed 2021-04-23]. Available at https://docs.ogc.org/DRAFTS/21-001.html
+* [[REM]] Open Geospatial Consortium (OGC). OGC 21-001: **OGC Route Exchange Model (DRAFT)** [online]. Edited by C. Portele. 2021 [viewed 2021-12-22]. Available at https://docs.ogc.org/DRAFTS/21-001.html

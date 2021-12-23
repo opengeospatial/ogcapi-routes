@@ -22,7 +22,7 @@
 |Internal reference number of this OGC(R) document:    21-001
 |Version: 1.0.0-SNAPSHOT
 |Category: OGC(R) Implementation Specification
-|Editor:   Clemens Portele, <other Editors>
+|Editor:   Clemens Portele
 |===
 
 [cols = "^", frame = "none"]

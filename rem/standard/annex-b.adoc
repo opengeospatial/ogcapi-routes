@@ -6,10 +6,8 @@
 This annex contains the JSON Schema of the Route Exchange Model in GeoJSON.
 
 [[rem-json-schema]]
-.JSON schema of the Route Exchange Model in GeoJSON
-=================
 [source,JSON]
+.JSON schema of the Route Exchange Model in GeoJSON
 ----
 include::code/rem-json-schema.json[]
 ----
-=================

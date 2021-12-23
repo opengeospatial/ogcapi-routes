@@ -26,7 +26,7 @@ OGC, Routing, Routing API, Route Exchange Model
 
 [big]*iii.   Preface*
 
-The work on this Standard started in the [OGC Open Routing Pilot](https://www.ogc.org/projects/initiatives/routingpilot). After the pilot, the work on the specification continued in the [OGC Routing Standards Working Group](https://www.ogc.org/projects/groups/routingswg).
+The work on this Standard started in the https://www.ogc.org/projects/initiatives/routingpilot[OGC Open Routing Pilot]. After the pilot, the work on the specification continued in the https://www.ogc.org/projects/groups/routingswg[OGC Routing Standards Working Group].
 
 Attention is drawn to the possibility that some of the elements of this document may be the subject of patent rights. The Open Geospatial Consortium shall not be held responsible for identifying any or all such patent rights.
 

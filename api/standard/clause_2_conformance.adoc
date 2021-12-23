@@ -5,9 +5,9 @@ This Standard defines the following eight requirements and conformance classes:
 * Minimal routing capability:
 ** <<rc_core,**Core**>>: Routing based on start/end point
 * Additional API capabilities:
-** <<rc_manage-routes,**Manage route**>>: Store, fetch and delete routes stored on the server
+** <<rc_manage-routes,**Manage routes**>>: Store, fetch and delete routes stored on the server
 * Additional routing parameters:
-** <<rc_mode,**Modes**>>: Specify the type of transport desired when computing the route
+** <<rc_mode,**Modes**>>: Specify the type of transport when computing the route
 ** <<rc_intermediate-waypoints,**Intermediate waypoints**>>: Pass through additional points along the route
 ** <<rc_height,**Height restrictions**>>: Consider a specified vehicle height in meters against known height restrictions when computing the route
 ** <<rc_weight,**Weight restrictions**>>: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
