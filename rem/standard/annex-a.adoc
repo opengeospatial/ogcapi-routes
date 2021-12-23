@@ -1,19 +1,359 @@
 [appendix]
 :appendix-caption: Annex
-== Conformance Class Abstract Test Suite (Normative)
+== Abstract Test Suite (Normative)
 
-#TODO#
+This test suite uses the https://en.wikipedia.org/wiki/Given-When-Then[Given-When-Then] notation to specify the tests.
 
-////
-Ensure that there is a conformance class for each requirements class and a test for each requirement (identified by requirement name and number)
-=== Conformance Class A
-==== Requirement 1
-[cols=">20h,<80d",width="100%"]
+=== Conformance Class "Route Exchange Model"
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
 |===
-|Test id: |/conf/conf-class-a/req-name-1
-|Requirement: |/req/req-class-a/req-name-1
-|Test purpose: | Verify that...
-|Test method: | Inspect...
+|Test id: | /conf/rem/validate-geojson
+|Requirements: | <<req_rem_geojson,/req/rem/geojson>> A
+|Test purpose: | Validate the route against the GeoJSON schema
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the REM JSON document is validated against https://geojson.org/schema/FeatureCollection.json using a JSON Schema validator
+
+Then:
+
+- assert that no errors are reported.
 |===
-==== Requirement 2
-////
+
+NOTE: If the JSON Schema validator used in the test does not support JSON Schema version 07, the GeoJSON schema document needs to be adapted to a version supported by the validator.
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/validate-coordinates
+|Requirements: | <<req_rem_geojson,/req/rem/geojson>> A
+|Test purpose: | Validate the spatial positions in the route
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- all positions in all GeoJSON geometry objects are extracted 
+
+Then:
+
+- assert that the first coordinate of each position is a valid longitude (between -180 and +180);
+- assert that the second coordinate of each position is a valid latitude (between -90 and +90);
+- assert that each position has the same number of coordinates (two or three, that is without or with height).
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/validate-bbox
+|Requirements: | <<req_rem_geojson,/req/rem/geojson>> A
+|Test purpose: | Validate the bounding box of the route, if provided
+|Test method: | 
+Given:
+
+- a REM JSON document that includes a `/bbox` member
+
+When:
+
+- all positions in all GeoJSON geometry objects are extracted 
+
+Then:
+
+- assert that each position is inside the bounding box. 
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/validate-rem
+|Requirements: | <<req_rem_features,/req/rem/features>> A, <<req_rem_start,/req/rem/start>> A, <<req_rem_end,/req/rem/end>> A, <<req_rem_overview,/req/rem/overview>> A/C/E/H/K/N/P, <<req_rem_segments,/req/rem/segments>> A/C/D/F/G/H/I/J/K
+|Test purpose: | Validate the route against the REM schema
+|Test method: | Use a JSON Schema validator and verify that the REM instance is valid against the <<rem-json-schema>>.
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the REM JSON document is validated against the <<rem-json-schema>> using a JSON Schema validator
+
+Then:
+
+- assert that no errors are reported.
+|===
+
+NOTE: If the JSON Schema validator used in the test does not support JSON Schema version 2019-09, the REM schema document needs to be adapted to a version supported by the validator.
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/features
+|Requirements: | <<req_rem_features,/req/rem/features>> A
+|Test purpose: | Verify the existence of the route components
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- all features (JSON Pointer `/features`) are extracted 
+
+Then:
+
+- assert that the features array includes exactly one object where the value of the relative JSON Pointer `/properties/featureType` is "overview";
+- assert that the features array includes exactly one object where the value of the relative JSON Pointer `/properties/featureType` is "start" (the start);
+- assert that the features array includes exactly one object where the value of the relative JSON Pointer `/properties/featureType` is "end" (the end);
+- assert that the features array includes at least one object where the value of the relative JSON Pointer `/properties/featureType` is "segment" (the segments).
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/segment-order
+|Requirements: | <<req_rem_features,/req/rem/features>> B, <<req_rem_overview,/req/rem/overview>> B, <<req_rem_segments,/req/rem/segments>> B
+|Test purpose: | Verify the order of the route segments
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the route position array is extracted (relative JSON Pointer `/geometry/coordinates` of the feature where `/properties/featureType` is "overview")
+- all segment positions are extracted (relative JSON Pointer `/geometry/coordinates` of the features where `/properties/featureType` is "segments")
+
+Then:
+
+- assert that each segment positions is included in the route position array;
+- assert that the segment positions are in the same order in which the positions appear in the route position array.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/start-position
+|Requirements: | <<req_rem_start,/req/rem/start>> B
+|Test purpose: | Verify the start position
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the first route position is extracted (relative JSON Pointer `/geometry/coordinates/0` of the feature where `/properties/featureType` is "overview")
+- the position of the start location is extracted (relative JSON Pointer `/geometry/coordinates` of the feature where `/properties/featureType` is "start")
+
+Then:
+
+- assert that both positions are identical.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/end-position
+|Requirements: | <<req_rem_end,/req/rem/end>> B
+|Test purpose: | Verify the end position
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the last route position is extracted (relative JSON Pointer `/geometry/coordinates/n` of the feature where `/properties/featureType` is "overview" where `n` is the index of the last array element)
+- the position of the end location is extracted (relative JSON Pointer `/geometry/coordinates` of the feature where `/properties/featureType` is "end")
+
+Then:
+
+- assert that both positions are identical.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/start-end-timestamp
+|Requirements: | <<req_rem_start,/req/rem/start>> C, <<req_rem_end,/req/rem/end>> C
+|Test purpose: | Verify the start and end timestamps
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the departure timestamp is extracted (relative JSON Pointer `/properties/timestamp` of the feature where `/properties/featureType` is "start")
+- the arrival timestamp is extracted (relative JSON Pointer `/properties/timestamp` of the feature where `/properties/featureType` is "end")
+
+Then:
+
+- assert that no departure timestamp is present or that it matches the ABNF rule for `date-time` where `time-offset` is always "Z";
+- assert that no arrival timestamp is present or that it matches the ABNF rule for `date-time` where `time-offset` is always "Z";
+- assert that the departure timestamp, if provided, is before the arrival timestamp, if provided.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/overview-length
+|Requirements: | <<req_rem_overview,/req/rem/overview>> D, <<req_rem_segments,/req/rem/segments>> C
+|Test purpose: | Verify the route length
+|Test method: | 
+Given:
+
+- a REM JSON document
+- a tolerance value
+
+When:
+
+- the route length is extracted (relative JSON Pointer `/properties/length_m` of the feature where `/properties/featureType` is "overview")
+- all segment lengths are extracted (relative JSON Pointer `/properties/length_m` of the features where `/properties/featureType` is "segments")
+
+Then:
+
+- assert that the difference between the route length and the sum of the segment lengths is less than the tolerance value.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/overview-length-computed
+|Requirements: | <<req_rem_overview,/req/rem/overview>> D
+|Test purpose: | Verify the route length against the route path
+|Test method: | 
+Given:
+
+- a REM JSON document
+- a length limit
+- a tolerance value
+
+When:
+
+- the route length is extracted (relative JSON Pointer `/properties/length_m` of the feature where `/properties/featureType` is "overview")
+- the path length is computed from the geometry (relative JSON Pointer `/geometry/coordinates` of the feature where `/properties/featureType` is "overview") by converting the line string to a meter-based projected coordinate reference system and computing the length of the converted line string
+
+Then:
+
+- assert that either the route length is larger than the length limit (for long routes the cartesian line will markedly differ from the path along the curved surface of the Earth) or that the difference between the route length and the path length is less than the tolerance value.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/overview-duration
+|Requirements: | <<req_rem_overview,/req/rem/overview>> F/G, <<req_rem_segments,/req/rem/segments>> E
+|Test purpose: | Verify the route duration
+|Test method: | 
+Given:
+
+- a REM JSON document
+- a tolerance value
+
+When:
+
+- the route duration is extracted (relative JSON Pointer `/properties/duration_s` of the feature where `/properties/featureType` is "overview")
+- all segment durations are extracted (relative JSON Pointer `/properties/duration_s` of the features where `/properties/featureType` is "segments")
+
+Then:
+
+- assert that either all segments and the overview have a duration or none of them has a duration;
+- assert that the difference between the route duration, if provided, and the sum of the segment durations, if provided, is less than the tolerance value.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/overview-height
+|Requirements: | <<req_rem_overview,/req/rem/overview>> I/J
+|Test purpose: | Verify the route height restriction
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the route height restriction is extracted (relative JSON Pointer `/properties/maxHeight_m` of the feature where `/properties/featureType` is "overview")
+- all segment height restrictions are extracted (relative JSON Pointer `/properties/maxHeight_m` of the features where `/properties/featureType` is "segments")
+
+Then:
+
+- assert that a route height restriction is provided, if at least one segment has a height restriction;
+- assert that the route height restriction, if provided, is the minimum of all segment height restrictions.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/overview-weight
+|Requirements: | <<req_rem_overview,/req/rem/overview>> L/M
+|Test purpose: | Verify the route weight restriction
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the route weight restriction is extracted (relative JSON Pointer `/properties/maxWeight_t` of the feature where `/properties/featureType` is "overview")
+- all segment weight restrictions are extracted (relative JSON Pointer `/properties/maxWeight_t` of the features where `/properties/featureType` is "segments")
+
+Then:
+
+- assert that a route weight restriction is provided, if at least one segment has a weight restriction;
+- assert that the route weight restriction, if provided, is the minimum of all segment weight restrictions.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/processingTime
+|Requirements: | <<req_rem_overview,/req/rem/overview>> O
+|Test purpose: | Verify the processing time
+|Test method: | 
+Given:
+
+- a REM JSON document
+- an optional timestamp when the route creation was requested
+
+When:
+
+- the processing time is extracted (relative JSON Pointer `/properties/processingTime` of the feature where `/properties/featureType` is "overview")
+
+Then:
+
+- assert that no processing time is present or that it matches the ABNF rule for `date-time` where `time-offset` is always "Z";
+- assert that the processing time is in the past;
+- assert that the processing time is not before the timestamp when the route creation was requested, if provided.
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/rem/speedLimitUnit
+|Requirements: | <<req_rem_segments,/req/rem/segements>> I
+|Test purpose: | Verify that a unit is provided for each speed limit
+|Test method: | 
+Given:
+
+- a REM JSON document
+
+When:
+
+- the two speed limit properties are extracted for each segment (relative JSON Pointers `/properties/speedLimit` and `/properties/speedLimitUnit` of the features where `/properties/featureType` is "segment")
+
+Then:
+
+- assert for each segment that either both properties are provided or no property is provided.
+|===

@@ -37,20 +37,6 @@ The normative statements use JSON Schema to specify schema components.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/geojson*
-^|A |Every representation of a route or route component SHALL be a valid GeoJSON object.
-|===
-
-[[req_rem_date-time]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/rem/date-time*
-^|A |Every representation of a timestamp SHALL be a valid `date-time` value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6].
-|===
-
-[[req_rem_fc]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/rem/fc*
 ^|A |The representation of a route SHALL be a valid GeoJSON feature collection.
 |===
 
@@ -70,24 +56,24 @@ The normative statements use JSON Schema to specify schema components.
 
 Typically the name will be provided by the requester of the route.
 
-[[req_rem_fc-features]]
+[[req_rem_features]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/rem/fc-features*
-^|A |The feature collection SHALL contain the following features:
+^|*Requirement {counter:req-id}* |*/req/rem/features*
+^|A |The feature collection SHALL contain the following features, identified by their property `featureType`:
 
-* a route overview
-* the start point of the route
-* the end point of the route
-* one or more segments
+* a route overview ("overview")
+* the start location of the route ("start")
+* the end location of the route ("end")
+* one or more segments ("segment")
 ^|B |The sequence of the segments SHALL be in their order along the route.
 |===
 
-[[rec_rem_fc-links]]
+[[rec_rem_links]]
 [width="90%",cols="2,6a"]
 |===
-^|*Recommendation {counter:rec-id}* |*/rec/rem/fc-links*
-^|A |The feature collection SHOULD have a member with the name "links" with the following schema:
+^|*Recommendation {counter:rec-id}* |*/rec/rem/links*
+^|A |The feature collection SHOULD have a member with the name "links" with the following schema (consistent with <<rfc8288,RFC 8288>>):
 
 [source,JSON]
 ----
@@ -106,12 +92,12 @@ Typically the name will be provided by the requester of the route.
   }
 }
 ----
-^|B |There SHOULD be a link with
+^|B |If the route is available via a HTTP(S) URI, there SHOULD be a link with
 
 * `rel` with value `self`;
 * `type` with value `application/geo+json`;
 *  a URI to fetch the route in `href`.
-^|C |There SHOULD be a link with
+^|C |If the route definition is available via a HTTP(S) URI, there SHOULD be a link with
 
 * `rel` with value `describedby`;
 * `type` with value `application/json`;
@@ -127,37 +113,40 @@ Typically the name will be provided by the requester of the route.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/start*
-^|A |The start point of the route SHALL be a GeoJSON feature with a Point geometry.
-^|B |The feature SHALL have a property `featureType` with the value `start`.
-^|C |The point geometry of the feature SHALL be identical to the first point of the route overview.
-^|D |If the feature has a property `timestamp`, it SHALL be of type `string`, format `date-time`, and indicate the (estimated) departure time.
+^|A |The start location of the route (property `featureType` is "start") SHALL be a GeoJSON feature with a Point geometry.
+^|B |The point geometry of the feature SHALL be identical to the first point of the route overview.
+^|C |If the feature has a property `timestamp`, it SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z"). The value indicates the estimated departure time.
 |===
 
 [[req_rem_end]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/end*
-^|A |The end point of the route SHALL be a GeoJSON feature with a Point geometry.
-^|B |The feature SHALL have a property `featureType` with the value `end`.
-^|C |The point geometry of the feature SHALL be identical to the last point of the route overview and identical to the point in the last segment.
-^|D |If the feature has a property `timestamp`, it SHALL be of type `string`, format `date-time`, and indicate the (estimated) arrival time.
+^|A |The start location of the route (property `featureType` is "end") SHALL be a GeoJSON feature with a Point geometry.
+^|B |The point geometry of the feature SHALL be identical to the last point of the route overview.
+^|C |If the feature has a property `timestamp`, it SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z"). The value indicates the estimated arrival time.
 |===
 
 [[req_rem_overview]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/overview*
-^|A |The route overview SHALL be a GeoJSON feature with a LineString geometry.
-^|B |The feature SHALL have a property `featureType` with the value `overview`.
-^|C |The line string geometry of the feature SHALL be the path from the start point to the end point of the route.
-^|D |The feature SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
-^|E |If the feature has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
-^|F |The feature SHALL have a property `duration_s`, if the route segments have a property with the same name.
-^|G |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the route in meters.
-^|H |If the feature has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the route in metric tons (tonnes).
-^|I |If the feature has a property `obstacles`, the value SHALL be of type `string` and describe how obstacles were taken into account in the route calculation.
-^|J |If the feature has a property `processingTime`, it SHALL be a `date-time` as specified by link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] and state the time when the route was calculated.
-^|K |If the feature has a property `comment`, the value SHALL be of type `string` and explain any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
+^|A |The route overview (property `featureType` is "overview") SHALL be a GeoJSON feature with a LineString geometry.
+^|B |The line string geometry of the oute overview SHALL be the path from the start point to the end point of the route.
+^|C |The route overview SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
+^|D |The value of a property `length_m` SHALL be identical to the sum of all route segment properties with the same name.
+^|E |If the route overview has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
+^|F |The route overview SHALL have a property `duration_s`, if the route segments have a property with the same name.
+^|G |The value of a property `duration_s` SHALL be identical to the sum of all route segment properties with the same name.
+^|H |If the route overview has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the route in meters.
+^|I |The route overview SHALL have a property `maxHeight_m`, if a route segment has a property with the same name.
+^|J |The value of a property `maxHeight_m` SHALL be identical to the minimum value of all route segment properties with the same name.
+^|K |If the route overview has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the route in metric tons (tonnes).
+^|L |The route overview SHALL have a property `maxWeight_t`, if a route segment has a property with the same name.
+^|M |The value of a property `maxWeight_t` SHALL be identical to the minimum value of all route segment properties with the same name.
+^|N |If the route overview has a property `obstacles`, the value SHALL be of type `string`. The value describes how obstacles were taken into account in the route calculation.
+^|O |If the route overview has a property `processingTime`, it SHALL be a `date-time` string value as specified by link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone 'Z'). The value states the time when the route was calculated.
+^|P |If the route overview has a property `comment`, the value SHALL be of type `string`. The value explains any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
 |===
 
 [[rec_rem_overview-properties]]
@@ -173,20 +162,17 @@ Typically the name will be provided by the requester of the route.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/segments*
-^|A |Each segment of the route SHALL be a GeoJSON feature with a Point geometry.
-^|B |The segment feature SHALL have a property `type` with the value `segment`.
-^|C |The point geometry of the feature SHALL be the last position of the segment and be on the line string geometry of the route overview.
-^|D |The feature SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
-^|E |The sum of all `length_m` values of segments SHALL be identical to the `length_m` value in the route overview.
-^|F |If the feature has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
-^|G |Either all segments or no segment SHALL have a property `duration_s`.
-^|H |The sum of all `duration_s` values of segments SHALL be identical to a `duration_s` value in the route overview.
-^|I |If the feature has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the segment in meters.
-^|J |If the feature has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the segment in metric tons (tonnes).
-^|K |If the feature has a property `speedLimit`, the value SHALL be of type `integer` with a known speed limit on the segment.
-^|L |If the feature has a property `speedLimit`, the unit of the speed limit SHALL be specified in a property `speedLimitUnit`; the allowed values are `kmph` (kilometers per hour) and `mph` (miles per hour).
-^|M |If the feature has a property `roadName`, the value SHALL be of type `string` with the road/street name of the segment.
-^|N |If the feature has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
+^|A |Each segment of the route (property `featureType` is "segment") SHALL be a GeoJSON feature with a Point geometry.
+^|B |The point geometry of each segment SHALL be on the line string geometry of the route overview. The geometry represents the last position of the segment.
+^|C |Each segment SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
+^|D |If a segment has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
+^|E |Either all segments or no segment SHALL have a property `duration_s`.
+^|F |If a segment has a property `maxHeight_m`, the value SHALL be of type `number` with a known height restriction on the segment in meters.
+^|G |If a segment has a property `maxWeight_t`, the value SHALL be of type `number` with a known weight restriction on the segment in metric tons (tonnes).
+^|H |If a segment has a property `speedLimit`, the value SHALL be of type `integer` with a known speed limit on the segment.
+^|I |If a segment has a property `speedLimit`, the unit of the speed limit SHALL be specified in a property `speedLimitUnit`; the allowed values are `kmph` (kilometers per hour) and `mph` (miles per hour).
+^|J |If a segment has a property `roadName`, the value SHALL be of type `string` with the road/street name of the segment.
+^|K |If a segment has a property `instructions`, the value SHALL be of type `string` with an instruction for the maneuver at the end of the segment. Allowed values are `continue`, `left` and `right`.
 |===
 
 [[rec_rem_segment-properties]]
