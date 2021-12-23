@@ -46,9 +46,9 @@ APIs will support them. The other four operations are implemented by routing API
 2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/core
 |Target type |Web API
 |Dependency |<<CommonCore,OGC API - Common - Part 1: Core, Requirements Classes "Core", "Landing Page", "JSON">>
-|Dependency |<<GeoJSON,GeoJSON>>
-|Dependency |<<REM,OGC Route Exchange Model, Requirements Class "Route Exchange Model">>
-|Dependency |<<rfc8288,Web Linking>>
+|Indirect Dependency |<<GeoJSON,GeoJSON>>
+|Indirect Dependency |<<REM,OGC Route Exchange Model, Requirements Class "Route Exchange Model">>
+|Indirect Dependency |<<rfc8288,Web Linking>>
 |===
 
 ==== OGC API - Common - Part 1: Core
@@ -58,11 +58,11 @@ At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a cand
 [[landing_page]]
 ==== API landing page
 
-[[req_core_root-success]]
+[[req_core_landing-page-link]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/core/compute-route-op*
-^|A |The content of the response SHALL include a link to the Routes resource at path `/routes` (link relation type `\http://www.opengis.net/def/rel/ogc/1.0/routes``).
+^|*Requirement {counter:req-id}* |*/req/core/landing-page-link*
+^|A |The content of the landing page response SHALL include a link to the Routes resource at path `/routes` (link relation type `\http://www.opengis.net/def/rel/ogc/1.0/routes`).
 |===
 
 The following is an example of the landing page of a routing API.
@@ -222,7 +222,6 @@ properties:
       preference:
         type: string
 ----
-^|C |The schema of the `preference` member SHALL be extended with `enum` and `default` values to declare the cost functions supported by the server.
 |===
 
 Additional members in the route definition can be ignored.
@@ -257,14 +256,13 @@ properties:
               minItems: 1
               type: string
 ----
-^|B |The first value listed in the array SHALL be the default cost function, if no preference is specified in the route definition.
 |===
 
 See <<example_cc>> for an example.
 
 NOTE: It is planned to register well-known cost functions with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated. Until then, use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
 
-The preference is a client hint and it is the decision of the server how to consider the preference in the computation of the route.
+The preference is a client hint and it is the decision of the server how to consider the preference in the computation of the route. The first value listed in the array is considered the default cost function, if no preference is specified in the route definition.
 
 [[req_core_compute-route-success]]
 [width="90%",cols="2,6a"]
@@ -272,7 +270,6 @@ The preference is a client hint and it is the decision of the server how to cons
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
 ^|A |A successful, synchronous execution of the operation SHALL be reported as a response with a HTTP status code `200`.
 ^|B |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model".
-^|C |Height SHALL be provided for all coordinates in the route or for no coordinates in the route.
 |===
 
 [[rec_core_compute-route-success]]
@@ -625,17 +622,17 @@ After the execution of the request, the route will no longer be included in the 
 
 This operation returns the input parameters used to create the route with id `routeId`.
 
-[[req_core_route-definition-op]]
+[[req_manage-routes_route-definition-op]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/async/route-definition-op*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/route-definition-op*
 ^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}/definition` for each route referenced from the Routes resource at `/routes`.
 |===
 
-[[req_core_route-definition-success]]
+[[req_manage-routes_route-definition-success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/async/route-definition-success*
+^|*Requirement {counter:req-id}* |*/req/manage-routes/route-definition-success*
 ^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
 ^|B |The content of that response SHALL be identical to the content of the POST request to `/routes` when the route was created.
 |===
@@ -658,10 +655,10 @@ when computing the route.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/intermediate-waypoints/input*
-^|A |The server SHALL support more than two points in the member with the
+^|A |The server SHALL support at least five points in the member with the
 name "waypoints" in the route definition in a HTTP POST request to the
 path `/routes` (i.e. `maxItems` may be removed from the schema definition
-or increased to a value larger than '2').
+or increased to a value larger than '4').
 |===
 
 [[req_intermediate-waypoints_success]]
@@ -691,24 +688,18 @@ Mode is a restriction based on the type of transport desired when computing the 
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/mode/input*
-^|A |The server SHALL support a member with the name "mode"
-in the route definition in a HTTP POST request to the path `/routes`
-with the following base schema:
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/mode` in the route definition in a HTTP POST request to the path `/routes` based on the following schema:
 
 [source,YAML]
 ----
-name: mode
-in: query
-schema:
-  type: string
+type: string
 ----
-^|B |The schema of the `mode` member SHALL be extended with `enum` and `default` values to declare the mode options supported by the server.
 |===
 
 [[req_mode_conformance-values]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/core/conformance-values*
+^|*Requirement {counter:req-id}* |*/req/mode/conformance-values*
 ^|A |The content of the conformance declaration response at path `/conformance` SHALL list all values that the `mode` parameter supports, based upon the following OpenAPI 3.0 schema:
 
 [source,YAML]
@@ -733,14 +724,13 @@ properties:
               minItems: 1
               type: string
 ----
-^|B |The first value listed in the array SHALL be the default mode, if no mode is specified in the route definition.
 |===
 
 See <<example_cc>> for an example.
 
-NOTE: It is planned to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated.
+NOTE: It is planned to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable.
 
-The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route.
+The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. The first value listed in the array is considered to be the default mode, if no mode is specified in the route definition.
 
 [[rc_height]]
 === Requirements Class "Height restrictions"
@@ -759,16 +749,12 @@ Consider a specified vehicle height in meters against known height restrictions 
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/height/input*
-^|A |The server SHALL support a member with the name "height"
-in the route definition in a HTTP POST request to the path `/routes`
-with the following schema:
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/height` in the route definition in a HTTP POST request to the path `/routes` based on the following schema:
 
 [source,YAML]
 ----
-name: height
-in: query
-schema:
-  type: number
+type: number
+minimum: 0
 ----
 |===
 
@@ -797,16 +783,12 @@ Consider a specified vehicle weight in metric tons (tonnes) against known weight
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/weight/input*
-^|A |The server SHALL support a member with the name "weight"
-in the route definition in a HTTP POST request to the path `/routes`
-with the following schema:
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/weight` in the route definition in a HTTP POST request to the path `/routes` based on the following schema:
 
 [source,YAML]
 ----
-name: weight
-in: query
-schema:
-  type: number
+type: number
+minimum: 0
 ----
 |===
 
@@ -834,10 +816,7 @@ One or more polygons describing areas the route should avoid.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/obstacles/input*
-^|A |The server SHALL support a member with the name "obstacles"
-in the route definition in a HTTP POST request to the path `/routes`
-with the following schema (a GeoJSON MultiPolygon, wrapped into a 
-"value" member):
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/obstacles` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (a GeoJSON MultiPolygon, wrapped into a "value" member):
 
 [source,YAML]
 ----
@@ -894,9 +873,7 @@ The time of departure or arrival. The default value is an immediate departure.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/time/input*
-^|A |The server SHALL support a member with the name "when"
-in the route definition in a HTTP POST request to the path `/routes`
-with the following schema:
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/when` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (an time constraint object, wrapped into a "value" member):
 
 [source,YAML]
 ----
@@ -912,7 +889,6 @@ properties:
       timestamp:
         type: string
         format: date-time
-        example: "2019-05-23T19:06:32Z"
       type:
         type: string
         default: departure
@@ -920,21 +896,21 @@ properties:
           - departure
           - arrival
 ----
+^|B |The `timestamp` value SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z").
 |===
 
 [[req_time_success]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/time/success*
-^|A |All temporal information in the route SHALL be based on the values in
-the "when" member (the time of departure or arrival, the default value is
-an immediate departure).
+^|A |All temporal information in the route SHALL be based on the values in the "when" member (the time of departure or arrival, the default value is an immediate departure).
+^|B |The start and end of the route SHALL include the `timestamp` property.
+^|C |The route overview and the segments SHALL include the `duration_s` properties.
 |===
 
 [[rec_time_success]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/time/success*
-^|A |The route SHOULD consider the expected traffic situation at the time
-specified in the "when" member.
+^|A |The route SHOULD consider the expected traffic situation at the time specified in the "when" member.
 |===

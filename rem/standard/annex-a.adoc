@@ -6,6 +6,17 @@ This test suite uses the https://en.wikipedia.org/wiki/Given-When-Then[Given-Whe
 
 === Conformance Class "Route Exchange Model"
 
+[[conf_rem]]
+[cols="1,4",width="90%"]
+|===
+2+|*Conformance Class*
+2+|http://www.opengis.net/spec/rem/1.0.0-draft.1/conf/rem
+|Target type |JSON
+|Requirements class |<<rc_rem,Requirements Class "Route Exchange Model">>
+|===
+
+Input to all tests is a REM JSON document.
+
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]
 |===
@@ -15,7 +26,7 @@ This test suite uses the https://en.wikipedia.org/wiki/Given-When-Then[Given-Whe
 |Test method: | 
 Given:
 
-- a REM JSON document
+- n/a
 
 When:
 
@@ -37,7 +48,7 @@ NOTE: If the JSON Schema validator used in the test does not support JSON Schema
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-geojson has been passed
 
 When:
 
@@ -59,7 +70,8 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document that includes a `/bbox` member
+- test /conf/rem/validate-geojson has been passed
+- the REM JSON document includes a `/bbox` member
 
 When:
 
@@ -80,7 +92,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- n/a
 
 When:
 
@@ -102,7 +114,8 @@ NOTE: If the JSON Schema validator used in the test does not support JSON Schema
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-geojson has been passed
+- test /conf/rem/validate-rem has been passed
 
 When:
 
@@ -125,7 +138,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 
@@ -147,7 +160,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 
@@ -168,7 +181,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 
@@ -189,7 +202,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 
@@ -212,7 +225,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 - a tolerance value
 
 When:
@@ -234,7 +247,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 - a length limit
 - a tolerance value
 
@@ -257,7 +270,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 - a tolerance value
 
 When:
@@ -280,7 +293,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 
@@ -302,7 +315,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 
@@ -324,7 +337,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 - an optional timestamp when the route creation was requested
 
 When:
@@ -347,7 +360,7 @@ Then:
 |Test method: | 
 Given:
 
-- a REM JSON document
+- test /conf/rem/validate-features has been passed
 
 When:
 

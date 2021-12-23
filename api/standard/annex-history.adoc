@@ -7,5 +7,5 @@
 |Date |Release |Editor | Primary clauses modified |Description
 |2021-01-12 |1.0.0-SNAPSHOT |C. Portele |all |initial version, based on Open Routing Pilot results
 |2021-04-23 |1.0.0-SNAPSHOT |C. Portele |all |Support for RFC 7240 ("Prefer" header), OGC API - Common - Part 1: Core, editorial updates 
-|2021-12-22 |1.0.0-SNAPSHOT |C. Portele |all |updates, based on SWG decisions on open issues
+|2021-12-23 |1.0.0-SNAPSHOT |C. Portele |all |updates, based on SWG decisions on open issues; test suite added
 |===
