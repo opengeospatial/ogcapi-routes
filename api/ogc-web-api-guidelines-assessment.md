@@ -11,7 +11,7 @@ This document outlines the support by OGC API Routes of the design principles of
   - more advanced capabilities like support for coordinate reference systems or asynchronous execution may be added in additional parts for those that need them, but still with a focus on support for capabilities needed by many
 - [x] Principle #3 - Use Well-Known Resource Types
   - routes are one of the well-known resource types that everyone uses, not only geospatial experts
-  - IANA registered media types are used (application/json and application/gep+json); note that the benefit of registering a new media type for a JSON route definition is considered small, so the generic JSON media type is used
+  - IANA registered media types are used (application/json and application/geo+json); note that the benefit of registering a new media type for a JSON route definition is considered small, so the generic JSON media type is used
 - [x] Principle #4 – Construct consistent URIs
   - the routing resources are structured in a simple path structure that is intuitive and at the same time extensible
   - the path structure is consistent with the examples in Principle #4
