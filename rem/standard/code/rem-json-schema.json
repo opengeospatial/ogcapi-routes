@@ -1,3 +1,274 @@
 {
-   "TODO": true
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$id": "http://schemas.opengis.net/rem/1.0/route.json",
+  "title": "A route",
+  "type": "object",
+  "required": ["type", "features"],
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": ["FeatureCollection"]
+    },
+    "name": {
+      "type": "string"
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/Overview" },
+          { "$ref": "#/$defs/Waypoint" },
+          { "$ref": "#/$defs/Segment" }
+        ]
+      }
+    },
+    "bbox": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Link"
+      }
+    }
+  },
+  "$defs": {
+    "Overview": {
+      "title": "A route overview",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Feature"]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "geometry": {
+          "title": "The geometry of the route",
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["LineString"]
+            },
+            "coordinates": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "required": ["featureType", "length_m"],
+          "properties": {
+            "featureType": {
+              "type": "string",
+              "enum": ["overview"]
+            },
+            "name": {
+              "type": "string"
+            },
+            "length_m": {
+              "type": "number"
+            },
+            "duration_s": {
+              "type": "number"
+            },
+            "maxHeight_m": {
+              "type": "number"
+            },
+            "maxWeight_t": {
+              "type": "number"
+            },
+            "obstacles": {
+              "type": "string"
+            },
+            "processingTime": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "comment": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Waypoint": {
+      "title": "A waypoint of a route",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Feature"]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "geometry": {
+          "title": "A start/end point of a route",
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["Point"]
+            },
+            "coordinates": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "required": ["featureType"],
+          "properties": {
+            "featureType": {
+              "type": "string",
+              "enum": ["start", "end"]
+            }
+          }
+        }
+      }
+    },
+    "Segment": {
+      "title": "A segment of a route",
+      "type": "object",
+      "required": ["type", "geometry", "properties"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["Feature"]
+        },
+        "id": {
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "geometry": {
+          "title": "The end point of the route segment",
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["Point"]
+            },
+            "coordinates": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "properties": {
+          "type": "object",
+          "required": ["featureType", "length_m"],
+          "properties": {
+            "featureType": {
+              "type": "string",
+              "enum": ["segment"]
+            },
+            "length_m": {
+              "type": "number"
+            },
+            "duration_s": {
+              "type": "number"
+            },
+            "maxHeight_m": {
+              "type": "number"
+            },
+            "maxWeight_t": {
+              "type": "number"
+            },
+            "speedLimit": {
+              "type": "number"
+            },
+            "speedLimitUnit": {
+              "type": "string",
+              "enum": ["kmph", "mph"]
+            },
+            "roadName": {
+              "type": "string"
+            },
+            "instructions": {
+              "type": "string",
+              "enum": ["continue", "left", "right"]
+            }
+          }
+        }
+      }
+    },
+    "Link": {
+      "type": "object",
+      "required": ["href", "rel"],
+      "properties": {
+        "href": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "rel": {
+          "type": "string"
+        },
+        "anchor": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "hreflang": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "length": {
+          "type": "string"
+        }
+      }
+    }
+  }
 }

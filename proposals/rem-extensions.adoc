@@ -1,0 +1,59 @@
+[[rem-extensions]]
+== Route Exchange Model Extensions
+
+The Route Exchange Model supports three variants:
+
+* Full: All route information is encoded in a GeoJSON feature collection.
+* Overview: A single GeoJSON feature detailing the route geometry along the network and the main properties of the route.
+* Segments: The first segment of a route and a link to the second segment, if there is more than one segment in the route. Subsequent segments will contain a link to the previous and next segment. The final segment contains only a link to the previous segment. Each segment is a GeoJSON feature.
+
+All implementations need to support the first variant (Full). The other two variants provide additional functionality to support a variety of use cases, specifically the Denied, Degraded, Intermittent and Low Bandwidth (DDIL) network use cases. Both options allow the user to retrieve the minimal information required for their use case. This could be the current step of the route, or an overview to assess the suggested route. In both cases only small GeoJSON objects are passed over the DDIL network. These variants also provide the option to conduct a comprehensive assessment of routes thereby allowing the user to request a number of route overviews in quick succession, choose the route which is most preferable and then reuse the route definition of the chosen route to request the full route.
+
+The following sections in this clause below specifies the requirements classes that implementations need to conform to.
+
+[[rc_rem-segment-with-links]]
+=== Requirements class "Route Exchange Model (segment with links)"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/rem-2/0.0/req/rem-segment-with-links
+|Target type |JSON object
+|Dependency |<<rc_rem-segment>>
+|===
+[[req_rem-segment-with-links_next-prev]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/rem-segment-with-links/next-prev*
+^|A |Each segment SHALL have a member with the name `links
+with the following schema:
+
+[source,JSON]
+----
+{
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": [ "href" ],
+    "properties": {
+      "href": { "type": "string" },
+      "rel": { "type": "string" },
+      "type": { "type": "string" },
+      "hreflang": { "type": "string" },
+      "title": { "type": "string" }
+    }
+  }
+}
+----
+^|B |Unless the segment is the last segment of the route, the segment SHALL have a link
+
+* `rel` with value `next`
+* `type` with value `application/geo+json`
+*  a URI to fetch the next segment along the route in `href`
+^|C |Unless the segment is the first segment of the route, the segment SHALL have a link
+
+* `rel` with value `prev`
+* `type` with value `application/geo+json`
+*  a URI to fetch the previous segment along the route in `href`
+|===
+

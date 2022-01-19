@@ -1,5 +1,5 @@
 == Scope
 
-#TODO: Insert Scope text here. Give the subject of the document and the aspects of that scope covered by the document.#
+This document specifies the Route Exchange Model (REM). 
 
-Explain Scope here
+The REM is a GeoJSON representation of a route, independent of the underlying routing data set, routing engine or algorithm. 

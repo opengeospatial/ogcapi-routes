@@ -1,16 +1,22 @@
 [big]*i.     Abstract*
 
-#TODO#
+The Route Exchange Model represents a route as a JSON document in a standardized way that is independent of the underlying data, routing engine software, and algorithms that are used to compute the route.
 
+For example, the complementary standard OGC API - Routes - Part 1: Core uses the Route Exchange Model to represent and share routes with users on the web.
+
+For providers of routes, the API building blocks and the Route Exchange Model provide a simple model to publish and offer those routes as resources for use by other systems.
+ 
+For users, applications, and enterprises, the capability to get routes in a common format, regardless of the underlying routing data, engines, or algorithms, represents a significant step forward in geospatial interoperability.
+ 
 [big]*ii.    Keywords*
 
 The following are keywords to be used by search engines and document catalogues.
 
-OGC, Routing, Route Exchange Model
+OGC, Routing, Routing API, Route Exchange Model
 
 [big]*iii.   Preface*
 
-#TODO: Insert Preface Text here. Give OGC specific commentary: describe the technical content, reason for document, history of the document and precursors, and plans for future work.#
+The work on this Standard started in the https://www.ogc.org/projects/initiatives/routingpilot[OGC Open Routing Pilot]. After the pilot, the work on the specification continued in the https://www.ogc.org/projects/groups/routingswg[OGC Routing Standards Working Group].
 
 Attention is drawn to the possibility that some of the elements of this document may be the subject of patent rights. The Open Geospatial Consortium shall not be held responsible for identifying any or all such patent rights.
 
@@ -20,14 +26,22 @@ Recipients of this document are requested to submit, with their comments, notifi
 
 The following organizations submitted this Document to the Open Geospatial Consortium (OGC):
 
-Organization name(s)
+* US Army Geospatial Center (AGC)
+* Ecere Corporation
+* interactive instruments GmbH
+* Skymantics LLC
 
-#TODO#
-
+[[submitters]]
 [big]*v.     Submitters*
 
 All questions regarding this submission should be directed to the editor or the submitters:
 
-Name  Affiliation
+|===
+|*Name* |*Affiliation*
 
-#TODO#
+|Clemens Portele _(editor)_ |interactive instruments GmbH
+|Jeff Harrison |US Army Geospatial Center (AGC)
+|Amy Youmans |US Army Geospatial Center (AGC)
+|Jérôme Jacovella-St-Louis |Ecere Corporation
+|Ignacio Correas |Skymantics LLC
+|===

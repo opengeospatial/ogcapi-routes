@@ -1,20 +1,40 @@
 [[routing-api]]
 == Routing API Extensions
 
+* communicate routes synchronously or asynchronously to clients,
+* support callbacks,
+
 === Overview
 
 This clause specifies following requirements/conformance classes:
 
 * Additional API capabilities:
-** (none)
+** **Asynchronous execution**: Return the route in the response to the routing request
+** **Callback**: Support for call to a webhook after the route is computed
+** **Result set**: Request parts of the Route Exchange Model, e.g., in DDIL situations
 * Additional routing parameters:
 ** **Routing engine**: Select a specific routing engine
 ** **Routing algorithm**: Select the algorithm to use
 ** **Source dataset**: Select the network dataset to use
 ** **Elevation model**: Specify an elevation model to use
 
+=== References
+
+* [[rfc7240]] Internet Engineering Task Force (IETF). RFC 7240: **Prefer Header for HTTP** [online]. Edited by J. Snell. 2014 [viewed 2021-04-13]. Available at http://tools.ietf.org/rfc/rfc7240.txt
+
+=== Link relations
+
+* **next**: Indicates that the link's context is a part of a series, and that the next in the series is the link target.
+* **\http://www.opengis.net/def/rel/OGC/1.0/subscriber**: Refers to a resource that accepts callback requests.
+
+=== Requirements
+
+* Asynchronous route computation
+* Support to call a webhook once the route calculation is completed
+* Request parts of the Route Exchange Model, e.g. only the overview
+
 [[conformance_declaration]]
-==== Declaration of conformance classes
+=== Declaration of conformance classes
 
 The following is an example of the conformance declaration of a routing API
 that implements all requirements classes specified in this extension.
@@ -31,10 +51,11 @@ declaration, therefore, is extended to support stating the options implemented.
 {
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/routing-engine",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/routing-algorithm",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/source-dataset",
-    "http://www.opengis.net/spec/ogcapi-routes-2/1.0/conf/elevation-model"
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-engine",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-algorithm",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/source-dataset",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/elevation-model",
+    "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/result-set"
   ],
   "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/core": {
     "values": [
@@ -42,21 +63,21 @@ declaration, therefore, is extended to support stating the options implemented.
       "shortest"
     ]
   },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine": {
+  "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-engine": {
     "values": [
       "Skymantics",
       "Ecere",
       "HERE"
     ]
   },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm": {
+  "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-algorithm": {
     "values": [
       "Dikjstra",
       "Floyd Marshall",
       "A*"
     ]
   },
-  "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset": {
+  "http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/source-dataset": {
     "values": [
       "NSG",
       "OSM",
@@ -67,6 +88,167 @@ declaration, therefore, is extended to support stating the options implemented.
 ----
 =================
 
+[[rc_async]]
+=== Requirements Class "Asynchronous execution"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-n/0.0/req/async
+|Target type |Web API
+|Dependency |<<rc_core>>
+|Dependency |<<rfc7240,RFC 7240 "Prefer Header for HTTP">>
+|===
+
+Clients requesting routes from servers that implement this requirements class have to be prepared to receive routes asynchronously. If a route is processed synchronously (the route content is returned in the response to the POST request as specified in <<rc_core>>) or asynchronously (the URI of the new route is returned in the response to the POST request as specified in this requirements class) is a decision of the server.
+
+At the same time, clients can express their preferences by using the `Prefer` header specified in <<rfc7240,RFC 7240 "Prefer Header for HTTP">> and servers should respect the hints sent by the clients.
+
+[[route2]]
+==== Routes
+
+[[compute_routes_async]]
+===== Compute a new route asynchronously
+
+[[rec_async_respond-async]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/async/respond-async*
+^|A |If the client includes the `Prefer` header with a https://tools.ietf.org/html/rfc7240#section-4.1["respond-async" Preference], the server SHOULD honor the preference and respond asynchronously.
+^|B |If the client includes the `Prefer` header with a https://tools.ietf.org/html/rfc7240#section-4.3["wait" Preference], the server SHOULD honor that preference in the decision to respond synchronously or asynchronously.
+|===
+
+[[req_async_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/async/success*
+^|A |If the server responds asynchronously, a successful execution of the operation SHALL be reported as a response with a HTTP status code `201`.
+^|B |The response SHALL include a header `Location` with the URI of the new route that is a sub-resource of `/routes`.
+|===
+
+Note that Servers can also create a route resource as a sub-resource of `/routes` for a routing request that is executed synchronously. 
+
+[[example_route_location]]
+.New route request
+=================
+The following request states a preference for an asynchronous response, if the processing is likely to take longer than 5 seconds. The server estimates that it would take more time and returns the URI of the new route (`https://example.org/api/routing/v1/routes/hdg6g`).
+
+[source]
+----
+POST /api/routing/v1/routes HTTP/1.1
+Host: example.org
+Content-Type: application/json
+Prefer: respond-async, wait=5
+
+{ ... the route definition ... }
+
+
+HTTP/1.1 201 Created
+Date: Tue, 13 Apr 2021 16:42:23 GMT
+Location: https://example.org/api/routing/v1/routes/hdg6g
+----
+=================
+
+[[example_route_processing]]
+.A route that is still being computed
+=================
+[source,JSON]
+----
+{
+  "type": "FeatureCollection",
+  "name": "Reagan Airport to Capitol",
+  "status": "running",
+  "links": [
+    {
+      "href": "https://example.com/routes/hdg6g",
+      "rel": "self",
+      "type": "application/geo+json",
+      "title": "this document"
+    },
+    {
+      "href": "https://example.com/routes/hdg6g/definition",
+      "rel": "describedby",
+      "type": "application/json",
+      "title": "the route definition for this route"
+    }
+  ],
+  "features": [
+    {
+      "type": "Feature",
+      "id": 1,
+      "geometry": null,
+      "properties": {
+        "type": "route overview"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 2,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.037722,
+          38.851444
+        ]
+      },
+      "properties": {
+        "type": "start"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 18,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.009003,
+          38.889931
+        ]
+      },
+      "properties": {
+        "type": "end"
+      }
+    }
+  ]
+}
+----
+=================
+
+[[rc_callback]]
+=== Requirements Class "Callback"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-n/0.0/req/callback
+|Target type |Web API
+|Dependency |<<rc_async>>
+|Dependency |link:https://tools.ietf.org/rfc/rfc8288.txt[Web Linking]
+|===
+
+[[req_callback_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/callback/input*
+^|A |The server SHALL process the `Link` header in HTTP POST request to the path `/routes`.
+|===
+
+[[req_callback_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/callback/success*
+^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has been completed successfully, the server SHALL send a POST request to the link target with the route according to the "Route Exchange Model (full)" as the content.
+|===
+
+[[req_callback_failure]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/callback/failure*
+^|A |If the request included a link with link relation type `http://www.opengis.net/def/rel/OGC/1.0/subscriber` with a link target in the "http" or "https" scheme and if the computation of the route has failed, the server SHALL send a POST request to the link target with the exception as the content.
+|===
+
+In addition to support for the subscriber links, a server can also support other mechanisms to support callbacks, for example, a query parameter.
+
 [[rc_routing-engine]]
 === Requirements Class "Routing engine"
 
@@ -75,7 +257,7 @@ Select the routing engine to use for calculating the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/routing-engine
+2+|http://www.opengis.net/spec/ogcapi-routes-n/1.0/req/routing-engine
 |Target type |Web API
 |Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
 |===
@@ -112,7 +294,7 @@ the following OpenAPI 3.0 schema:
 ----
 type: object
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine:
+  http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-engine:
     type: object
     required:
       - values
@@ -140,7 +322,7 @@ Select the routing / graph solving algorithm to use for calculating the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/routing-algorithm
+2+|http://www.opengis.net/spec/ogcapi-routes-n/1.0/req/routing-algorithm
 |Target type |Web API
 |Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
 |===
@@ -177,7 +359,7 @@ the following OpenAPI 3.0 schema:
 ----
 type: object
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm:
+  http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/routing-algorithm:
     type: object
     required:
       - values
@@ -205,7 +387,7 @@ Select the source dataset for calculating the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-2/1.0/req/source-dataset
+2+|http://www.opengis.net/spec/ogcapi-routes-n/1.0/req/source-dataset
 |Target type |Web API
 |Dependency |OGC API - Routes - Part 1: Core, Requirements Class "Core"
 |===
@@ -242,7 +424,7 @@ the following OpenAPI 3.0 schema:
 ----
 type: object
 properties:
-  http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset:
+  http://www.opengis.net/spec/ogcapi-routes-n/0.0/conf/source-dataset:
     type: object
     required:
       - values
@@ -265,4 +447,69 @@ properties:
 [[rc_elevation-model]]
 === Requirements Class "Elevation model"
 
-#TODO#
+TODO
+
+[[rc_result-set]]
+=== Requirements Class "Result set"
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-n/0.0/req/result-set
+|Target type |Web API
+|Dependency |<<rc_core>>
+|Dependency |http://www.opengis.net/spec/rem-2/0.0/req/rem-segment-with-links
+|===
+
+[[req_result-set_input]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/result-set/input*
+^|A |The server SHALL support a parameter with the name "resultSet" in
+GET requests to the path `/routes/{routeId}` with the following schema:
+
+[source,YAML]
+----
+name: resultSet
+in: query
+schema:
+  type: string
+  enum:
+    - full
+    - overview
+    - no-geometry
+    - segments
+  default: full
+----
+|===
+
+[[req_result-set_success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/result-set/success*
+^|A |If the `resultSet` parameter has been provided in the request,
+the server SHALL return the following after a successful execution
+of the request depending on the parameter value:
+
+* 'full' (default): the complete representation of the route according to
+requirements class "Route Exchange Model (full)".
+* 'overview': the route overview feature according to
+requirements class "Route Exchange Model (overview)".
+* 'no-geometry': the route overview feature according to
+requirements class "Route Exchange Model (overview)", 
+but geometry set to `null`.
+* 'segments': the first segment feature according to
+requirements class "Route Exchange Model (segment with links)"
+|===
+
+If 'segments' is requested, the segment will include a link to the second segment
+(link relation `next`), if there is more than one segment. Every segment
+except the first and the last segment will include two links (link
+relations `prev` and `next`), except the last segment, which just has a
+`prev` link (unless there is only a single segment in which case there is
+no `prev` link).
+
+It is up to the server how this is implemented and how segment URIs are minted.
+Options include another parameter to identify the segment by index or
+temporary, opaque URIs.
+

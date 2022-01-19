@@ -32,7 +32,7 @@ To generate the HTML versions of the standards from this repository yourself, en
 [Asciidoctor](https://asciidoctor.org/) set up and [installed](https://asciidoctor.org/docs/#get-started-with-asciidoctor).
 Then run:
 
-```
+```bash
 asciidoctor api/standard/21-000.adoc
 asciidoctor rem/standard/21-001.adoc
 ```

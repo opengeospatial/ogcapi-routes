@@ -75,15 +75,15 @@ that implements all requirements classes. The ResultSet class has no equivalent 
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/job-list",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/callback",
     "http://www.opengis.net/spec/ogcapi-processes-1/1.0/conf/dismiss",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/oaproc-routing",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/intermediate-waypoints",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-height",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/max-weight",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/obstacles",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-engine",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/routing-algorithm",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/source-dataset",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0/conf/time"
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/oaproc-routing",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/max-height",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/max-weight",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/obstacles",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/routing-engine",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/routing-algorithm",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/source-dataset",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time"
   ]
 }
 ----
@@ -130,7 +130,7 @@ with the routing request:
 * Routing algorithm to use when processing the route
 * Obstacle requirements
 * Height restriction
-* Maximum load restriction
+* Weight restriction
 * Time of departure or arrival",
     "keywords": [ "routing" ],
     "version": "1.0",
@@ -217,7 +217,7 @@ NOTE: We are still trying to simplify process description in _OGC API - Processe
     {
       "id": "maxWeight",
       "title": "Maximum weight",
-      "description": "A weight restriction for vehicles in tons \nto consider when computing the route.\n\nSupport for this parameter is not required and the parameter may be\nremoved from the API definition.",
+      "description": "A weight restriction for vehicles in metric tons (tonnes) \nto consider when computing the route.\n\nSupport for this parameter is not required and the parameter may be\nremoved from the API definition.",
       "formats": [
         {
           "mediaType": "text/plain"

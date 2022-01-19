@@ -1,14 +1,7 @@
 == References
 The following normative documents contain provisions that, through reference in this text, constitute provisions of this document. For dated references, subsequent amendments to, or revisions of, any of these publications do not apply. For undated references, the latest edition of the normative document referred to applies.
 
-* [[rfc7240]] Internet Engineering Task Force (IETF). RFC 7240: **Prefer Header for HTTP** [online]. Edited by J. Snell. 2014 [viewed 2021-04-13]. Available at http://tools.ietf.org/rfc/rfc7240.txt
-
 * [[GeoJSON]] Internet Engineering Task Force (IETF). RFC 7946: **The GeoJSON Format** [online]. Edited by H. Butler, M. Daly, A. Doyle, S. Gillies, S. Hagen, T. Schaub. 2016 [viewed 2020-03-16]. Available at http://tools.ietf.org/rfc/rfc7946.txt
-
 * [[rfc8288]] Internet Engineering Task Force (IETF). RFC 8288: **Web Linking** [online]. Edited by M. Nottingham. 2017 [viewed 2020-03-16]. Available at http://tools.ietf.org/rfc/rfc8288.txt
-
-* [[CommonCore]] Open Geospatial Consortium (OGC). OGC 19-072: **OGC API - Common - Part 1: Core** [online]. Edited by Ch. Heazel. 2021 [viewed 2020-03-16]. Available at https://portal.ogc.org/files/?artifact_id=97330
-
-* [[REM]] Open Geospatial Consortium (OGC). OGC 21-001: **OGC Route Exchange Model (DRAFT)** [online]. Edited by C. Portele. 2021 [viewed 2021-04-23]. Available at https://docs.ogc.org/DRAFTS/21-001.html
-
-* [[OpenAPI]] OpenAPI Initiative (OAI). **OpenAPI Specification 3.0** [online]. 2020 [viewed 2020-03-16]. The latest patch version at the time of publication of this standard was 3.0.3, available at http://spec.openapis.org/oas/v3.0.3
+* [[CommonCore]] Open Geospatial Consortium (OGC). OGC 19-072: **OGC API - Common - Part 1: Core (DRAFT)** [online]. Edited by Ch. Heazel. 2021 [viewed 2021-12-22]. Available at https://docs.ogc.org/DRAFTS/19-072.html
+* [[REM]] Open Geospatial Consortium (OGC). OGC 21-001: **OGC Route Exchange Model (DRAFT)** [online]. Edited by C. Portele. 2021 [viewed 2021-12-22]. Available at https://docs.ogc.org/DRAFTS/21-001.html

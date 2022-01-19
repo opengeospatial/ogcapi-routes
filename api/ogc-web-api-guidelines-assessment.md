@@ -1,0 +1,67 @@
+# OGC API Routes Support of the OGC Web API Guidelines
+
+This document outlines the support by OGC API Routes of the design principles of the [OGC Web API Guidelines](https://github.com/opengeospatial/OGC-Web-API-Guidelines).
+
+- [x] Principle #1 – Don’t Reinvent
+  - consistent with the current architecture of the web, leverages existing, widely used and implemented specifications (e.g. HTTP/HTTPS, Web Linking, OpenAPI, JSON, GeoJSON, JSON Schema) and only adds minimal additional requirements specific to routing resources
+- [x] Principle #2 – Keep the API Simple and Intuitive
+  - the scope of Part 1 is limited to capabilities that almost anyone needs who wants to compute and share routes on the Web via an API; the API building blocks are consistent with the current Web architecture and straightforward to understand by web developers
+  - the spatial concepts introduced in Part 1 are minimal (only a single CRS following common practice)
+  - all query parameters are optional with default values that will produce meaningful responses
+  - more advanced capabilities like support for coordinate reference systems or asynchronous execution may be added in additional parts for those that need them, but still with a focus on support for capabilities needed by many
+- [x] Principle #3 - Use Well-Known Resource Types
+  - routes are one of the well-known resource types that everyone uses, not only geospatial experts
+  - IANA registered media types are used (application/json and application/geo+json); note that the benefit of registering a new media type for a JSON route definition is considered small, so the generic JSON media type is used
+- [x] Principle #4 – Construct consistent URIs
+  - the routing resources are structured in a simple path structure that is intuitive and at the same time extensible
+  - the path structure is consistent with the examples in Principle #4
+- [x] Principle #5 – Use HTTP Methods consistent with RFC 7231
+  - Part 1 use POST and GET in conformance with the requirements and semantics specified in RFC 7231
+- [x] Principle #6 – Put Selection Criteria behind the ‘?’
+  - Part 1 does not specify any selection criteria
+  - future parts may add selection criteria in particular for fetching routes 
+- [x] Principle #7 – Error Handling and use of HTTP Status Codes
+  - HTTP status codes are used to represent the semantics of the response, because they are commonly understood by web developers; implementations are encouraged to provide meaningful error messages to clients
+  - no normative schema for exceptions has been specified, but the recommendations in Common apply
+- [x] Principle #8 – Use explicit list of HTTP Status Codes
+  - the specification of each operation includes guidance on the applicable status codes
+- [x] Principle #9 – Use of HTTP Header
+  - all HTTP headers can be used as specified by the HTTP RFCs
+  - the headers `Accept`, `Accept-Language`, and `Content-Language` are in particular relevant and discussed in the document
+- [x] Principle #10 - Allow flexible Content Negotiation
+  - see Principle #9, server-driven content negotiation is supported, even though only support for JSON is required
+- [ ] Principle #11 - Pagination
+  - future parts may add paging for APIs that support managing routes
+- [ ] Principle #12 – Processing Resources
+  - not applicable; currently OGC API Routes does not expose any processing resources in the sense described in the principle; the capability to compute a route is an operation on the route collection resource to create a new route
+- [x] Principle #13 – Support Metadata
+  - each resource provides the metadata for using the API
+  - to keep the API simple and intuitive only the minimal metadata is specified
+  - additional metadata can be added or referenced using links; in some cases, this is required (`service-desc`, `service-doc`) or recommended and used in examples (`describedby`, `describedby`).
+- [x] Principle #14 – Consider your Security needs
+  - supports HTTPS and RFC2818
+  - the standards discuss security considerations
+- [x] Principle #15 – API Description
+  - requires an API definition (`service-desc`) and a human readable API documentation (`service-doc`)
+  - OpenAPI 3.0 is recommended
+- [x] Principle #16 - Use well-known identifiers
+  - uses media types and link relations types that are registered with IANA, where available
+  - extensions will be registered in the OGC Definitions Server
+- [x] Principle #17 - Use explicit relations
+  - the link relation types for the links between the resources are specified by the standards
+  - recommendations are provided for link relations to external resources (see also Principle #13)
+- [x] Principle #18 - Support W3C Cross-Origin Resource Sharing
+  - the importance to support cross-origin requests is already highlighted in the dependency Common
+- [x] Principle #19 - Resource encodings
+  - JSON is mandatory, HTML is recommended
+- [x] Principle #20 - Good APIs are testable from the beginning
+  - the current draft specification has been tested in the Open Routing Sprint 2021 with running client and server code from three independent implementations (each providing server and client); the testability of the requirements has been verified as part of the sprint
+  - an abstract test suite will be specified before the specification moves to the approval process
+- [x] Principle #21 - Specify whether operations are safe and/or idempotent
+  - The standard HTTP rules apply for the GET and POST methods
+- [x] Principle #22 – Make resources discoverable
+  - OGC API Routes by design supports clients that follow links to the resources
+- [x] Principle #23 - Make default behavior explicit
+  - all requests work without a query parameter (see Principle #2)
+  - the request to compute a route expects at least a start and end point and it does not make sense to use defaults for these
+  - defaults are documented in the API definition and in the conformance declaration, e.g. for the preferred cost function
