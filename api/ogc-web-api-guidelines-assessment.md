@@ -37,7 +37,7 @@ This document outlines the support by OGC API Routes of the design principles of
 - [x] Principle #13 – Support Metadata
   - each resource provides the metadata for using the API
   - to keep the API simple and intuitive only the minimal metadata is specified
-  - additional metadata can be added or referenced using links; in some cases, this is required (`service-desc`, `service-doc`) or recommended and used in examples (`describedby`, `describedby`).
+  - additional metadata can be added or referenced using links; in some cases, this is required (`service-desc`, `service-doc`); additional metadata can be linked using the standard `describedby` link relation type.
 - [x] Principle #14 – Consider your Security needs
   - supports HTTPS and RFC2818
   - the standards discuss security considerations
@@ -56,9 +56,9 @@ This document outlines the support by OGC API Routes of the design principles of
   - JSON is mandatory, HTML is recommended
 - [x] Principle #20 - Good APIs are testable from the beginning
   - the current draft specification has been tested in the Open Routing Sprint 2021 with running client and server code from three independent implementations (each providing server and client); the testability of the requirements has been verified as part of the sprint
-  - an abstract test suite will be specified before the specification moves to the approval process
+  - an detailed abstract test suite has been specified
 - [x] Principle #21 - Specify whether operations are safe and/or idempotent
-  - The standard HTTP rules apply for the GET and POST methods
+  - The standard HTTP rules apply for the GET, POST and DELETE methods
 - [x] Principle #22 – Make resources discoverable
   - OGC API Routes by design supports clients that follow links to the resources
 - [x] Principle #23 - Make default behavior explicit
