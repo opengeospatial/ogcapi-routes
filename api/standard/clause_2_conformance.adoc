@@ -1,18 +1,21 @@
 == Conformance
 
-This Standard defines the following eight requirements and conformance classes:
+OGC API - Routes - Part 1: Core Standard defines the following eight requirements and conformance classes:
 
 * Minimal routing capability:
-** <<rc_core,**Core**>>: Routing based on start/end point
+** <<rc_core,**Core**>>: Routing based on start/end point.
 * Additional API capabilities:
-** <<rc_manage-routes,**Manage routes**>>: Store, fetch and delete routes stored on the server
+** <<rc_manage-routes,**Manage routes**>>: Store, fetch and delete routes stored on the server.
 * Additional routing parameters:
-** <<rc_mode,**Modes**>>: Specify the type of transport when computing the route
-** <<rc_intermediate-waypoints,**Intermediate waypoints**>>: Pass through additional points along the route
-** <<rc_height,**Height restrictions**>>: Consider a specified vehicle height in meters against known height restrictions when computing the route
-** <<rc_weight,**Weight restrictions**>>: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
-** <<rc_obstacles,**Obstacles**>>: Avoid obstacles
-** <<rc_time,**Temporal constraints**>>: Specify departure/arrival time
+** <<rc_mode,**Modes**>>: Specify the type of transport when computing the route.
+** <<rc_intermediate-waypoints,**Intermediate waypoints**>>: Pass through additional points along the route.
+** <<rc_height,**Height restrictions**>>: Consider a specified vehicle height in meters against known height restrictions when computing the route.
+** <<rc_weight,**Weight restrictions**>>: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
+
+   Note:  A metric ton (tonne) is equivalent to 1,000 kg, which is larger than the U.S. ton.
+   
+** <<rc_obstacles,**Obstacles**>>: Avoid obstacles.
+** <<rc_time,**Temporal constraints**>>: Specify departure/arrival time.
 
 Requirements for a single standardization target types are considered: Web API.
 
@@ -22,7 +25,7 @@ In order to conform to this OGC® Standard, a software implementation shall choo
 
 * Any one of the conformance classes specified in Annex A (normative). 
 
-Note that at all implementations must implement the Core conformance class. 
+  Note:  All implementations must implement the Core conformance class. 
 
 [#conf_class_uris,reftext='{table-caption} {counter:table-num}']
 .Conformance class URIs
