@@ -8,6 +8,9 @@ For the purposes of this document, the following additional terms and definition
 feature::
 abstraction of real world phenomena [ISO 19101-1:2014]
 
+feature collection::
+a set of features from a dataset
+
 GeoJSON::
 geospatial data interchange format based on JavaScript Object Notation (JSON) [IETF RFC 7946]
 
