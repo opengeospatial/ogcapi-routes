@@ -16,7 +16,7 @@ For users, applications, and enterprises, the capability to get routes across a 
  
 Finally, the OGC recognizes that there are many environments for implementing open routing including on road, off road, air, sea, and many others. In addition, some communities may require specialized parameters in their Routing API.
  
-Accordingly, the OGC API - Routes - Part 1: Core accepts start and end positions that may be in different environments, return paths and waypoints between those positions, and be extensible to support parameters required by diverse implementation communities.
+Accordingly, the OGC API - Routes - Part 1: Core accepts two waypoints, a start and end position, which may be in different environments, return paths and waypoints between those positions, and be extensible to support parameters required by diverse implementation communities.
 
 [big]*ii.    Keywords*
 
