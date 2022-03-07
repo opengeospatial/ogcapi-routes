@@ -4,9 +4,9 @@
 
 The OGC API family of standards is organized by resource type. 
 
-This standard specifies the fundamental API building blocks for routes. Routing is one of the most widely used geospatial operations in the world today. However, so far, OGC does not currently have a modern API and methods for routing.
+The OGC API - Routes - Part 1: Core standard specifies the fundamental API building blocks for interacting with the routes resource type. Routing is one of the most widely used geospatial operations in the world today.
  
-This standard uses the Route Exchange Model to represent routes.
+This standard uses the https://docs.ogc.org/DRAFTS/21-001.html[Route Exchange Model] to represent routes.
  
 For providers of routes, the API building blocks and the Route Exchange Model provide a simple model to publish and offer those routes as resources for use by other systems.
  
@@ -14,9 +14,9 @@ For developers building infrastructures, the API building blocks provide a thin 
  
 For users, applications, and enterprises, the capability to get routes across a common API, regardless of the underlying routing data, engines, or algorithms, represents a significant step forward in geospatial interoperability.
  
-Finally, it is recognized there are many environments for implementing open routing including on road, off road, air, sea, and many others. In addition, some communities may require specialized parameters in their Routing API.
+Finally, the OGC recognizes that there are many environments for implementing open routing including on road, off road, air, sea, and many others. In addition, some communities may require specialized parameters in their Routing API.
  
-Accordingly, the proposed API will accept starting and ending positions that may be in many environments, return paths and waypoints between those positions, and be extensible to support parameters required by diverse implementation communities.
+Accordingly, the OGC API - Routes - Part 1: Core accepts start and end positions that may be in different environments, return paths and waypoints between those positions, and be extensible to support parameters required by diverse implementation communities.
 
 [big]*ii.    Keywords*
 
