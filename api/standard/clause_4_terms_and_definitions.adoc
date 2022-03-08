@@ -5,6 +5,9 @@ This document also uses terms defined in the OGC Standard for Modular specificat
 
 For the purposes of this document, the following additional terms and definitions apply.
 
+cost function::
+a function that maps an event or values of one or more variables into a real number intuitively representing some "cost" associated with the event 
+
 feature::
 abstraction of real world phenomena [ISO 19101-1:2014]
 
