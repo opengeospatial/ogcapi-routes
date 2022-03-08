@@ -33,7 +33,7 @@ The API building blocks support the resources and operations listed in Table 1.
 |Route definition |`/routes/{routeId} /definition` |GET |n/a |`application/json` |<<get_route_definition>>
 !===
 
-The first three operations are available in the 'Core' requirements class. All routing
+The first three operations are available in the 'Core' requirements class.  All routing
 APIs implementing this Standard will support them. The other four operations are implemented by routing APIs implementing the
 'Manage routes' requirements class.
 
