@@ -53,7 +53,7 @@ APIs implementing this Standard will support them. The other four operations are
 
 ==== OGC API - Common - Part 1: Core
 
-At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> has been voted on, but is not yet published. The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
+At the time of writing, https://ogcapi.ogc.org/common[OGC API - Common - Part 1: Core] has been voted on, but is not yet published. The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
 
 [[landing_page]]
 ==== API landing page
@@ -168,9 +168,9 @@ Support for additional encodings or additional CRSs may be specified in future e
 
 This operation creates a new route. The payload of the request specifies the definition of the new route.
 
-The core requirements class supports a minimum route definition by using two `waypoints`, the start and end point of the route.
+The core requirements class supports a minimum route definition by using two `waypoints`: The start and end point of the route.
 
-In addition, clients can select a cost function as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
+In addition, clients can select a cost function, as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
 
 An optional `name` for the route can be provided. The name can be used as the title in links to the route and the name is also included in the route itself.
 
@@ -269,7 +269,7 @@ The parameter "preference" is a client hint and the server determines how to con
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
 ^|A |A successful, synchronous execution of the operation SHALL be reported as a response with a HTTP status code `200`.
-^|B |By default (and this requirements class provides no mechanism to change the default), the response content SHALL conform to the requirements class "Route Exchange Model".
+^|B |By default the response content SHALL conform to the requirements class "Route Exchange Model".  NOTE:  This requirements class provides no mechanism to change the default, and future extentions could return another route representation, such as a OGC GeoPackage.
 |===
 
 [[rec_core_compute-route-success]]
@@ -640,7 +640,7 @@ This operation returns the input parameters used to create the route with id `ro
 [[rc_intermediate-waypoints]]
 === Requirements Class "Intermediate waypoints"
 
-Additional waypoints along the route between start and end to consider
+The client can specify additional waypoints along the route between the start location and the end location to consider
 when computing the route.
 
 [cols="1,4",width="90%"]
@@ -728,14 +728,14 @@ properties:
 
 See <<example_cc>> for an example.
 
-NOTE: It is planned to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable.
+NOTE: The plan is to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable.
 
-The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. The first value listed in the array is considered to be the default mode, if no mode is specified in the route definition.
+The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. If no mode is specified in the route definition then the first value listed in the array is considered to be the default mode.
 
 [[rc_height]]
 === Requirements Class "Height restrictions"
 
-Consider a specified vehicle height in meters against known height restrictions when computing the route.
+This requirement enables the API request to consider a specified vehicle height, in meters, against known height restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
@@ -769,7 +769,7 @@ the value of "height" in meters.
 [[rc_weight]]
 === Requirements Class "Weight restrictions"
 
-Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
+This requirement enables the API requeste to specify a vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
@@ -802,7 +802,7 @@ minimum: 0
 [[rc_obstacles]]
 === Requirements Class "Obstacles"
 
-One or more polygons describing areas the route should avoid.
+This requirement enables the API request to specify one or more polygons describing areas the route should avoid.
 
 [cols="1,4",width="90%"]
 |===
@@ -859,7 +859,7 @@ properties:
 [[rc_time]]
 === Requirements Class "Temporal constraints"
 
-The time of departure or arrival. The default value is an immediate departure.
+This requirement enable the API request to specify the time of departure or arrival. The default value is an immediate departure.
 
 [cols="1,4",width="90%"]
 |===
