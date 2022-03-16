@@ -34,6 +34,12 @@ The columns for each part list the conformance classes of the standard that are 
 | https://www.ogc.org/resource/products/details/?pid=1598[Link]
 | portele [at] interactive-instruments.de
 
+| link:servers/ecere_gnosis_map_server.md[GNOSIS Map Server]
+| `core`, `height`, `intermediate-waypoints`, `mode`, `weight`
+| `Route Exchange Model`
+| https://www.ogc.org/resource/products/details/?pid=1670[Link]
+| jerome [at] ecere.com
+
 | -
 | -
 | -
@@ -53,10 +59,10 @@ The columns for each part list the conformance classes of the standard that the 
 |===
 | Product | Part 1 | Route Exchange Model | OGC Product Database | Contact email
 
-| link:clients/ecere_gnosis_cartographer.md[ldproxy]
-| `core`
+| link:clients/ecere_gnosis_cartographer.md[GNOSIS Cartographer / Routing Client]
+| `core`, `height`, `intermediate-waypoints`, `manage-routes`, `mode`, `obstacles`, `weight`
 | `Route Exchange Model`
-| TBA
+| https://www.ogc.org/resource/products/details/?pid=1672[link]
 | jerome [at] ecere.com
 
 
