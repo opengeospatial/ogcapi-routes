@@ -15,7 +15,35 @@ The work on the API started in the [OGC Open Routing Pilot](https://www.ogc.org/
 
 ## Overview
 
-TODO
+In addition to the resources provided through inheritance from [OGC API - Common](https://ogcapi.ogc.org/common), the following resources are also provided by [OGC API - Routes](https://ogcapi.ogc.org/routes):
+
+```
+POST /routes
+```
+Compute a new route.
+
+```
+GET /routes
+```
+
+Fetch routes.
+
+```
+GET /routes/{routeId}
+```
+Fetch a route.
+
+```
+DELETE /routes/{routeId}
+```
+
+Delete a route.
+
+```
+GET /routes/{routeId}/definition
+```
+
+Fetch the definition of a route.
 
 ## Communication
 
@@ -24,7 +52,10 @@ so browse there to get a good idea of what is happening, as well as past decisio
 
 ## Additional information
 
-TODO
+This repository contains draft content for both:
+
+* [OGC API - Routes - Part 1: Core](https://docs.ogc.org/DRAFTS/21-000.html)
+* [OGC Route Exchange Model](https://docs.ogc.org/DRAFTS/21-001.html)
 
 ## Building
 
