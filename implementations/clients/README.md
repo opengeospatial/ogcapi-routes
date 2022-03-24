@@ -1,4 +1,4 @@
-# Using OGC API Features
+# Using OGC API Routes
 
 This folder contains descriptions how GIS clients and libraries can be used to connect to APIs that implement OGC API Routes. The focus is on examples and "how-to" descriptions that help others to use the software to connect to such APIs.
 
