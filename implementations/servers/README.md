@@ -1,4 +1,4 @@
-# Publishing APIs implementing OGC API Features
+# Publishing APIs implementing OGC API Routes
 
 This folder contains descriptions of software packages that can be used to provide APIs that implement and conform to OGC API Routes. The focus is on examples and "how-to" descriptions.
 
