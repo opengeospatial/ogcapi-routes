@@ -20,7 +20,7 @@
 |Publication Date:   <yyyy-mm-dd>
 |External identifier of this OGC(R) document: http://www.opengis.net/doc/is/rem/1.0
 |Internal reference number of this OGC(R) document:    21-001
-|Version: 1.0.0-SNAPSHOT
+|Version: 1.0.0-draft.1
 |Category: OGC(R) Implementation Specification
 |Editor:   Clemens Portele
 |===
@@ -33,7 +33,7 @@
 [cols = "^", frame = "none", grid = "none"]
 |===
 |*Copyright notice*
-|Copyright (C) 2021 Open Geospatial Consortium
+|Copyright (C) 2022 Open Geospatial Consortium
 |To obtain additional rights of use, visit http://www.opengeospatial.org/legal/
 |===
 
