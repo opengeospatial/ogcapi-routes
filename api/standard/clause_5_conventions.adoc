@@ -53,7 +53,7 @@ For API definitions that do not conform to the OpenAPI Specification 3.0, the no
 
 === Alignment with OGC API - Processes
 
-The computation of a route is a process that operates on geospatial data typically including a routing network. This document specifies the OGC API building blocks for Routes as API resources. An alternate implementation option for a Routing API is to implement routing as a process using the building blocks specified in the OGC API Processes standard. Both building blocks have been aligned so that the same route definition can be sent to both API options. The alignment between the two OGC API standards is mostly transparent to developers, except for two extensions to the Route Definition object that is submitted in a POST request to the Routes resource (path `/routes`) that would not be necessary for the Routes API:
+The computation of a route is a process that operates on geospatial data that typically includes a routing dataset, which is a networked dataset that has a set of connected vertices and edges that have topological properties on which analysis can be done. This standard specifies the OGC API building blocks for Routes as API resources. An alternate implementation option for a Routing API is to implement routing as a process using the building blocks specified in the OGC API - Processes - Part 1: Core Standard. Both building blocks have been aligned so that the same route definition can be sent to both API options. The alignment between OGC API Processes and OGC API Routes is mostly transparent to developers, except for two extensions needed for the Route Definition object that is submitted in a POST request to the Routes resource (path `/routes`) that would not be necessary for the Routes API:
 
-* an extra "inputs" member that contains the route definition object;
-* extra "value" members in the waypoints, obstacles and temporal constraints objects.
+* An extra "inputs" member that contains the route definition object;
+* Extra "value" members in the waypoints, obstacles and temporal constraints objects.

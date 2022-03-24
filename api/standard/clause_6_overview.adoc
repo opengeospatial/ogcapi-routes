@@ -3,17 +3,17 @@
 
 This section describes the requirements that this standard supports.
 
-The bare minimum requirement for a Routing API is to compute a route based on a start and end point. The resulting route is encoded using the Route Exchange Model.
+The bare minimum requirement for a Routing API is to compute a route based on a start and end point. The resulting route is encoded using the Route Exchange Model (REM).
 
-Besides this basic requirement, additional optional requirements to the API are the following:
+Besides this basic requirement, additional optional requirements to the API are:
 
 * Storage and management of computed routes
 
-Additionally, an API may support the following optional routing parameters:
+Additionally, a Routing API may support the following optional routing parameters:
 
-* Capability to add additional intermediate waypoints
-* Select a transport mode for the route computation
-* Apply a height restriction to the route computation
-* Apply a weight restriction to the route computation
-* Ability to define obstacles that have to be avoided
-* Specify departure or arrival times
+* Capability to add additional intermediate waypoints.
+* Select a transport mode for the route computation.
+* Apply a height restriction to the route computation.
+* Apply a weight restriction to the route computation.
+* Ability to define obstacles that have to be avoided.
+* Specify departure or arrival times.

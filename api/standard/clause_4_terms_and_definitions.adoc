@@ -5,8 +5,16 @@ This document also uses terms defined in the OGC Standard for Modular specificat
 
 For the purposes of this document, the following additional terms and definitions apply.
 
+cost function::
+a function that maps an event or values of one or more variables into a real number intuitively representing some "cost" associated with the event
+
+EXAMPLE: For routing, typical "costs" that would be incurred are duration (fastest route) or distance (shortest route).
+
 feature::
 abstraction of real world phenomena [ISO 19101-1:2014]
+
+feature collection::
+a set of features from a dataset [OGC API - Features - Part 1: Core]
 
 GeoJSON::
 geospatial data interchange format based on JavaScript Object Notation (JSON) [IETF RFC 7946]
@@ -14,7 +22,7 @@ geospatial data interchange format based on JavaScript Object Notation (JSON) [I
 route::
 sequence of connected segments providing directions to travel between specific waypoints
 
-NOTE: This definition doesn't use the definition from ISO 19134:2007 because of use of terms such as "links" and "network".
+NOTE: This definition does not use the definition from ISO 19134:2007 because of use of terms such as "links" and "network".
 
 waypoint::
 location that plays a role in choosing candidate routes potentially satisfying a routing request [ISO 19133:2005]

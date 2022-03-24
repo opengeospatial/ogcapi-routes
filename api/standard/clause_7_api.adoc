@@ -3,19 +3,19 @@
 
 === Overview
 
-This clause specifies the Routing API as a Web API for routing based on the OGC API principles and OGC API - Common as well as the Route Exchange Model. It consists of the following requirements/conformance classes:
+This clause specifies the API building blocks for a Web API for Routing based on the <<OGCWebAPIGuidelines,OGC Web API Guidelines>>, <<CommonCore,OGC API Common>> and the <<REM,OGC Route Exchange Model>>. The API building blocks are specified in the following requirements/conformance classes:
 
 * Minimal routing capability:
-** **Core**: Routing based on start/end point
+** **Core**: Routing based on start/end point.
 * Additional API capabilities:
-** **Manage routes**: Store, fetch and delete routes stored on the server
+** **Manage routes**: Store, fetch and delete routes stored on the server.
 * Additional routing parameters:
-** **Mode**: Specify the type of transport when computing the route
-** **Intermediate waypoints**: Pass through additional points along the route
-** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route
-** **Weight restrictions**: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route
-** **Obstacles**: Avoid obstacles
-** **Temporal constraints**: Specify departure/arrival time
+** **Mode**: Specify the type of transport when computing the route.
+** **Intermediate waypoints**: Pass through additional points along the route.
+** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route.
+** **Weight restrictions**: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
+** **Obstacles**: Avoid obstacles.
+** **Temporal constraints**: Specify departure/arrival time.
 
 The API building blocks support the resources and operations listed in Table 1.
 
@@ -33,8 +33,8 @@ The API building blocks support the resources and operations listed in Table 1.
 |Route definition |`/routes/{routeId} /definition` |GET |n/a |`application/json` |<<get_route_definition>>
 !===
 
-The first three operations are available in the 'Core' requirements class, i.e. all routing
-APIs will support them. The other four operations are implemented by routing APIs implementing the
+The first three operations are available in the 'Core' requirements class.  All routing
+APIs implementing this Standard will support them. The other four operations are implemented by routing APIs implementing the
 'Manage routes' requirements class.
 
 [[rc_core]]
@@ -53,7 +53,9 @@ APIs will support them. The other four operations are implemented by routing API
 
 ==== OGC API - Common - Part 1: Core
 
-At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a candidate standard and not yet published. The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
+At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> has been voted on, but is not yet published. The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
+
+NOTE: Version 1.0 of this Standard will either reference a published version of the OGC API - Common - Part 1: Standard or directly include the relevant provisions from the requirements classes "Core", "Landing Page" and "JSON".
 
 [[landing_page]]
 ==== API landing page
@@ -65,7 +67,7 @@ At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> is a cand
 ^|A |The content of the landing page response SHALL include a link to the Routes resource at path `/routes` (link relation type `\http://www.opengis.net/def/rel/ogc/1.0/routes`).
 |===
 
-The following is an example of the landing page of a routing API.
+The following is an example of a landing page of a routing API that implements this Standard.
 
 [[example_lp]]
 .Landing page
@@ -112,7 +114,7 @@ The following is an example of the landing page of a routing API.
 [[conformance_declaration]]
 ==== Declaration of conformance classes
 
-The following is an example of the conformance declaration of a routing API that implements all requirements classes.
+The following is an example of the conformance declaration of a routing API that implements all requirements classes specified in this Standard.
 
 Requirements classes can support options and parsing the API definition may be unnecessarily costly for clients to determine the options. The conformance declaration, therefore, is extended to support stating the options of a conformance class in a `properties` member where the conformance class URI is the key for the options of that conformance class.
 
@@ -154,11 +156,11 @@ Requirements classes can support options and parsing the API definition may be u
 [[geometries]]
 ==== Geometries
 
-All geometries used in the API are GeoJSON geometries. This includes the waypoints in the route definition and the geometries of all features in the route exchange model (overview, start, end, segments).
+All implementations of this Standard will support geometries encoded as GeoJSON. This includes the waypoints in the route definition and the geometries of all features in the route exchange model (overview, start, end, segments).
 
-All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum, i.e., the coordinate reference system used by Global Positioning System (GPS). In GeoJSON, a coordinate is an array of numbers. The first two elements are longitude and latitude, or easting and northing, precisely in that order and using decimal numbers. Height may be included as an optional third element.
+All geometries use coordinates based on the World Geodetic System 1984 (WGS 84) datum, i.e., the coordinate reference system (CRS) used by Global Positioning System (GPS). In GeoJSON, a coordinate is an array of numbers. The first two elements are longitude and latitude, or easting and northing, precisely in that order and specified in decimal numbers. Ellipsoidal height may be included as an optional third element.
 
-Support for additional encodings or additional coordinate reference systems can be specified in future extensions.
+Support for additional encodings or additional CRSs may be specified in future extensions.
 
 [[routes]]
 ==== Routes
@@ -168,11 +170,11 @@ Support for additional encodings or additional coordinate reference systems can 
 
 This operation creates a new route. The payload of the request specifies the definition of the new route.
 
-The core requirements class supports a minimum route definition by two `waypoints`, the start and end point of the route.
+The core requirements class supports a minimum route definition by using two `waypoints`: The start and end point of the route.
 
-In addition, clients can select a cost function as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
+In addition, clients can select a cost function, as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
 
-An optional `name` for the route can be provided. The name can be used as the title in links to the route and is also included in the route itself.
+An optional `name` for the route can be provided. The name can be used as the title in links to the route and the name is also included in the route itself.
 
 [[req_core_compute-route-op]]
 [width="90%",cols="2,6a"]
@@ -226,7 +228,8 @@ properties:
 
 Additional members in the route definition can be ignored.
 
-NOTE: The content model of the route definition object has been designed so that it can be a valid request to an process execution request according to OGC API - Processes. This adds additional members "inputs" and "value" that would otherwise be unnecessary.
+NOTE: The content model of the route definition object has been designed so that it can also be the content of a process execution request according to the OGC API - Processes - Part 1: Core Standard. The motivation for this is the following: The computation of a route is a process that operates on geospatial data that typically includes a routing dataset, which is a networked dataset that has a set of connected vertices and edges that have topological properties on which analysis can be done. This standard specifies the OGC API building blocks for Routes as API resources. An alternate implementation option for a routing API could be to implement routing as a Process resource using the building blocks specified in the OGC API - Processes - Part 1: Core Standard. The current design allows that the same request can be sent to both API options to compute a new route. 
+The decision to align the payload with OGC API Processes adds additional members "inputs" and "value" that would otherwise be unnecessary. 
 
 [[req_core_conformance-values]]
 [width="90%",cols="2,6a"]
@@ -260,17 +263,19 @@ properties:
 
 See <<example_cc>> for an example.
 
-NOTE: It is planned to register well-known cost functions with the OGC Naming Authority that are recommended for use, where applicable. Once a register has been established, this specification will be updated. Until then, use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
+NOTE: The plan is to register well-known cost functions with the OGC that are recommended for use, where applicable. Once a register has been established, this Standard will be updated. Until then, use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
 
-The preference is a client hint and it is the decision of the server how to consider the preference in the computation of the route. The first value listed in the array is considered the default cost function, if no preference is specified in the route definition.
+The property "preference" in a route definition is a client hint and the server determines how to consider the preference in the computation of the route.  If no preference is specified in the route definition the first value listed in the array is considered the default cost function.
 
 [[req_core_compute-route-success]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/compute-route-success*
 ^|A |A successful, synchronous execution of the operation SHALL be reported as a response with a HTTP status code `200`.
-^|B |By default (and this requirements class provides no mechanism to change the default), the content SHALL conform to the requirements class "Route Exchange Model".
+^|B |By default the response content SHALL conform to the requirements class "Route Exchange Model".
 |===
+
+NOTE: This requirements class provides no mechanism to change the default, and future extensions could return another route representation, such as an OGC GeoPackage.
 
 [[rec_core_compute-route-success]]
 [width="90%",cols="2,6a"]
@@ -280,20 +285,20 @@ The preference is a client hint and it is the decision of the server how to cons
 ^|B |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
 |===
 
-This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution can be added in a future extension.
+This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution can be added in a future extension to this Standard.
 
 [[req_core_error]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/error*
-^|A |If the request does not conform to the requirements (e.g., the route definition is invalid) a response with status code `400` SHALL be returned.
+^|A |If the request does not conform to the requirements `/req/core/compute-route-op` and `/req/core/conformance-values` (e.g., the route definition is not schema valid, the waypoints coordinates are invalid, or the preference value is invalid) a response with status code `400` SHALL be returned.
 ^|B |If the request is valid, but the server is not able to process the request (e.g., the server has insufficient route network data for the request), a response with status code `422` SHALL be returned.
 |===
 
 [[example_route_definition]]
 .Route definition
 =================
-This requests the fastest route from Reagan Airport to the U.S. Capitol
+The following is an example request for the fastest route from Reagan National Airport to the U.S. Capitol building
 in Washington, D.C.
 
 [source,JSON]
@@ -323,7 +328,7 @@ in Washington, D.C.
 =================
 
 [[example_route]]
-.A route
+.The route response:
 =================
 [source,JSON]
 ----
@@ -452,7 +457,7 @@ in Washington, D.C.
 [[example_route_location]]
 .New route request
 =================
-In the response to a synchronous request to compute a route, the server returns the route in the payload, but also the URI of the new route (`https://example.org/api/routing/v1/routes/hdg6g`) on the server.
+In the response to a synchronous request to compute a route, the server returns the route in the payload, but also the URI of the new route such as: (`https://example.org/api/routing/v1/routes/hdg6g`). The following illustrates the HTTP request sent to the API and the HTTP response returned by the API:
 
 [source]
 ----
@@ -475,10 +480,10 @@ Content-Type: application/geo+json
 [width="90%",cols="2,6a"]
 |===
 ^|*Permission {counter:per-id}* |*/per/manage-routes/purge-routes*
-^|A |Routing APIs may purge routes stored on the server automatically.
+^|A |Routing APIs may automatically purge routes stored on the server.
 |===
 
-Typically, routes will be removed after a reasonable time, for example, a few hours after the route has last been accessed.
+Typically, routes will be removed after a reasonable time, for example, a few hours after the route was last accessed.
 
 [[get_routes]]
 ===== Fetch routes
@@ -530,7 +535,7 @@ Access to this resource will typically require authentication. The server will o
 to routes that the client is authorized to access.
 
 [[example_routes]]
-.Routes
+.The Routes resource: The Server Response with available routes
 =================
 [source,JSON]
 ----
@@ -594,7 +599,7 @@ See <<example_route>> for an example of a route.
 [[delete_route]]
 ===== Delete a route
 
-This operation deletes the route with identifier `routeId`.
+This operation deletes a route with identifier `routeId`.
 If the route is still in processing, the routing process is canceled.
 
 [[req_manage-routes_delete-route-op]]
@@ -640,7 +645,7 @@ This operation returns the input parameters used to create the route with id `ro
 [[rc_intermediate-waypoints]]
 === Requirements Class "Intermediate waypoints"
 
-Additional waypoints along the route between start and end to consider
+The client can specify additional waypoints along the route between the start location and the end location to consider
 when computing the route.
 
 [cols="1,4",width="90%"]
@@ -696,6 +701,39 @@ type: string
 ----
 |===
 
+[[example_route_definition_mode]]
+.Route definition with a mode
+=================
+The following is an example request for the fastest bicycle route from Reagan National Airport to the U.S. Capitol building
+in Washington, D.C.
+
+[source,JSON]
+----
+{
+  "inputs": {
+    "name": "Reagan Airport to Capitol",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          [
+            -77.009003,
+            38.889931
+          ]
+        ]
+      }
+    },
+    "preference": "fastest",
+    "mode": "cycling"
+  }
+}
+----
+=================
+
 [[req_mode_conformance-values]]
 [width="90%",cols="2,6a"]
 |===
@@ -728,14 +766,14 @@ properties:
 
 See <<example_cc>> for an example.
 
-NOTE: It is planned to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable.
+NOTE: The plan is to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable.
 
-The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. The first value listed in the array is considered to be the default mode, if no mode is specified in the route definition.
+The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. If no mode is specified in the route definition then the first value listed in the array is considered to be the default mode.
 
 [[rc_height]]
 === Requirements Class "Height restrictions"
 
-Consider a specified vehicle height in meters against known height restrictions when computing the route.
+This requirement enables the API request to consider a specified vehicle height, in meters, against known height restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
@@ -758,6 +796,39 @@ minimum: 0
 ----
 |===
 
+[[example_route_definition_height]]
+.Route definition with a height restriction
+=================
+The following is an example request for the fastest route with a vehicle with a height of four meters from Reagan National Airport to the U.S. Capitol building
+in Washington, D.C.
+
+[source,JSON]
+----
+{
+  "inputs": {
+    "name": "Reagan Airport to Capitol",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          [
+            -77.009003,
+            38.889931
+          ]
+        ]
+      }
+    },
+    "preference": "fastest",
+    "height": 4.0
+  }
+}
+----
+=================
+
 [[req_height_success]]
 [width="90%",cols="2,6a"]
 |===
@@ -769,7 +840,7 @@ the value of "height" in meters.
 [[rc_weight]]
 === Requirements Class "Weight restrictions"
 
-Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
+This requirement enables the API request to specify a vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
 
 [cols="1,4",width="90%"]
 |===
@@ -792,6 +863,39 @@ minimum: 0
 ----
 |===
 
+[[example_route_definition_weight]]
+.Route definition with a weight restriction
+=================
+The following is an example request for the fastest route with a vehicle with a weight of 8.5 metric tons from Reagan National Airport to the U.S. Capitol building
+in Washington, D.C.
+
+[source,JSON]
+----
+{
+  "inputs": {
+    "name": "Reagan Airport to Capitol",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          [
+            -77.009003,
+            38.889931
+          ]
+        ]
+      }
+    },
+    "preference": "fastest",
+    "weight": 8.5
+  }
+}
+----
+=================
+
 [[req_weight_success]]
 [width="90%",cols="2,6a"]
 |===
@@ -802,7 +906,7 @@ minimum: 0
 [[rc_obstacles]]
 === Requirements Class "Obstacles"
 
-One or more polygons describing areas the route should avoid.
+This requirement enables the API request to specify one or more polygons describing areas the route should avoid.
 
 [cols="1,4",width="90%"]
 |===
@@ -849,6 +953,69 @@ properties:
 ----
 |===
 
+[[example_route_definition_obstacles]]
+.Route definition with an obstacle that should be avoided
+=================
+The following is an example request for the fastest route from Reagan National Airport to the U.S. Capitol building
+in Washington, D.C, that avoids an rectangular area that includes parts of Georgetown
+
+[source,JSON]
+----
+{
+  "inputs": {
+    "name": "Reagan Airport to Capitol",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          [
+            -77.009003,
+            38.889931
+          ]
+        ]
+      }
+    },
+    "preference": "fastest",
+    "obstacles": {
+      "value": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [
+                -77.073211,
+                38.9023888
+              ],
+              [
+                -77.049522,
+                38.9023888
+              ],
+              [
+                -77.049522,
+                38.9104038
+              ],
+              [
+                -77.073211,
+                38.9104038
+              ],
+              [
+                -77.073211,
+                38.9023888
+              ]
+            ]
+          ]
+        ]
+      }
+    }
+  }
+}
+----
+=================
+
 [[req_obstacles_success]]
 [width="90%",cols="2,6a"]
 |===
@@ -859,7 +1026,7 @@ properties:
 [[rc_time]]
 === Requirements Class "Temporal constraints"
 
-The time of departure or arrival. The default value is an immediate departure.
+This requirement enable the API request to specify the time of departure or arrival. The default value is an immediate departure.
 
 [cols="1,4",width="90%"]
 |===
@@ -898,6 +1065,44 @@ properties:
 ----
 ^|B |The `timestamp` value SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z").
 |===
+
+[[example_route_definition_when]]
+.Route definition with a desired arrival time
+=================
+The following is an example request for the fastest route from Reagan National Airport to the U.S. Capitol building
+in Washington, D.C, that arrives at 6pm local time on February 24th, 2022.
+
+[source,JSON]
+----
+{
+  "inputs": {
+    "name": "Reagan Airport to Capitol",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            -77.037722,
+            38.851444
+          ],
+          [
+            -77.009003,
+            38.889931
+          ]
+        ]
+      }
+    },
+    "preference": "fastest",
+    "when": {
+      "value": {
+        "timestamp": "2022-02-24T13:00:00Z",
+        "type": "arrival"
+      }
+    }
+  }
+}
+----
+=================
 
 [[req_time_success]]
 [width="90%",cols="2,6a"]
