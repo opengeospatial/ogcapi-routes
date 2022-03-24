@@ -7,3 +7,4 @@
 * [[OGCAPI]] Open Geospatial Consortium (OGC). *OGC APIs - Building Blocks for Location* [online, viewed 2021-12-22]. Available at https://ogcapi.ogc.org/
 * [[RPER]] Open Geospatial Consortium (OGC). *OGC® Routing Pilot ER* [online, viewed 2021-12-22]. Available at https://docs.ogc.org/per/19-041r3.html
 * [[RAPIER]] Open Geospatial Consortium (OGC). *WPS Routing API ER* [online, viewed 2021-12-22]. Available at https://docs.ogc.org/per/19-040.html
+* [[OGCWebAPIGuidelines]] Open Geospatial Consortium (OGC). *OGC Web API Guidelines* [online, viewed 2021-12-22]. Available at https://github.com/opengeospatial/OGC-Web-API-Guidelines

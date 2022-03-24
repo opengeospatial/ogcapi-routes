@@ -1,6 +1,6 @@
 == Scope
 
-OGC API - Routes - Part 1: Core Standard specifies the behavior of a Web API that allows applications to request routes in a manner independent of the underlying routing data set, routing engine or algorithm. 
+The OGC API - Routes - Part 1: Core Standard specifies the behavior of a Web API that allows applications to request routes in a manner independent of the underlying routing data set, routing engine or algorithm. 
 
 This standard defines modular API building blocks to: 
 
@@ -8,6 +8,6 @@ This standard defines modular API building blocks to:
 * Specify additional, commonly used routing parameters in addition to the start and end point of the route,
 * Manage routes on the server.
 
-Routes are represented as a GeoJSON encoded feature collection according to the OGC Route Exchange Model.
+Routes are represented as a feature collection encoded in GeoJSON according to the <<REM,OGC Route Exchange Model>>.
 
 In addition, the API supports building blocks that enable clients to interrogate the API and retrieve the API definition, and a list of conformance classes supported by the API.
