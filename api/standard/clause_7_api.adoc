@@ -17,7 +17,7 @@ This clause specifies the API building blocks for a Web API for Routing based on
 ** **Obstacles**: Avoid obstacles.
 ** **Temporal constraints**: Specify departure/arrival time.
 
-The API building blocks support the resources and operations listed in Table 1.
+The API building blocks support the resources and operations listed in <<tldr>>.
 
 [#tldr,reftext='{table-caption} {counter:table-num}']
 .Overview of resources and applicable HTTP methods and media types
