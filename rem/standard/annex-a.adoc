@@ -355,7 +355,7 @@ Then:
 [cols=">20h,<80a",width="100%"]
 |===
 |Test id: | /conf/rem/speedLimitUnit
-|Requirements: | <<req_rem_segments,/req/rem/segements>> I
+|Requirements: | <<req_rem_segments,/req/rem/segments>> I
 |Test purpose: | Verify that a unit is provided for each speed limit
 |Test method: | 
 Given:
