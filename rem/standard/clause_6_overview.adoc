@@ -227,3 +227,23 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 * attribute `timestamp`
 ** multiplicity: 0..1
 ** value: `DateTime`
+
+=== Relationship with other OGC standards
+
+==== OGC API Routes
+
+The Route Exchange Model is used to represent routes by https://docs.ogc.org/DRAFTS/21-000.html[OGC API - Routes - Part 1: Core].
+
+==== OGC Moving Features JSON
+
+The https://docs.ogc.org/is/19-045r3/19-045r3.html[OGC Moving Features Encoding Extension - JSON (MF-JSON)] is a JSON encoding for moving features. There are similarities between the two standards and their scopes, but essentially they encode different concepts. 
+
+A route in the Route Exchange Model describes a planned trip of a vehicle or person. The route is split into segments where the segment boundaries are at decision points along the route.
+
+A trajectory in MF-JSON describes the path of some moving feature over time where the position and potentially other aspects (e.g., orientation) are recorded at various timestamps. The trajectory describes the location of the real-world entity over time.
+
+As such, there are similarities between both encodings, but they are different, because they serve different purposes.
+
+==== OGC API EDR
+
+OGC API EDR also uses the concept of a trajectory - for the purposes of querying data along the trajectory. Like a trajectory from Moving Features could be used to query an OGC Web API implementing the EDR trajectory query, the overview geometry of a route could be used to fetch information from the OGC Web API.
