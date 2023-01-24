@@ -88,6 +88,11 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 ** definition: Additional waypoints along the route between start and end to consider when computing the route.
 ** multiplicity: 0..*
 ** value: `Waypoint`
+* attribute `intermediateUnordered`
+** definition: If `intermediate` is provided, the order of the waypoints is by default signifiant and a route must pass through the waypoints in the order provided. If set to `true`, a route may pass through the intermediate waypoints in any order.
+** multiplicity: 1
+** value: `Boolean`
+** default: `false`
 * attribute `maxHeight`
 ** definition: A height restriction for vehicles in meters to consider when computing the route.
 ** multiplicity: 0..1
@@ -227,6 +232,8 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 * attribute `timestamp`
 ** multiplicity: 0..1
 ** value: `DateTime`
+* constraints:
+** `type = 'waypoint'`
 
 === Relationship with other OGC standards
 

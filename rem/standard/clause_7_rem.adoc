@@ -65,8 +65,10 @@ Typically the name will be provided by the requester of the route.
 * a route overview ("overview")
 * the start location of the route ("start")
 * the end location of the route ("end")
+* an intermediate waypoint along the route ("waypoint")
 * one or more segments ("segment")
 ^|B |The sequence of the segments SHALL be in their order along the route.
+^|C |The sequence of the waypoints SHALL be in their order along the route.
 |===
 
 [[rec_rem_links]]
@@ -181,3 +183,14 @@ Typically the name will be provided by the requester of the route.
 ^|*Recommendation {counter:rec-id}* |*/rec/rem/segment-properties*
 ^|A |Segments SHOULD have the property `duration_s`. The information about the estimated duration for travelling a route is important for users.
 |===
+
+[[req_rem_waypoints]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/rem/waypoints*
+^|A |If the route has intermediate waypoints, each intermediate waypoint (property `featureType` is "waypoint") SHALL be a GeoJSON feature with a Point geometry.
+^|B |The point geometry of the feature SHALL be identical to the point geometry of the route segment leading to the waypoint.
+^|C |The waypoint feature SHALL immediately follow the route segment feature leading to the waypoint.
+^|D |If the feature has a property `timestamp`, it SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z"). The value indicates the estimated arrival time at the intermediate waypoint.
+|===
+
