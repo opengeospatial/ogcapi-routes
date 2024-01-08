@@ -4,7 +4,7 @@
 == Bibliography
 
 * [[OpenAPI]] OpenAPI Initiative (OAI). **OpenAPI Specification 3.0** [online]. 2020 [viewed 2020-03-16]. The latest patch version at the time of publication of this standard was 3.0.3, available at http://spec.openapis.org/oas/v3.0.3
-* [[OGCAPI]] Open Geospatial Consortium (OGC). *OGC APIs - Building Blocks for Location* [online, viewed 2021-12-22]. Available at https://ogcapi.ogc.org/
+* [[OGCAPI]] Open Geospatial Consortium (OGC). *OGC API Standards - Building Blocks for Location* [online, viewed 2024-01-08]. Available at https://ogcapi.ogc.org/
 * [[RPER]] Open Geospatial Consortium (OGC). *OGC® Routing Pilot ER* [online, viewed 2021-12-22]. Available at https://docs.ogc.org/per/19-041r3.html
 * [[RAPIER]] Open Geospatial Consortium (OGC). *WPS Routing API ER* [online, viewed 2021-12-22]. Available at https://docs.ogc.org/per/19-040.html
 * [[OGCWebAPIGuidelines]] Open Geospatial Consortium (OGC). *OGC Web API Guidelines* [online, viewed 2021-12-22]. Available at https://github.com/opengeospatial/OGC-Web-API-Guidelines
