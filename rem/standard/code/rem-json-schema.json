@@ -136,7 +136,7 @@
           ]
         },
         "geometry": {
-          "title": "A start/end point of a route",
+          "title": "A start/intermediate/end waypoint of a route",
           "type": "object",
           "required": ["type", "coordinates"],
           "properties": {
@@ -160,7 +160,7 @@
           "properties": {
             "featureType": {
               "type": "string",
-              "enum": ["start", "end"]
+              "enum": ["start", "waypoint", "end"]
             }
           }
         }
