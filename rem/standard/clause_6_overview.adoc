@@ -254,3 +254,9 @@ As such, there are similarities between both encodings, but they are different, 
 ==== OGC API EDR
 
 OGC API EDR also uses the concept of a trajectory - for the purposes of querying data along the trajectory. Like a trajectory from Moving Features could be used to query an OGC Web API implementing the EDR trajectory query, the overview geometry of a route could be used to fetch information from the OGC Web API.
+
+=== Alignment with other standards
+
+Other standards, such as General Transit Feed Specification (GTFS) or Network Timetable Exchange (NeTEx), use relatively similar concepts of routes than the Route Exchange Model, but for the purposes of modelling transit networks. As such, they put a higher emphasis in timetables and fares of regular transport lines and lower in the geographical components of routes.
+
+Even though public transport routes can be partially modelled using Route Exchange Model, it is out of scope and not all the necessary characteristics are supported by this standard. Future extensions or revisions might expand the scope to support them fully.
