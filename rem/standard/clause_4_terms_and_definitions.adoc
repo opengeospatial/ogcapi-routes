@@ -5,11 +5,26 @@ This document also uses terms defined in the OGC Standard for Modular specificat
 
 For the purposes of this document, the following additional terms and definitions apply.
 
+action::
+a predefined operation, task, or activity assigned to a specific waypoint along a route, to be performed when reaching or interacting with that location, regardless of the type of the route(such as walking, cycling, driving, autonomous vehicle, etc).
+
+NOTE: Actions can include a range of activities relevant to the purpose of the journey and context of the route. Examples of actions include, but are not limited to: changing speed, taking a photo, delivering a package, buying tickets, starting a guided tour, having lunch, or pausing for a rest. Actions may require interacting with a physical location (e.g., purchasing an entry ticket at a museum waypoint), performing a digital task (e.g., checking in via an app), or initiating vehicle, equipment, or sensor operations (e.g., activating a camera at a scenic viewpoint, unloading cargo at a delivery point).
+
+contingency::
+a predefined alternative plan or course of action developed to address specific events or changes in the conditions during a trip along a route.
+
+NOTE: Contingencies ensure that an autonomous vehicle or a vehicle operator can respond effectively to situations such as changes in traffic conditions, equipment malfunctions, loss of communication, environmental hazards, etc. They are particularly useful for autonomous vehicles and support the safe and effective execution of a trip. Contingencies are specific procedures or adaptations that can be executed, if the original plan for the trip is disrupted, allowing the continuation of the trip, or, alternatively, its abort or return as needed.
+
 feature::
 abstraction of real world phenomena [ISO 19101-1:2014]
 
 GeoJSON::
 geospatial data interchange format based on JavaScript Object Notation (JSON) [IETF RFC 7946]
+
+mode::
+a configurable setting selected by the operator and provided as an input to the planning server that determines the operational profile and planning parameters for an autonomous vehicle’s plan.
+
+NOTE: Modes specify the purpose of the mission (such as survey, delivery, or patrol) or adapt planning for the characteristics and requirements of a particular vehicle type (such as pedestrian, bicycle, or aerial vehicle). The selected mode influences how the planning server generates the plan, including which behaviors, constraints, and priorities to use during route and action generation. For example, in “parking mode” or “highway mode,” the planning algorithms and resource allocations are optimized differently to meet the needs of each mission context. Operators select the appropriate mode based on mission objectives or the type of vehicle, ensuring the plan is safe, efficient, and tailored to the operating scenario. Modes enable the planning system to flexibly support a wide range of autonomous vehicle applications with context-appropriate strategies.
 
 route::
 sequence of connected segments providing directions to travel between specific waypoints

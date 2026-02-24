@@ -15,3 +15,9 @@ NOTE: The URI is temporary during the development of this specification. The fin
 This document uses JSON Schema to document the syntax of the Route Exchange Model.
 
 The complete schema is available in <<rem-json-schema>>.
+
+=== Units of measure
+
+The Route Exchange Model uses fixed units for properties with a unit of measure to avoid that all clients must be able to convert between various units. Examples are the length of a segment or route (meter), the expected duration to travel along a segment or route (seconds), or the weight (metric ton) or height (meter) restriction. An exception is speed where the information should match the information on the road signs and which are therefore either in kmph or mph.
+
+A client can present the information to the user using the perferred units of the user.

@@ -12,10 +12,7 @@ This clause specifies the API building blocks for a Web API for Routing based on
 * Additional routing parameters:
 ** **Mode**: Specify the type of transport when computing the route.
 ** **Intermediate waypoints**: Pass through additional points along the route.
-** **Height restrictions**: Consider a specified vehicle height in meters against known height restrictions when computing the route.
-** **Weight restrictions**: Consider a specified vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
-** **Obstacles**: Avoid obstacles.
-** **Temporal constraints**: Specify departure/arrival time.
+** **Spatial constraints**: Specify spatial constrains and restrictions, optionally also with a time-based constraint.
 
 The API building blocks support the resources and operations listed in <<tldr>>.
 
@@ -31,10 +28,14 @@ The API building blocks support the resources and operations listed in <<tldr>>.
 .2+|Route .2+|`/routes/{routeId}` |GET |n/a |`application/geo+json` |<<get_route>>
 |DELETE |n/a |n/a |<<delete_route>>
 |Route definition |`/routes/{routeId} /definition` |GET |n/a |`application/json` |<<get_route_definition>>
+|Modes |`/modes` |GET |n/a |`application/json` |<<get_list_of_modes>>
+|Actions |`/actions` |GET |n/a |`application/json` |<<get_list_of_actions>>
+|Action |`/actions/{actionId}` |GET |n/a |`application/json` |<<get_action_schema>>
+
 !===
 
 The first three operations are available in the 'Core' requirements class.  All routing
-APIs implementing this Standard will support them. The other four operations are implemented by routing APIs implementing the
+APIs implementing this Standard will support them. The following five operations are implemented by routing APIs implementing the
 'Manage routes' requirements class.
 
 [[rc_core]]
@@ -126,29 +127,12 @@ Requirements classes can support options and parsing the API definition may be u
 {
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/mode",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/height",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/weight",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/obstacles",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes"
-  ],
-  "properties": {
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core": {
-      "preferences": [
-        "fastest",
-        "shortest"
-      ]
-    },
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/mode": {
-      "modes": [
-        "motor-vehicle",
-        "bicycle",
-        "pedestrian"
-      ]
-    }
-  }
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time"
+  ]
 }
 ----
 =================
@@ -172,7 +156,7 @@ This operation creates a new route. The payload of the request specifies the def
 
 The core requirements class supports a minimum route definition by using two `waypoints`: The start and end point of the route.
 
-In addition, clients can select a cost function, as the routing `preference`. The API declares the cost functions that it supports in the Conformance Declaration resource and in the API definition.
+In addition, clients can select a routing `mode` among those offered by the server. The API declares the modes that it supports in the `Modes` API resource.
 
 An optional `name` for the route can be provided. The name can be used as the title in links to the route and the name is also included in the route itself.
 
@@ -221,7 +205,7 @@ properties:
                   minItems: 2
                   items:
                     type: number
-      preference:
+      mode:
         type: string
 ----
 |===
@@ -230,42 +214,6 @@ Additional members in the route definition can be ignored.
 
 NOTE: The content model of the route definition object has been designed so that it can also be the content of a process execution request according to the OGC API - Processes - Part 1: Core Standard. The motivation for this is the following: The computation of a route is a process that operates on geospatial data that typically includes a routing dataset, which is a networked dataset that has a set of connected vertices and edges that have topological properties on which analysis can be done. This standard specifies the OGC API building blocks for Routes as API resources. An alternate implementation option for a routing API could be to implement routing as a Process resource using the building blocks specified in the OGC API - Processes - Part 1: Core Standard. The current design allows that the same request can be sent to both API options to compute a new route. 
 The decision to align the payload with OGC API Processes adds additional members "inputs" and "value" that would otherwise be unnecessary. 
-
-[[req_core_conformance-values]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/core/conformance-values*
-^|A |The content of the conformance declaration response at path `/conformance` SHALL list all values that the `preference` parameter supports, based upon the following OpenAPI 3.0 schema:
-
-[source,YAML]
-----
-type: object
-required:
-  - properties
-properties:
-  properties:
-    type: object
-    required:
-      - http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core
-    properties:
-      http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core:
-        type: object
-        required:
-          - preferences
-        properties:
-          preferences:
-            type: array
-            items:
-              minItems: 1
-              type: string
-----
-|===
-
-See <<example_cc>> for an example.
-
-NOTE: The plan is to register well-known cost functions with the OGC that are recommended for use, where applicable. Once a register has been established, this Standard will be updated. Until then, use `fastest` for cost functions that optimize duration and `shortest` for cost functions that optimize distance.
-
-The property "preference" in a route definition is a client hint and the server determines how to consider the preference in the computation of the route.  If no preference is specified in the route definition the first value listed in the array is considered the default cost function.
 
 [[req_core_compute-route-success]]
 [width="90%",cols="2,6a"]
@@ -291,7 +239,7 @@ This requirements class only specifies requirements for the synchronous executio
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/error*
-^|A |If the request does not conform to the requirements `/req/core/compute-route-op` and `/req/core/conformance-values` (e.g., the route definition is not schema valid, the waypoints coordinates are invalid, or the preference value is invalid) a response with status code `400` SHALL be returned.
+^|A |If the request does not conform to the requirements `/req/core/compute-route-op` and `/req/core/conformance-values` (e.g., the route definition is not schema valid, the waypoints coordinates are invalid, or the mode value is invalid) a response with status code `400` SHALL be returned.
 ^|B |If the request is valid, but the server is not able to process the request (e.g., the server has insufficient route network data for the request), a response with status code `422` SHALL be returned.
 |===
 
@@ -321,7 +269,7 @@ in Washington, D.C.
         ]
       }
     },
-    "preference": "fastest"
+    "mode": "car-fastest"
   }
 }
 ----
@@ -676,15 +624,15 @@ overview line string geometry passes through the position or a position
 on the route network that is close to the waypoint.
 |===
 
-[[rc_mode]]
+[[rc_modes]]
 === Requirements Class "Modes"
 
-Mode is a restriction based on the type of transport desired when computing the route. For instance, "On Road", "Off Road". The API declares the modes that it supports.
+Modes is a restriction based on the route operation or type of transport desired when computing the route. For instance, "drone", "truck-shortest" or "public-fastest". The API declares the modes that it supports.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/mode
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/modes
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -727,200 +675,439 @@ in Washington, D.C.
         ]
       }
     },
-    "preference": "fastest",
-    "mode": "cycling"
+    "mode": "cycling-fastest"
   }
 }
 ----
 =================
-
-[[req_mode_conformance-values]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/mode/conformance-values*
-^|A |The content of the conformance declaration response at path `/conformance` SHALL list all values that the `mode` parameter supports, based upon the following OpenAPI 3.0 schema:
-
-[source,YAML]
-----
-type: object
-required:
-  - properties
-properties:
-  properties:
-    type: object
-    required:
-      - http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/mode
-    properties:
-      http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/mode:
-        type: object
-        required:
-          - modes
-        properties:
-          modes:
-            type: array
-            items:
-              minItems: 1
-              type: string
-----
-|===
-
-See <<example_cc>> for an example.
-
-NOTE: The plan is to register well-known modes with the OGC Naming Authority that are recommended for use, where applicable.
 
 The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. If no mode is specified in the route definition then the first value listed in the array is considered to be the default mode.
 
-[[rc_height]]
-=== Requirements Class "Height restrictions"
+[[modes]]
+==== Modes
 
-This requirement enables the API request to consider a specified vehicle height, in meters, against known height restrictions when computing the route.
+[[fetch_modes]]
+===== Fetch the list of modes
+
+This operation fetches the list of available modes offered by the server. The list of modes should have at least one element.
+
+[[req_core_compute-list-modes]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/list-modes*
+^|A |The server SHALL support the HTTP GET operation at the path `/modes`.
+^|B |The content of that response SHALL be based upon the following OpenAPI 3.0 schema::
+
+[source,YAML]
+----
+type: array
+items:
+  type: object
+  properties:
+    name:
+      type: string
+      minLength: 1
+      description: Name of the mode the server will expect in the request for a route
+    description:
+      type: string
+      minLength: 1
+      description: Human-readable description of the mode, used for informational purposes
+    supported_regions:
+      type: array
+      description: Areas where requests using this mode are supported
+      items:
+        type: object
+        properties:
+          bbox:
+            type: array
+            items:
+              type: number
+            minItems: 4
+            maxItems: 4
+            description: A GeoJSON bounding box represented as [west, south, east, north] in degrees
+          description:
+            type: string
+            description: Optional human-readable description of the area
+        required:
+          - bbox
+    domain:
+      type: array
+      items:
+        type: string
+        enum: ["air", "surface", "subsurface", "ground", "space"]
+      minItems: 1
+      description: The domain(s) in which this mode operates
+  required: ["name", "description", "domain"]
+  additionalProperties: false
+----
+|===
+
+The following are some examples of the list of modes of a routing API that implements this Standard.
+
+[[example_modes_multiple_regions]]
+.Modes multiple regions
+=================
+[source,JSON]
+----
+[
+  {
+    "name": "drone",
+    "description": "Routing for unmanned aerial vehicles",
+    "supported_regions": [
+      {
+        "bbox": [-123.5, 37.7, -122.3, 38.1],
+        "description": "San Francisco Bay Area"
+      },
+      {
+        "bbox": [12.4, 41.8, 12.6, 42.0]
+      }
+    ],
+    "domain": ["air"]
+  }
+]
+----
+=================
+
+[[example_modes_mixed_domains]]
+.Modes mixed domains
+=================
+[source,JSON]
+----
+[
+  {
+    "name": "drone",
+    "description": "Routing for unmanned aerial vehicles",
+    "supported_regions": [
+      {
+        "bbox": [-123.5, 37.7, -122.3, 38.1],
+        "description": "San Francisco Bay Area"
+      },
+      {
+        "bbox": [12.4, 41.8, 12.6, 42.0]
+      }
+    ],
+    "domain": ["air"]
+  },
+  {
+    "name": "bike",
+    "description": "Cycling routes in urban and rural areas",
+    "supported_regions": [
+      {
+        "bbox": [2.3, 48.8, 2.5, 49.0],
+        "description": "Paris Metropolitan Area"
+      }
+    ],
+    "domain": ["ground"]
+  },
+  {
+    "name": "metro",
+    "description": "Subway systems within major cities",
+    "domain": ["subsurface"]
+  }
+]
+----
+=================
+
+[[rc_actions]]
+=== Requirements Class "Actions"
+
+This requirement enables the API request to trigger a new action based on a sensor input.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/height
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/actions
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_height_input]]
+[[actions]]
+==== Actions
+
+[[fetch_actions]]
+===== Fetch the list of actions
+
+This operation fetches the list of available actions offered by the server.
+
+[[req_core_compute-list-actions]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/height/input*
-^|A |The server SHALL support a member at the JSON Pointer `/inputs/height` in the route definition in a HTTP POST request to the path `/routes` based on the following schema:
+^|*Requirement {counter:req-id}* |*/req/core/list-actions*
+^|A |The server SHALL support the HTTP GET operation at the path `/actions`.
+^|B |The content of that response SHALL be based upon the following OpenAPI 3.0 schema::
 
 [source,YAML]
 ----
-type: number
-minimum: 0
+type: array
+items:
+  type: string
 ----
+^|C |The server SHALL support the HTTP GET operation at the path `/actions/{actionid}` for each available action.
+^|D |The content of that response SHALL be an object describing the schema of the action. The definition of the schema is outside the scope of the API.
 |===
 
-[[example_route_definition_height]]
-.Route definition with a height restriction
-=================
-The following is an example request for the fastest route with a vehicle with a height of four meters from Reagan National Airport to the U.S. Capitol building
-in Washington, D.C.
+The following are some examples of the list of actions of a routing API that implements this Standard.
 
+[[example_actions]]
+.List of actions
+
+Response of HTTP GET operation at the path `/actions`.
+
+=================
+[source,JSON]
+----
+[
+  "autoland",
+  "loiter"
+]
+----
+=================
+
+Response of HTTP GET operation at the path `/actions/autoland`.
+
+=================
 [source,JSON]
 ----
 {
-  "inputs": {
-    "name": "Reagan Airport to Capitol",
-    "waypoints": {
-      "value": {
-        "type": "MultiPoint",
-        "coordinates": [
-          [
-            -77.037722,
-            38.851444
-          ],
-          [
-            -77.009003,
-            38.889931
-          ]
-        ]
-      }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/autoland.schema.json",
+  "title": "AutoLand",
+  "allOf": [
+    {
+      "$ref": "https://example.com/schemas/action.schema.json"
     },
-    "preference": "fastest",
-    "height": 4.0
+    {
+      "type": "object",
+      "required": ["name", "point"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "autoland"
+        },
+        "point": {
+          "type": "object",
+          "required": ["type", "coordinates"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "Point"
+            },
+            "coordinates": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "Longitude and latitude as [lon, lat]"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}
+----
+=================
+
+Encoding of a valid autoland action
+
+=================
+[source,JSON]
+----
+{
+  "id": "8a56e7bc-218f-4c48-8e71-02c00a5a67de",
+  "description": "Initiate automated landing at main base",
+  "name": "autoland",
+  "point": {
+    "type": "Point",
+    "coordinates": [34.0522, -118.2437]
   }
 }
 ----
 =================
 
-[[req_height_success]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/height/success*
-^|A |The computed route SHALL be passable by vehicles with a height up to
-the value of "height" in meters.
-|===
+Response of HTTP GET operation at the path `/actions/loiter`.
 
-[[rc_weight]]
-=== Requirements Class "Weight restrictions"
-
-This requirement enables the API request to specify a vehicle weight in metric tons (tonnes) against known weight restrictions when computing the route.
-
-[cols="1,4",width="90%"]
-|===
-2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/weight
-|Target type |Web API
-|Dependency |<<rc_core>>
-|===
-
-[[req_weight_input]]
-[width="90%",cols="2,6a"]
-|===
-^|*Requirement {counter:req-id}* |*/req/weight/input*
-^|A |The server SHALL support a member at the JSON Pointer `/inputs/weight` in the route definition in a HTTP POST request to the path `/routes` based on the following schema:
-
-[source,YAML]
-----
-type: number
-minimum: 0
-----
-|===
-
-[[example_route_definition_weight]]
-.Route definition with a weight restriction
 =================
-The following is an example request for the fastest route with a vehicle with a weight of 8.5 metric tons from Reagan National Airport to the U.S. Capitol building
-in Washington, D.C.
-
 [source,JSON]
 ----
 {
-  "inputs": {
-    "name": "Reagan Airport to Capitol",
-    "waypoints": {
-      "value": {
-        "type": "MultiPoint",
-        "coordinates": [
-          [
-            -77.037722,
-            38.851444
-          ],
-          [
-            -77.009003,
-            38.889931
-          ]
-        ]
-      }
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/loiter.schema.json",
+  "title": "Loiter",
+  "allOf": [
+    {
+      "$ref": "https://example.com/schemas/action.schema.json"
     },
-    "preference": "fastest",
-    "weight": 8.5
-  }
+    {
+      "type": "object",
+      "required": ["name", "radius", "altitude", "duration", "pattern"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "loiter"
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Radius in meters of the loiter circle"
+        },
+        "altitude": {
+          "type": "number",
+          "description": "Altitude in meters above sea level"
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Duration in seconds to loiter"
+        },
+        "pattern": {
+          "type": "string",
+          "enum": ["circular", "racetrack", "figure-eight", "hover", "spiral"],
+          "description": "Flight pattern used for loitering"
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
 }
 ----
 =================
 
-[[req_weight_success]]
-[width="90%",cols="2,6a"]
+Encoding of a valid loiter action
+
+=================
+[source,JSON]
+----
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "description": "Loiter over the west ridge for 10 minutes",
+  "name": "loiter",
+  "radius": 250,
+  "altitude": 100,
+  "duration": 600,
+  "pattern": "circular"
+}
+----
+=================
+
+[[rc_contingencies]]
+=== Requirements Class "Contingencies"
+
+This requirement enables the API request to define contingencies and fallback plans during a route.
+
+[cols="1,4",width="90%"]
 |===
-^|*Requirement {counter:req-id}* |*/req/weight/success*
-^|A |The computed route SHALL be passable by vehicles with a weight up to the value of "weight" in metric tons (tonnes).
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/contingencies
+|Target type |Web API
+|Dependency |<<rc_core>>
 |===
 
-[[rc_obstacles]]
-=== Requirements Class "Obstacles"
+[[actions]]
+==== Contingencies
+
+[[fetch_actions]]
+===== Fetch the list of contingencies
+
+This operation fetches the list of available contingencies offered by the server.
+
+[[req_core_compute-list-contingencies]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/list-contingencies*
+^|A |The server SHALL support the HTTP GET operation at the path `/contingencies`.
+^|B |The content of that response SHALL be based upon the following OpenAPI 3.0 schema::
+
+[source,YAML]
+----
+type: array
+items:
+  type: string
+----
+^|C |The server SHALL support the HTTP GET operation at the path `/contingencies/{contingencies}` for each available contingency.
+^|D |The content of that response SHALL be an object describing the schema of the contingency. The definition of the schema is outside the scope of the API.
+|===
+
+The following are some examples of the list of contingencies of a routing API that implements this Standard.
+
+[[example_contingencies]]
+.List of contingencies
+
+Response of HTTP GET operation at the path `/contingecies`.
+
+=================
+[source,JSON]
+----
+[
+  "reroute",
+  "abort_mission",
+  "return_to_base"
+]
+----
+=================
+
+Response of HTTP GET operation at the path `/actions/reroute`.
+
+=================
+[source,JSON]
+----
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/reroute.schema.json",
+  "title": "Reroute",
+  "type": "object",
+  "required": ["name", "trigger_conditions", "alternative_route"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "const": "reroute"
+    },
+    "trigger_conditions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Conditions that trigger the contingency, e.g., traffic_jam, communication_loss"
+      }
+    },
+    "alternative_route": {
+      "type": "object",
+      "description": "Definition of an alternative route to follow",
+      "properties": {
+        "routeId": {
+          "type": "string",
+          "description": "Identifier of the alternative route"
+        }
+      },
+      "required": ["routeId"]
+    }
+  },
+  "additionalProperties": false
+}
+----
+=================
+
+[[rc_spatial_constraints]]
+=== Requirements Class "Spatial Constraints"
 
 This requirement enables the API request to specify one or more polygons describing areas the route should avoid.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/obstacles
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/spatial_constraints
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_obstacles_input]]
+[[req_spatial_constraints_input]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/obstacles/input*
-^|A |The server SHALL support a member at the JSON Pointer `/inputs/obstacles` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (a GeoJSON MultiPolygon, wrapped into a "value" member):
+^|*Requirement {counter:req-id}* |*/req/spatial_constraints/input*
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/spatial_constraints` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (a GeoJSON MultiPolygon, wrapped into a "value" member):
 
 [source,YAML]
 ----
@@ -980,7 +1167,7 @@ in Washington, D.C, that avoids an rectangular area that includes parts of Georg
       }
     },
     "preference": "fastest",
-    "obstacles": {
+    "spatial_constraints": {
       "value": {
         "type": "MultiPolygon",
         "coordinates": [
@@ -1016,11 +1203,11 @@ in Washington, D.C, that avoids an rectangular area that includes parts of Georg
 ----
 =================
 
-[[req_obstacles_success]]
+[[req_spatial_constraints_success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/obstacles/success*
-^|A |The computed route SHALL not pass through the polygons identified as obstacles.
+^|*Requirement {counter:req-id}* |*/req/spatial_constraints/success*
+^|A |The computed route SHALL not pass through the polygons identified as spatial constraints.
 |===
 
 [[rc_time]]

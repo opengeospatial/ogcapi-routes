@@ -33,11 +33,32 @@ An operator uses the routing functionality provided by the client to create a ro
 .UML class diagram of the Route model
 image::UML/rem-route.png[alt=UML diagram,width=100%]
 
+==== Action
+* a `Data type`
+* attribute `description`
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `id`
+** multiplicity: 1
+** value: `CharacterString`
+
 ==== Destination
 * a subtype of `Waypoint`
 * a `Feature`
 * constraints:
 ** `type = 'end'`
+
+==== Mode
+* a `Data type`
+* attribute `description`
+** multiplicity: 0..1
+** value: `CharacterString`
+* attribute `id`
+** multiplicity: 1
+** value: `CharacterString`
+* attribute `title`
+** multiplicity: 1
+** value: `CharacterString`
 
 ==== Route
 * an `Object` 
@@ -88,19 +109,15 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 ** definition: Additional waypoints along the route between start and end to consider when computing the route.
 ** multiplicity: 0..*
 ** value: `Waypoint`
-* attribute `maxHeight`
-** definition: A height restriction for vehicles in meters to consider when computing the route.
+* attribute `intermediateUnordered`
+** definition: If `intermediate` is provided, the order of the waypoints is by default signifiant and a route must pass through the waypoints in the order provided. If set to `true`, a route may pass through the intermediate waypoints in any order.
+** multiplicity: 1
+** value: `Boolean`
+** default: `false`
+* attribute `mode`
+** definition: A configurable setting that determines the operational profile and planning parameters for a vehicle’s plan.
 ** multiplicity: 0..1
-** value: `Measure`
-* attribute `maxWeight`
-** definition: A weight restriction for vehicles in metric tons (tonnes) to consider when computing the route.
-** multiplicity: 0..1
-** value: `Measure`
-* attribute `obstacles`
-** definition: Areas the route should avoid.
-** note: Currently this uses a simple approach. In general, the list of obstacles could also be a feature collection where every obstacle is a feature. Such a representation would be required, if the routing engine is able to handle obstacles with different characteristics/properties (for example, an obstacle is only valid for a certain time interval).
-** multiplicity: 0..1
-** value: `GM_MultiSurface`
+** value: `Mode`
 * attribute `preference`
 ** definition: The optimization goal for the route calculation (fastest, shortest, etc.). 
 ** multiplicity: 1
@@ -112,10 +129,6 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 * attribute `start`
 ** multiplicity: 1
 ** value: `Waypoint`
-* attribute `temporal`
-** definition: The time of departure or arrival. The default value is an immediate departure.
-** multiplicity: 0..1
-** value: `TemporalConstraint`
 
 ==== RouteOverview
 * a subtype of `RouteComponent`
@@ -132,18 +145,6 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 ** definition: Length of the route in meters.
 ** multiplicity: 1
 ** value: `Measure`
-* attribute `maxHeight`
-** definition: A known height restriction on the route in meters.
-** multiplicity: 0..1
-** value: `Measure`
-* attribute `maxWeight`
-** definition: A known weight restriction on the route in metric tons (tonnes).
-** multiplicity: 0..1
-** value: `Measure`
-* attribute `obstacles`
-** definition: Describes how obstacles were taken into account in the route calculation.
-** multiplicity: 0..1
-** value: `CharacterString`
 * attribute `path`
 ** definition: The path from the start point to the end point of the route.
 ** multiplicity: 1
@@ -158,14 +159,6 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 ==== RouteSegment
 * a subtype of `RouteComponent`
 * a `Feature`
-* attribute `duration`
-** definition: Estimated amount of time required to travel the segment in seconds.
-** multiplicity: 0..1
-** value: `Measure`
-* attribute `instructions`
-** definition: An instruction for the maneuver at the end of the segment.
-** multiplicity: 0..1
-** value: `CharacterString`
 * attribute `length`
 ** definition: Length of the segment in meters.
 ** multiplicity: 1
@@ -174,22 +167,6 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 ** definition: The last position of the segment and be on the path geometry of the route overview.
 ** multiplicity: 1
 ** value: `GM_Point`
-* attribute `maxHeight`
-** definition: A known height restriction in meters.
-** multiplicity: 0..1
-** value: `Measure`
-* attribute `maxWeight`
-** definition: A known weight restriction in metric tons (tonnes).
-** multiplicity: 0..1
-** value: `Measure`
-* attribute `roadName`
-** definition: The road/street name of the segment.
-** multiplicity: 0..1
-** value: `CharacterString`
-* attribute `speedLimit`
-** definition: A known speed limit on the segment.
-** multiplicity: 0..1
-** value: `Measure`
 * constraints:
 ** `type = 'segment'`
 
@@ -199,23 +176,19 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 * constraints:
 ** `type = 'start'`
 
-==== TemporalConstraint
-* a `Data type`
-* attribute `timestamp`
-** multiplicity: 1
-** value: `DateTime`
-* attribute `type`
-** multiplicity: 1
-** default: `departure`
-** values:
-*** `departure`
-*** `arrival `
-
 ==== Waypoint
 * a subtype of `RouteComponent`
 * a supertype of `Destination`, `Start`
 * a `Feature`
 * definition: A waypoint of the route.
+* attribute `action`
+** definition: A predefined operation, task, or activity assigned to a specific waypoint along a route, to be performed when reaching or interacting with that location.
+** multiplicity: 0..*
+** value: `Action`
+* attribute `id`
+** definition: The id of the waypoint.
+** multiplicity: 1
+** value: `CharacterString`
 * attribute `location`
 ** definition: The coordinates of the waypoint.
 ** multiplicity: 1
@@ -224,9 +197,26 @@ image::UML/rem-route.png[alt=UML diagram,width=100%]
 ** definition: A name for the waypoint.
 ** multiplicity: 0..1
 ** value: `CharacterString`
-* attribute `timestamp`
-** multiplicity: 0..1
-** value: `DateTime`
+
+=== Relationship with other OGC standards
+
+==== OGC API Routes
+
+The Route Exchange Model is used to represent routes by https://docs.ogc.org/DRAFTS/21-000.html[OGC API - Routes - Part 1: Core].
+
+==== OGC Moving Features JSON
+
+The https://docs.ogc.org/is/19-045r3/19-045r3.html[OGC Moving Features Encoding Extension - JSON (MF-JSON)] is a JSON encoding for moving features. There are similarities between the two standards and their scopes, but essentially they encode different concepts. 
+
+A route in the Route Exchange Model describes a planned trip of a vehicle or person. The route is split into segments where the segment boundaries are at decision points along the route.
+
+A trajectory in MF-JSON describes the path of some moving feature over time where the position and potentially other aspects (e.g., orientation) are recorded at various timestamps. The trajectory describes the location of the real-world entity over time.
+
+As such, there are similarities between both encodings, but they are different, because they serve different purposes.
+
+==== OGC API EDR
+
+OGC API EDR also uses the concept of a trajectory - for the purposes of querying data along the trajectory. Like a trajectory from Moving Features could be used to query an OGC Web API implementing the EDR trajectory query, the overview geometry of a route could be used to fetch information from the OGC Web API.
 
 === Alignment with other standards
 

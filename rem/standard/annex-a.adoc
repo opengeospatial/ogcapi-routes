@@ -86,7 +86,7 @@ Then:
 [cols=">20h,<80a",width="100%"]
 |===
 |Test id: | /conf/rem/validate-rem
-|Requirements: | <<req_rem_features,/req/rem/features>> A, <<req_rem_start,/req/rem/start>> A, <<req_rem_end,/req/rem/end>> A, <<req_rem_overview,/req/rem/overview>> A/C/E/H/K/N/P, <<req_rem_segments,/req/rem/segments>> A/C/D/F/G/H/I/J/K
+|Requirements: | <<req_rem_features,/req/rem/features>> A, <<req_rem_start,/req/rem/start>> A, <<req_rem_end,/req/rem/end>> A, <<req_rem_overview,/req/rem/overview>> A/C/E/H/K/N/P, <<req_rem_segments,/req/rem/segments>> A/C/D/F/G/H/I/J/K, <<req_rem_waypoints,/req/rem/waypoints>> A
 |Test purpose: | Validate the route against the REM schema
 |Test method: | Use a JSON Schema validator and verify that the REM instance is valid against the <<rem-json-schema>>.
 |Test method: | 
@@ -113,7 +113,6 @@ NOTE: If the JSON Schema validator used in the test does not support JSON Schema
 |Test purpose: | Verify the existence of the route components
 |Test method: | 
 Given:
-
 - test /conf/rem/validate-geojson has been passed
 - test /conf/rem/validate-rem has been passed
 
@@ -196,9 +195,31 @@ Then:
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]
 |===
+|Test id: | /conf/rem/waypoints-position
+|Requirements: | <<req_rem_waypoints,/req/rem/waypoints>> B, C
+|Test purpose: | Verify the position of waypoints
+|Test method: | 
+Given:
+
+- test /conf/rem/validate-features has been passed
+
+When:
+
+- the position of each waypoint is extracted (JSON Pointer `/features/n/geometry/coordinates` of a feature where `/properties/featureType` is "waypoint" and `n` is the index of the feature in the features array)
+- the position and feature type of each previous feature is extracted (relative JSON Pointers `/features/n-1/geometry/coordinates` and `/features/n-1/properties/featureType`) 
+
+Then:
+
+- assert that both positions are identical;
+- assert that the feature type of each previous feature is "segment".
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
 |Test id: | /conf/rem/start-end-timestamp
-|Requirements: | <<req_rem_start,/req/rem/start>> C, <<req_rem_end,/req/rem/end>> C
-|Test purpose: | Verify the start and end timestamps
+|Requirements: | <<req_rem_start,/req/rem/start>> C, <<req_rem_end,/req/rem/end>> C, <<req_rem_waypoints,/req/rem/waypoints>> D
+|Test purpose: | Verify the waypoint timestamps
 |Test method: | 
 Given:
 
@@ -208,12 +229,17 @@ When:
 
 - the departure timestamp is extracted (relative JSON Pointer `/properties/timestamp` of the feature where `/properties/featureType` is "start")
 - the arrival timestamp is extracted (relative JSON Pointer `/properties/timestamp` of the feature where `/properties/featureType` is "end")
+- the intermediate timestamps are extracted (relative JSON Pointer `/properties/timestamp` of the feature where `/properties/featureType` is "waypoint")
 
 Then:
 
 - assert that no departure timestamp is present or that it matches the ABNF rule for `date-time` where `time-offset` is always "Z";
 - assert that no arrival timestamp is present or that it matches the ABNF rule for `date-time` where `time-offset` is always "Z";
+- assert that each intermediate timestamp matches the ABNF rule for `date-time` where `time-offset` is always "Z";
 - assert that the departure timestamp, if provided, is before the arrival timestamp, if provided.
+- assert that any intermediate timestamp, if provided, is after the departure timestamp, if provided.
+- assert that any intermediate timestamp, if provided, is before the arrival timestamp, if provided.
+- assert that any intermediate timestamps are in ascending sort order in the route.
 |===
 
 ==== Conformance Test {counter:test-id}
