@@ -29,6 +29,7 @@ The API building blocks support the resources and operations listed in <<tldr>>.
 |DELETE |n/a |n/a |<<delete_route>>
 |Route definition |`/routes/{routeId} /definition` |GET |n/a |`application/json` |<<get_route_definition>>
 |Modes |`/modes` |GET |n/a |`application/json` |<<get_list_of_modes>>
+|Mode |`/modes/{modeId}` |GET |n/a |`application/json` |<<get_mode_schema>>
 |Actions |`/actions` |GET |n/a |`application/json` |<<get_list_of_actions>>
 |Action |`/actions/{actionId}` |GET |n/a |`application/json` |<<get_action_schema>>
 
@@ -627,7 +628,7 @@ on the route network that is close to the waypoint.
 [[rc_modes]]
 === Requirements Class "Modes"
 
-Modes is a restriction based on the route operation or type of transport desired when computing the route. For instance, "drone", "truck-shortest" or "public-fastest". The API declares the modes that it supports.
+Modes is a restriction based on the route operation or type of transport desired when computing the route. For instance, "drone", "truck-shortest" or "public-fastest". The API declares the modes that it supports. Each mode can have its own specific schema, allowing clients to define parameters for the mode when creating a new route.
 
 [cols="1,4",width="90%"]
 |===
@@ -686,12 +687,12 @@ The mode is a client hint and it is the decision of the server how to consider t
 [[modes]]
 ==== Modes
 
-[[fetch_modes]]
+[[get_list_of_modes]]
 ===== Fetch the list of modes
 
 This operation fetches the list of available modes offered by the server. The list of modes should have at least one element.
 
-[[req_core_compute-list-modes]]
+[[req_mode_list-modes]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/list-modes*
@@ -734,12 +735,30 @@ items:
       type: array
       items:
         type: string
-        enum: ["air", "surface", "subsurface", "ground", "space"]
+        enum: ["air", "maritime", "ground"]
       minItems: 1
       description: The domain(s) in which this mode operates
   required: ["name", "description", "domain"]
   additionalProperties: false
 ----
+|===
+
+[[rec_mode_domain-names]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/core/domain-names*
+^|A |The domain names SHOULD be selected from the following list:
+
+* **Ground Domain**
+** **Definition**: The area of the Earth's surface, including its terrain, cities, and infrastructure.
+** **Scope**: The domain extends from the surface of the Earth to the high-water mark.
+** **Overlaps**: The Ground Domain overlaps with the Maritime Domain in the landward segment of the littorals (coastal areas).
+* **Maritime Domain**
+** **Definition**: The oceans, seas, bays, rivers, lakes, estuaries and coastal areas of the Earth.
+** **Scope**: The Domain includes the surface, subsurface (underwater).
+* **Air Domain**
+** **Definition**: The atmosphere, beginning at the Earth's surface and extending upwards.
+** **Scope**: The Domain extends to the altitude where atmospheric effects become negligible. This is often considered to be the Kármán line (100 km) or the edge of "near space" (around 70,000 feet, or roughly 20 km).
 |===
 
 The following are some examples of the list of modes of a routing API that implements this Standard.
@@ -802,16 +821,205 @@ The following are some examples of the list of modes of a routing API that imple
   {
     "name": "metro",
     "description": "Subway systems within major cities",
-    "domain": ["subsurface"]
+    "domain": ["ground"]
   }
 ]
+----
+=================
+
+[[mode]]
+==== Mode
+
+[[get_mode_schema]]
+===== Fetch the schema of a mode
+
+This operation returns the schema of the mode with id `modeId`.
+
+[[req_mode-get-mode-schema]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/get-mode-schema*
+^|A |The server SHALL support the HTTP GET operation at the path `/mode/{modeId}`
+for each mode referenced from the Modes resource at `/modes`.
+|===
+
+[[req_mode-get-mode-schema-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/get-mode-schema-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
+^|B |The content of that response SHALL be an OpenAPI 3.0 compatible schema.
+|===
+
+The following is an example of modes supported in an implementation, together with the specific schemas of each mode.
+
+[[example_modes_list]]
+.Modes list
+=================
+[source,JSON]
+----
+[
+  {
+    "name": "inspection",
+    "description": "Generates a plan for a pipeline inspection",
+    "title": "Pipeline Inspection"
+  },
+    "name": "survey",
+    "description": "Generates a plan for a bathymetric survey using multi-beam sonar",
+    "title": "Survey Plan"
+  }
+]
+----
+=================
+
+[[example_inspection_mode]]
+.Inspection mode
+=================
+[source,JSON]
+----
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "angle": {
+      "description": "sensor angle",
+      "maximum": 120,
+      "minimum": 100,
+      "type": "integer"
+    },
+    "beams": {
+      "default": 400,
+      "description": "Number of beams",
+      "maximum": 2048,
+      "minimum": 400,
+      "type": "integer"
+    },
+    "feature": {
+      "anyOf": [
+        {
+          "format": "uri",
+          "type": "string"
+        },
+        {
+          "properties": {
+            "geometry": {
+              "properties": {
+                "coordinates": {
+                  "items": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "type": "array"
+                  },
+                  "type": "array"
+                },
+                "type": {
+                  "enum": [
+                    "LineString"
+                  ],
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "coordinates"
+              ],
+              "type": "object"
+            },
+            "properties": {
+              "type": "object"
+            },
+            "type": {
+              "enum": [
+                "Feature"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "geometry"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "name": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "resolution": {
+      "description": "Space between beams",
+      "maximum": 100,
+      "minimum": 0.1,
+      "type": "number"
+    }
+  },
+  "required": [
+    "name",
+    "feature"
+  ],
+  "type": "object"
+}
+----
+=================
+
+[[example_survey_mode]]
+.Survey mode
+=================
+[source,JSON]
+----
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "angle": {
+      "description": "sensor angle",
+      "maximum": 120,
+      "minimum": 100,
+      "type": "integer"
+    },
+    "beams": {
+      "default": 400,
+      "description": "Number of beams",
+      "maximum": 2048,
+      "minimum": 400,
+      "type": "integer"
+    },
+    "overlap": {
+      "default": 10,
+      "description": "passes overlap",
+      "maximum": 30,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "range": {
+      "default": 400,
+      "description": "Desired Sensor Range",
+      "maximum": 500,
+      "minimum": 100,
+      "type": "integer"
+    },
+    "resolution": {
+      "description": "Space between beams",
+      "maximum": 100,
+      "minimum": 0.1,
+      "type": "number"
+    }
+  },
+  "required": [
+    "resolution",
+    "angle"
+  ],
+  "type": "object"
+}
 ----
 =================
 
 [[rc_actions]]
 === Requirements Class "Actions"
 
-This requirement enables the API request to trigger a new action based on a sensor input.
+This requirement enables the API request to trigger a new action based on a sensor input. Each action can have its own schema, allowing the fine tuning of action behaviour through parameter values.
 
 [cols="1,4",width="90%"]
 |===
@@ -824,12 +1032,12 @@ This requirement enables the API request to trigger a new action based on a sens
 [[actions]]
 ==== Actions
 
-[[fetch_actions]]
+[[get_list_of_actions]]
 ===== Fetch the list of actions
 
 This operation fetches the list of available actions offered by the server.
 
-[[req_core_compute-list-actions]]
+[[req_actions-list-actions]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/list-actions*
@@ -846,6 +1054,48 @@ items:
 ^|D |The content of that response SHALL be an object describing the schema of the action. The definition of the schema is outside the scope of the API.
 |===
 
+[[rec_action_names]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/core/action-names*
+^|A |The action names SHOULD be selected from the <<action_names_table>>.
+|===
+
+[[action_names_table]]
+[#tldr,reftext='{table-caption} {counter:table-num}']
+.Recommended of action names, definitions and applicability
+[cols="18,18,60,18,18",options="header"]
+!===
+|loiter |Loiter |Maintain position or circle waypoint for surveillance/waiting. |Seconds |UAV/UUV/USV/UGV
+|hover |Hover |Stationary hover above/below waypoint. |Seconds |UAV/UUV/USV
+|land |Land |Touch down and stop at waypoint. |Seconds |UAV/UGV/USV
+|takeoff |Takeoff |Ascend/depart from waypoint surface. |Seconds |UAV/UGV/USV
+|dock |Dock |Connect to charging/refueling station. |Seconds |UUV/USV/UGV
+|undock |Undock |Disconnect from station. |Seconds |UUV/USV/UGV
+|inspect |Inspect |Sensor scan (camera/LiDAR/sonar) of waypoint area. |Seconds |All
+|photo |Photo |Capture image/multispectral photo. |Seconds |UAV/UUV/USV
+|video |Video |Record video stream. |Seconds |UAV/UUV/USV
+|sample |Sample |Collect physical/environmental sample. |Seconds |UAV/UUV/USV/UGV
+|drop |Drop |Release payload/object. |Seconds |UAV/USV/UGV
+|pick |Pickup |Retrieve payload/object. |Seconds |UAV/USV/UGV
+|measure |Measure |Take precise measurement (alt/depth/temp/etc.). |Seconds |All
+|relay |Relay |Act as comms/data relay node. |Seconds |All
+|sync |Sync |Coordinate timing with other assets. |Seconds |All
+|wait |Wait |Pause until condition/time/external trigger. |Seconds |All
+|orbit |Orbit |Fly predefined pattern around waypoint. |Seconds |UAV/UUV/USV
+|spiral |Spiral |Spiral ascent/descent through waypoint. |Seconds |UAV/UUV
+|figure8 |Figure-8 |Fly figure-8 pattern through waypoint. |Seconds |UAV/UUV/USV
+|scan |Scan |Sweeping sensor coverage (radar/sonar/LiDAR). |Seconds |All
+|map |Map |Generate local 3D map/cloud. |Seconds |UAV/UUV/USV/UGV
+|charge |Charge |Perform battery recharge cycle. |Seconds |All
+|refuel |Refuel |Perform fuel transfer. |Seconds |USV/UGV
+|service |Service |Run self-diagnostic/maintenance routine. |Seconds |All
+|report |Report |Transmit status/data summary. |Seconds |All
+|abort |Abort |Cancel mission, initiate safe return. |N/A |All
+|divert |Divert |Switch to alternate route/mission. |N/A |All
+|hold |Hold |Pause all motion, maintain attitude. | Seconds |All 
+!===
+
 The following are some examples of the list of actions of a routing API that implements this Standard.
 
 [[example_actions]]
@@ -857,21 +1107,50 @@ Response of HTTP GET operation at the path `/actions`.
 [source,JSON]
 ----
 [
-  "autoland",
+  "land",
   "loiter"
 ]
 ----
 =================
 
-Response of HTTP GET operation at the path `/actions/autoland`.
+[[action]]
+==== Action
+
+[[get_action_schema]]
+===== Fetch the schema of an action
+
+This operation returns the schema of the action with id `actionId`.
+
+[[req_action-get-action-schema]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/get-action-schema*
+^|A |The server SHALL support the HTTP GET operation at the path `/action/{actionId}`
+for each mode referenced from the Actions resource at `/actions`.
+|===
+
+[[req_action-get-action-schema-success]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/core/get-action-schema-success*
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
+^|B |The content of that response SHALL be an OpenAPI 3.0 compatible schema.
+|===
+
+The following is an example of the specific schemas of actions listed in <<example_actions>>.
+
+[[example_action_land]]
+.Schema of action land
+
+Response of HTTP GET operation at the path `/actions/land`.
 
 =================
 [source,JSON]
 ----
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/schemas/autoland.schema.json",
-  "title": "AutoLand",
+  "$id": "https://example.com/schemas/land.schema.json",
+  "title": "Land",
   "allOf": [
     {
       "$ref": "https://example.com/schemas/action.schema.json"
@@ -882,7 +1161,7 @@ Response of HTTP GET operation at the path `/actions/autoland`.
       "properties": {
         "name": {
           "type": "string",
-          "const": "autoland"
+          "const": "land"
         },
         "point": {
           "type": "object",
@@ -912,7 +1191,10 @@ Response of HTTP GET operation at the path `/actions/autoland`.
 ----
 =================
 
-Encoding of a valid autoland action
+[[example_action_land_encoding]]
+.Encoding of action land
+
+Encoding of a valid land action
 
 =================
 [source,JSON]
@@ -920,7 +1202,7 @@ Encoding of a valid autoland action
 {
   "id": "8a56e7bc-218f-4c48-8e71-02c00a5a67de",
   "description": "Initiate automated landing at main base",
-  "name": "autoland",
+  "name": "land",
   "point": {
     "type": "Point",
     "coordinates": [34.0522, -118.2437]
@@ -928,6 +1210,9 @@ Encoding of a valid autoland action
 }
 ----
 =================
+
+[[example_action_loiter]]
+.Schema of action loiter
 
 Response of HTTP GET operation at the path `/actions/loiter`.
 
@@ -977,6 +1262,9 @@ Response of HTTP GET operation at the path `/actions/loiter`.
 ----
 =================
 
+[[example_action_loiter_encoding]]
+.Encoding of action loiter
+
 Encoding of a valid loiter action
 
 =================
@@ -1007,10 +1295,10 @@ This requirement enables the API request to define contingencies and fallback pl
 |Dependency |<<rc_core>>
 |===
 
-[[actions]]
+[[contingencies]]
 ==== Contingencies
 
-[[fetch_actions]]
+[[fetch_contingencies]]
 ===== Fetch the list of contingencies
 
 This operation fetches the list of available contingencies offered by the server.
@@ -1166,7 +1454,6 @@ in Washington, D.C, that avoids an rectangular area that includes parts of Georg
         ]
       }
     },
-    "preference": "fastest",
     "spatial_constraints": {
       "value": {
         "type": "MultiPolygon",
@@ -1279,7 +1566,6 @@ in Washington, D.C, that arrives at 6pm local time on February 24th, 2022.
         ]
       }
     },
-    "preference": "fastest",
     "when": {
       "value": {
         "timestamp": "2022-02-24T13:00:00Z",
