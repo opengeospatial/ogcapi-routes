@@ -81,7 +81,7 @@
         },
         "properties": {
           "type": "object",
-          "required": ["featureType", "length_m"],
+          "required": ["featureType", "length"],
           "properties": {
             "featureType": {
               "type": "string",
@@ -90,20 +90,11 @@
             "name": {
               "type": "string"
             },
-            "length_m": {
+            "length": {
               "type": "number"
             },
             "duration_s": {
               "type": "number"
-            },
-            "maxHeight_m": {
-              "type": "number"
-            },
-            "maxWeight_t": {
-              "type": "number"
-            },
-            "obstacles": {
-              "type": "string"
             },
             "processingTime": {
               "type": "string",
@@ -206,33 +197,17 @@
         },
         "properties": {
           "type": "object",
-          "required": ["featureType", "length_m"],
+          "required": ["featureType", "length"],
           "properties": {
             "featureType": {
               "type": "string",
               "enum": ["segment"]
             },
-            "length_m": {
+            "length": {
               "type": "number"
             },
             "duration_s": {
               "type": "number"
-            },
-            "maxHeight_m": {
-              "type": "number"
-            },
-            "maxWeight_t": {
-              "type": "number"
-            },
-            "speedLimit": {
-              "type": "number"
-            },
-            "speedLimitUnit": {
-              "type": "string",
-              "enum": ["kmph", "mph"]
-            },
-            "roadName": {
-              "type": "string"
             },
             "instructions": {
               "type": "string",

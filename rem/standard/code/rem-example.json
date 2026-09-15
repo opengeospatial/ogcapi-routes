@@ -8,7 +8,7 @@
       "type": "Feature",
       "properties": {
         "featureType": "overview",
-        "length_m": 8290,
+        "length": 8290,
         "duration_s": 1053
       },
       "geometry": {
@@ -208,7 +208,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 70,
+        "length": 70,
         "duration_s": 46,
         "instructions": "continue",
         "text": "Head north on North Rd. Go for 70 m."
@@ -224,7 +224,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 372,
+        "length": 372,
         "duration_s": 75,
         "roadName": "North Rd",
         "instructions": "left",
@@ -241,7 +241,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 131,
+        "length": 131,
         "duration_s": 28,
         "roadName": "Wisconsin Ave NW",
         "instructions": "left",
@@ -258,7 +258,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 1752,
+        "length": 1752,
         "duration_s": 215,
         "roadName": "Garfield St NW",
         "instructions": "right",
@@ -275,7 +275,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 351,
+        "length": 351,
         "duration_s": 49,
         "roadName": "Massachusetts Ave NW",
         "instructions": "right",
@@ -292,7 +292,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 3021,
+        "length": 3021,
         "duration_s": 275,
         "roadName": "Waterside Dr NW",
         "instructions": "continue",
@@ -309,7 +309,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 748,
+        "length": 748,
         "duration_s": 90,
         "roadName": "Rock Creek and Potomac Pkwy NW",
         "text": "Keep left onto Ohio Dr SW. Go for 748 m."
@@ -325,7 +325,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 1155,
+        "length": 1155,
         "duration_s": 107,
         "roadName": "Ohio Dr SW",
         "text": "Keep left onto Independence Ave SW. Go for 1.2 km."
@@ -341,7 +341,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 125,
+        "length": 125,
         "duration_s": 22,
         "roadName": "Independence Ave SW",
         "text": "Keep right onto Independence Ave SW. Go for 125 m."
@@ -357,7 +357,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 283,
+        "length": 283,
         "duration_s": 73,
         "roadName": "Independence Ave SW",
         "text": "Keep left onto Independence Ave SW. Go for 283 m."
@@ -373,7 +373,7 @@
       "properties": {
         "featureType": "segment",
         "levelOfDetail": "visualization",
-        "length_m": 282,
+        "length": 282,
         "duration_s": 73,
         "roadName": "Independence Ave SW",
         "text": "Turn slightly left onto 15th St SW. Go for 282 m."

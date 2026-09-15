@@ -3,3 +3,11 @@
 This folder contains descriptions how GIS clients and libraries can be used to connect to APIs that implement OGC API Routes. The focus is on examples and "how-to" descriptions that help others to use the software to connect to such APIs.
 
 We welcome pull requests to update this page to add or update an entry for a client implementation that can be used to connect to APIs implementing OGC API Routes. If it is your software product, please also update the [main page](../README.adoc).
+
+## Client Development Guides
+
+* link:ogc_api_routes_building_clients.adoc[Part II — Building Clients] - A comprehensive guide to building schema-driven clients for OGC API - Routes, covering discovery, dynamic UI generation, route creation, progress monitoring, and route visualization.
+
+## Client Implementations
+
+* link:ecere_gnosis_cartographer.md[Ecere GNOSIS Cartographer] - A cross-platform GIS tool supporting OGC API Routes.

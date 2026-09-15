@@ -1,0 +1,741 @@
+= Part II — Building Clients
+
+== Introduction
+
+OGC API - Routes is a schema-driven API for route generation and route retrieval. As a client developer, your job isn't merely to submit start and destination points — it's to dynamically discover the routing capabilities a server offers, build appropriate route-planning interfaces from that metadata, monitor route generation, and visualize the resulting routes.
+
+Unlike routing systems that hardcode assumptions about vehicle types, route options, route attributes, or route actions, OGC API - Routes is designed to be self-describing. Clients should discover modes, actions, attributes, supported regions, and mode-specific request schemas from the server and adapt automatically.
+
+This part walks through the full client lifecycle: capability discovery, mode discovery, region discovery, action discovery, attribute discovery, dynamic UI generation, route creation, progress monitoring, route retrieval, and dynamic route visualization. The goal is a client that works unmodified across deployments supporting entirely different routing domains — ground vehicles, maritime vessels, UAVs, USVs, defence planning, survey planning, inspection planning, or space operations.
+
+== 1. Discovery
+
+=== 1.1 Landing Page
+
+Every OGC API - Routes implementation exposes a landing page:
+
+[source,http]
+----
+GET /
+----
+
+[source,json]
+----
+{
+  "title": "My Routing Server",
+  "description": "OGC API Routes service",
+  "links": [
+    { "rel": "modes", "href": "/modes" },
+    { "rel": "actions", "href": "/actions" },
+    { "rel": "attributes", "href": "/attributes" }
+  ]
+}
+----
+
+The landing page is the entry point into everything else — a well-behaved client should follow the advertised links rather than assuming `/modes`, `/actions`, and `/attributes` exist at fixed paths.
+
+== 2. Discovering Supported Modes
+
+=== 2.1 Why Modes Matter
+
+Modes define the routing capabilities a server supports — `drone`, `truck`, `ship`, `bicycle`, `satellite`, `inspection`, `survey`, and so on. The OGC API does **not** define a fixed list of modes; each server advertises its own, and clients must discover them dynamically rather than assuming any particular name exists.
+
+=== 2.2 List Available Modes
+
+[source,http]
+----
+GET /modes
+----
+
+[source,json]
+----
+[
+  {
+    "name": "drone",
+    "description": "Routing for unmanned aerial vehicles",
+    "domain": ["air"],
+    "supported_regions": [
+      {
+        "bbox": [-123.5, 37.7, -122.3, 38.1],
+        "description": "San Francisco Bay Area"
+      }
+    ]
+  },
+  {
+    "name": "ship",
+    "description": "Maritime transport routes",
+    "domain": ["surface"],
+    "supported_regions": [
+      {
+        "bbox": [-70.0, 40.0, -60.0, 45.0],
+        "description": "North Atlantic shipping lane"
+      }
+    ]
+  }
+]
+----
+
+A client should use this to populate a routing-mode selector, display available domains, allow filtering by mode, visualize supported routing regions, and prevent invalid requests outside supported areas before they're ever submitted.
+
+=== 2.3 Using Supported Regions
+
+A map-based client can render each mode's `bbox` as a coverage overlay, disable route generation outside valid areas, warn the user before a doomed request is submitted, and — where more than one provider covers overlapping regions — help select the appropriate one automatically.
+
+== 3. Discovering Mode Schemas
+
+Once the user selects a mode, fetch its definition:
+
+[source,http]
+----
+GET /modes/{modeId}
+----
+
+The response is a JSON Schema describing mode-specific inputs:
+
+[source,json]
+----
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "angle": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 120
+    },
+    "resolution": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 100
+    }
+  },
+  "required": ["resolution", "angle"]
+}
+----
+
+This schema is the contract between client and server. A client should never hardcode form fields for a specific mode — the flow is always _schema → UI → request_, in that order.
+
+== 4. Discovering Attributes
+
+=== 4.1 Attribute List
+
+[source,http]
+----
+GET /attributes
+----
+
+[source,json]
+----
+{
+  "total_distance": { "description": "Total distance of the route" },
+  "difficulty": { "description": "Difficulty level" }
+}
+----
+
+These are the attributes the server may attach to generated route objects.
+
+=== 4.2 Attribute Details
+
+[source,http]
+----
+GET /attributes/{attributeId}
+----
+
+[source,json]
+----
+{
+  "name": "difficulty",
+  "description": "Difficulty level of generated route",
+  "type": "string",
+  "enum": ["easy", "moderate", "hard"]
+}
+----
+
+A client can use this metadata to render values correctly, display legends, apply colors, validate user edits, and generate tooltips — all without hardcoding what "difficulty" means for any particular deployment.
+
+== 5. Discovering Actions
+
+=== 5.1 Action List
+
+[source,http]
+----
+GET /actions
+----
+
+[source,json]
+----
+["autoland", "loiter"]
+----
+
+Actions represent planning primitives that the server generates and understands — a route might include an `autoland` or `loiter` action at a particular waypoint, for instance.
+
+=== 5.2 Action Schemas
+
+[source,http]
+----
+GET /actions/autoland
+----
+
+[source,json]
+----
+{
+  "title": "AutoLand",
+  "allOf": [
+    { "$ref": "action.schema.json" },
+    {
+      "properties": {
+        "name": { "const": "autoland" },
+        "point": { "type": "object" }
+      }
+    }
+  ]
+}
+----
+
+=== 5.3 Avoid Hard-Coding Actions
+
+Avoid this pattern:
+
+[source,cpp]
+----
+if (action.name == "autoland")
+{
+    // ...
+}
+----
+
+Prefer discovering the action inventory and its schema at runtime (`GET /actions`, `GET /actions/{actionId}`) and using the retrieved schema to build editors, viewers, and validators generically. A client written this way keeps working when the server adds a new action type — no redeploy required.
+
+== 6. A Schema-Driven Client
+
+=== 6.1 Core Principle
+
+Everything should be generated from metadata. The client should have no built-in knowledge of whether the server supports defence planning, bicycle routing, survey planning, maritime routing, USV routing, or UAV routing. The flow is always: server schema → client UI → route request. The same client binary should work against entirely different deployments.
+
+=== 6.2 Why This Matters
+
+Consider two servers — Server A advertising `inspection` and `survey`, Server B advertising `drone`, `truck`, and `ship`. A schema-driven client works with both without recompilation, because it never encodes assumptions about which modes exist; it only encodes how to turn _any_ schema into a form and _any_ form into a request.
+
+== 7. Building a Route Planning User Interface
+
+The recommended workflow is map-centric rather than form-centric:
+
+[source,text]
+----
+Discover modes → Select mode → Display supported regions
+  → Generate mode form from schema → Select route geometry on map
+  → Submit route request → Show progress → Display route
+----
+
+=== 7.1 Region Visualization
+
+Given `{"supported_regions": [{"bbox": [-70, 40, -60, 45]}]}`, render the bounding box on the map as a shaded coverage area, optionally with a mode-specific overlay style, and warn the user if they try to plan outside it.
+
+=== 7.2 Map Interaction
+
+Users typically define a start location, a destination, and optional intermediate waypoints directly on the map — click to set the start, click again for the destination, then add optional waypoints — before the request is ever assembled or submitted.
+
+=== 7.3 Dynamic Mode Form Generation
+
+The mode schema should be converted into UI controls using a consistent mapping:
+
+[cols="1,1",options="header"]
+|===
+|Schema type |Suggested control
+|`string` |Text field
+|`string` with `enum` |Drop-down
+|`number` |Numeric input
+|`integer` |Spinner
+|`boolean` |Checkbox
+|`object` |Nested form
+|`array` |Collection editor
+|===
+
+For example, `{"angle": {"type": "integer", "minimum": 100, "maximum": 120}}` becomes a labeled spinner bounded to `[100, 120]` — without a single line of hand-written UI code specific to "angle." Section 14.4 revisits this table as executable logic, and — importantly — makes sure the `enum` case is actually implemented, not just documented.
+
+== 8. Creating a Route
+
+Clients submit route requests to `POST /routes`, following the OGC `Route` request model. A typical navigation request:
+
+[source,json]
+----
+{
+  "mode": {
+    "name": "surface",
+    "parameters": { "profile": "USV" }
+  },
+  "start": {
+    "id": "start",
+    "coordinates": [4.2, 58.9]
+  },
+  "destination": {
+    "id": "destination",
+    "coordinates": [5.1, 59.5]
+  },
+  "intermediate_waypoints": []
+}
+----
+
+== 9. Synchronous Execution
+
+[source,http]
+----
+POST /routes
+Prefer: respond-sync
+----
+
+[source,http]
+----
+200 OK
+----
+
+[source,json]
+----
+{ "...": "Route" }
+----
+
+The route is returned immediately in the response body. This is appropriate for fast route generation, local routing, or simple planners where the round trip is short enough that polling would be overkill.
+
+== 10. Asynchronous Execution
+
+[source,http]
+----
+POST /routes
+Prefer: respond-async
+----
+
+[source,http]
+----
+201 Created
+Location: /routes/abc123/progress
+----
+
+[source,json]
+----
+{ "routeId": "abc123", "status": "accepted" }
+----
+
+The client now monitors progress rather than blocking on the initial request.
+
+=== 10.1 Route Progress
+
+[source,http]
+----
+GET /routes/{routeId}/progress
+----
+
+[source,json]
+----
+{
+  "jobID": "abc123",
+  "status": "running",
+  "progress": 42,
+  "message": "Computing route"
+}
+----
+
+Use this to drive progress bars, estimated-completion indicators, and status messages. A robust client should treat `status` as more than a two-state flag — see Section 14.8 for handling `failed` and `cancelled`, not just `successful`.
+
+=== 10.2 Fetching the Route
+
+Once progress indicates completion:
+
+[source,http]
+----
+GET /routes/{routeId}
+----
+
+[source,json]
+----
+{ "...": "Route" }
+----
+
+The route can now be rendered.
+
+== 11. Rendering Routes
+
+Clients should not assume anything about a route's attributes, actions, or profile-specific extensions ahead of time. Instead, discover the supporting metadata from `GET /attributes` and `GET /actions`, and render whatever the route actually contains using that metadata.
+
+== 12. Profile-Driven Visualization
+
+One of the most important architectural ideas in OGC API - Routes is support for domain-specific profiles — defence, maritime, bicycle, UAV, USV, survey, inspection, and others — without the client needing special-case code for any of them:
+
+[source,text]
+----
+Mode schema      →  Generate route creation UI
+Action schema    →  Generate action UI
+Attribute schema →  Generate attribute rendering
+----
+
+This lets the same client application adapt automatically to entirely different routing domains.
+
+== 13. Example End-to-End Workflow
+
+[source,text]
+----
+GET /modes
+  → user selects "inspection"
+GET /modes/inspection
+  → generate inspection-specific form
+GET /actions, GET /attributes
+  → prepare renderers
+user selects route geometry
+POST /routes  (Prefer: respond-async)
+  → 201 Created
+poll GET /routes/{routeId}/progress
+  → completed
+GET /routes/{routeId}
+  → render route using discovered schemas
+----
+
+== 14. Example QML Routing Client
+
+The following example demonstrates the overall structure of a schema-driven routing client. It fetches available routing modes, displays supported regions on a map, loads the schema for the selected mode, dynamically generates mode-specific controls, lets the user select start and destination points, creates a route, handles both synchronous and asynchronous execution, and renders the route on completion.
+
+=== 14.1 Client State Model
+
+[source,qml]
+----
+property string baseUrl: "http://localhost:8080"
+
+property var modes: []
+property var selectedMode: null
+
+property var modeSchema: null
+property var modeParameters: ({})
+
+property var startPoint: null
+property var destinationPoint: null
+
+property var currentRoute: null
+property var lastError: null
+----
+
+The client maintains the discovered routing modes, the selected mode, the mode schema, mode-specific parameters, the selected map locations, the active route, and — added here relative to a minimal version of this model — a slot for the last error, so the UI has somewhere to surface a failed request instead of failing silently. All UI generation is driven from metadata retrieved from the server.
+
+=== 14.2 Fetch Available Modes
+
+[source,qml]
+----
+function loadModes()
+{
+    let xhr = new XMLHttpRequest()
+
+    xhr.open("GET", baseUrl + "/modes")
+
+    xhr.onreadystatechange = function()
+    {
+        if (xhr.readyState !== XMLHttpRequest.DONE)
+            return
+
+        if (xhr.status === 200)
+        {
+            modes = JSON.parse(xhr.responseText)
+        }
+        else
+        {
+            lastError = "Failed to load modes (HTTP " + xhr.status + ")"
+        }
+    }
+
+    xhr.send()
+}
+----
+
+The response contains routing mode names, descriptions, supported domains, and supported regions. A map client can immediately visualize supported regions and prevent users from attempting routing operations outside valid coverage areas.
+
+=== 14.3 Fetch a Mode Schema
+
+[source,qml]
+----
+function loadMode(modeName)
+{
+    let xhr = new XMLHttpRequest()
+
+    xhr.open("GET", baseUrl + "/modes/" + modeName)
+
+    xhr.onreadystatechange = function()
+    {
+        if (xhr.readyState !== XMLHttpRequest.DONE)
+            return
+
+        if (xhr.status === 200)
+        {
+            modeSchema = JSON.parse(xhr.responseText)
+        }
+        else
+        {
+            lastError = "Failed to load mode schema (HTTP " + xhr.status + ")"
+        }
+    }
+
+    xhr.send()
+}
+----
+
+The returned JSON Schema describes the mode-specific parameters required for route generation. The client generates its user interface directly from this schema rather than relying on hardcoded controls.
+
+=== 14.4 Dynamic Form Generation
+
+Just as in OGC API - Processes, the mode schema becomes the UI contract. This function should implement the same mapping documented in Section 7.3 — in particular, an earlier draft of this example checked `schema.type` alone and fell through every `string` field to a plain text box, which silently dropped the `enum` → drop-down case from the table it was meant to implement:
+
+[source,qml]
+----
+function createControl(name, schema)
+{
+    if (schema.enum !== undefined)
+        return "ComboBox"
+
+    switch (schema.type)
+    {
+        case "string":
+            return "TextField"
+
+        case "number":
+        case "integer":
+            return "SpinBox"
+
+        case "boolean":
+            return "CheckBox"
+
+        case "object":
+            return "NestedForm"
+
+        case "array":
+            return "CollectionEditor"
+
+        default:
+            return "TextField"
+    }
+}
+----
+
+Given a schema such as:
+
+[source,json]
+----
+{
+  "properties": {
+    "profile": {
+      "type": "string",
+      "enum": ["USV", "ship", "hostile-ship"]
+    }
+  }
+}
+----
+
+the generated form now correctly becomes a `ComboBox` populated with `USV`, `ship`, and `hostile-ship` — rather than a free-text field the user could mistype into — without the client having any built-in knowledge of maritime routing profiles. Those concepts belong to the server and are discovered dynamically.
+
+=== 14.5 Building a Route Request
+
+[source,qml]
+----
+function createRouteRequest()
+{
+    return {
+        mode: {
+            name: selectedMode,
+            parameters: modeParameters
+        },
+
+        start: {
+            id: "start",
+            coordinates: startPoint
+        },
+
+        destination: {
+            id: "destination",
+            coordinates: destinationPoint
+        },
+
+        intermediate_waypoints: []
+    }
+}
+----
+
+The exact structure may vary according to the `Route` specification, but the principle stays the same: route geometry comes from the map, and mode parameters come from the discovered schema.
+
+=== 14.6 Submit a Route Synchronously
+
+[source,qml]
+----
+function createRouteSync()
+{
+    let xhr = new XMLHttpRequest()
+
+    xhr.open("POST", baseUrl + "/routes")
+    xhr.setRequestHeader("Content-Type", "application/json")
+    xhr.setRequestHeader("Prefer", "respond-sync")
+
+    xhr.onreadystatechange = function()
+    {
+        if (xhr.readyState !== XMLHttpRequest.DONE)
+            return
+
+        if (xhr.status === 200)
+        {
+            currentRoute = JSON.parse(xhr.responseText)
+        }
+        else
+        {
+            lastError = "Route request failed (HTTP " + xhr.status + ")"
+        }
+    }
+
+    xhr.send(JSON.stringify(createRouteRequest()))
+}
+----
+
+=== 14.7 Submit a Route Asynchronously
+
+[source,qml]
+----
+function createRouteAsync()
+{
+    let xhr = new XMLHttpRequest()
+
+    xhr.open("POST", baseUrl + "/routes")
+    xhr.setRequestHeader("Content-Type", "application/json")
+    xhr.setRequestHeader("Prefer", "respond-async")
+
+    xhr.onreadystatechange = function()
+    {
+        if (xhr.readyState !== XMLHttpRequest.DONE)
+            return
+
+        if (xhr.status === 201)
+        {
+            let job = JSON.parse(xhr.responseText)
+            monitorRoute(job.routeId)
+        }
+        else
+        {
+            lastError = "Route request failed (HTTP " + xhr.status + ")"
+        }
+    }
+
+    xhr.send(JSON.stringify(createRouteRequest()))
+}
+----
+
+The server responds immediately with a route identifier and progress endpoint.
+
+=== 14.8 Monitor Route Progress
+
+[source,qml]
+----
+function monitorRoute(routeId)
+{
+    let timer = Qt.createQmlObject(
+        'import QtQuick 2.15; Timer { interval: 1000; repeat: true }',
+        root)
+
+    timer.triggered.connect(function()
+    {
+        let xhr = new XMLHttpRequest()
+
+        xhr.open("GET", baseUrl + "/routes/" + routeId + "/progress")
+
+        xhr.onreadystatechange = function()
+        {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return
+
+            if (xhr.status !== 200)
+            {
+                timer.stop()
+                lastError = "Lost contact with route job (HTTP " + xhr.status + ")"
+                return
+            }
+
+            let progress = JSON.parse(xhr.responseText)
+            progressBar.value = progress.progress
+
+            if (progress.status === "successful")
+            {
+                timer.stop()
+                loadRoute(routeId)
+            }
+            else if (progress.status === "failed" || progress.status === "cancelled")
+            {
+                timer.stop()
+                lastError = progress.message || ("Route " + progress.status)
+            }
+        }
+
+        xhr.send()
+    })
+
+    timer.start()
+}
+----
+
+The original version of this function only stopped polling on `status === "successful"`. That leaves `failed` and `cancelled` jobs polling forever — the timer never stops, the progress bar sits at whatever percentage it last reached, and the user gets no indication anything went wrong. The corrected version above stops the timer and surfaces `lastError` for both terminal failure states, in addition to a transport-level failure (a non-200 response from the progress endpoint itself). Note also that `Qt.createQmlObject(..., root)` assumes an item with `id: root` is in scope as the intended parent — make sure that id actually exists in the surrounding component, or pass a different valid parent item.
+
+=== 14.9 Retrieve the Completed Route
+
+[source,qml]
+----
+function loadRoute(routeId)
+{
+    let xhr = new XMLHttpRequest()
+
+    xhr.open("GET", baseUrl + "/routes/" + routeId)
+
+    xhr.onreadystatechange = function()
+    {
+        if (xhr.readyState !== XMLHttpRequest.DONE)
+            return
+
+        if (xhr.status === 200)
+        {
+            currentRoute = JSON.parse(xhr.responseText)
+        }
+        else
+        {
+            lastError = "Failed to retrieve completed route (HTTP " + xhr.status + ")"
+        }
+    }
+
+    xhr.send()
+}
+----
+
+The route can then be rendered on the map.
+
+=== 14.10 Discover Action Definitions
+
+Clients should never hardcode action types. Instead, use `GET /actions` and `GET /actions/{actionId}` — the returned JSON Schema defines how the action is encoded, edited, validated, and displayed, so new actions can appear on the server without requiring a client update.
+
+=== 14.11 Discover Attribute Definitions
+
+Similarly, `GET /attributes` and `GET /attributes/{attributeId}` should drive visualization of route metadata. For example, `{"name": "difficulty", "enum": ["easy", "moderate", "hard"]}` might drive a color mapping (`easy → green`, `moderate → yellow`, `hard → red`) generated from the enum values, without any route-specific code baked into the client.
+
+=== 14.12 Profiles and Domain Adaptation
+
+One server might expose `inspection` and `survey`; another might expose `drone`, `truck`, and `ship`; a third might expose `usv`, `uav`, `autoland`, and `loiter`. A schema-driven client works with all of them, because the workflow is always:
+
+[source,text]
+----
+Server schema → generated UI → route request → generated route → schema-driven rendering
+----
+
+The client never needs to know whether it's being used for defence planning, maritime navigation, inspection planning, survey planning, or bicycle routing — those capabilities are described by the server and interpreted dynamically at runtime.
+
+== 15. Checklist for Client Developers
+
+* Discover modes rather than hardcoding them.
+* Use supported regions to improve user experience and pre-empt invalid requests.
+* Generate mode forms, action editors, and attribute renderers from schemas — including the `enum` → drop-down case, not just primitive types.
+* Support both synchronous and asynchronous execution.
+* Monitor progress through the progress endpoint, and handle `failed` and `cancelled` states, not only `successful`.
+* Retrieve completed routes from `/routes/{routeId}`.
+* Handle non-2xx HTTP responses at every step, not just the happy path.
+* Avoid hardcoding action names, attribute names, or assumptions about which routing profiles exist.
+* Build every UI component from server-provided metadata whenever possible.
+
+== 16. Summary
+
+OGC API - Routes is fundamentally a schema-driven routing platform. Clients should discover modes, actions, attributes, supported regions, and route-generation schemas from the server instead of embedding routing knowledge directly into the application.
+
+A robust client uses that metadata to generate route-planning forms, validation rules, route viewers, attribute renderers, and action editors dynamically — and treats error and failure states as first-class outcomes to handle, not just the successful path. Built this way, a single client can interoperate with maritime, defence, inspection, survey, aerial, ground, subsurface, and space-routing deployments without modification.
