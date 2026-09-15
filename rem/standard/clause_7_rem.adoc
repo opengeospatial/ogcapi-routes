@@ -15,6 +15,8 @@ GeoJSON is used for the following reasons:
 * consistent with the emerging https://www.ogcapi.ogc.org/[OGC API standards]
 * an https://tools.ietf.org/html/rfc7946[open standard]
 
+As such, the only coordinate reference system accepted is WGS84 for horizontal and elevation in meters as the mean sea level for the vertical.
+
 [[rc_rem]]
 === Requirements class "Route Exchange Model"
 
@@ -121,7 +123,7 @@ Typically the name will be provided by the requester of the route.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/end*
-^|A |The start location of the route (property `featureType` is "end") SHALL be a GeoJSON feature with a Point geometry.
+^|A |The end location of the route (property `featureType` is "end") SHALL be a GeoJSON feature with a Point geometry.
 ^|B |The point geometry of the feature SHALL be identical to the last point of the route overview.
 |===
 
@@ -130,22 +132,18 @@ Typically the name will be provided by the requester of the route.
 |===
 ^|*Requirement {counter:req-id}* |*/req/rem/overview*
 ^|A |The route overview (property `featureType` is "overview") SHALL be a GeoJSON feature with a LineString geometry.
-^|B |The line string geometry of the oute overview SHALL be the path from the start point to the end point of the route.
-^|C |The route overview SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
-^|D |The value of a property `length_m` SHALL be identical to the sum of all route segment properties with the same name.
-^|E |If the route overview has a property `duration_s`, the value SHALL be of type `number` with the estimated amount of time required to travel the segment in seconds.
-^|F |The route overview SHALL have a property `duration_s`, if the route segments have a property with the same name.
-^|G |The value of a property `duration_s` SHALL be identical to the sum of all route segment properties with the same name.
-^|H |If the route overview has a property `processingTime`, it SHALL be a `date-time` string value as specified by link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone 'Z'). The value states the time when the route was calculated.
-^|I |If the route overview has a property `comment`, the value SHALL be of type `string`. The value explains any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
+^|B |The line string geometry of the route overview SHALL be the path from the start point to the end point of the route.
+^|C |The route overview SHALL have a property `length` (type: `number`) with the length of the segment in meters.
+^|D |The value of a property `length` SHALL be identical to the sum of all route segment properties with the same name.
+^|E |If the route overview has a property `processingTime`, it SHALL be a `date-time` string value as specified by link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone 'Z'). The value states the time when the route was calculated.
+^|F |If the route overview has a property `comment`, the value SHALL be of type `string`. The value explains any minor issues that were encountered during the processing of the routing request, i.e. any issues that did not result in an error.
 |===
 
 [[rec_rem_overview-properties]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/rem/overview-properties*
-^|A |The route overview SHOULD have the property `duration_s`. The information about the estimated duration for travelling a route is important for users.
-^|B |The route overview SHOULD have the property `processingTime`.
+^|A |The route overview SHOULD have the property `processingTime`.
 |===
 
 [[req_rem_segments]]
@@ -154,7 +152,7 @@ Typically the name will be provided by the requester of the route.
 ^|*Requirement {counter:req-id}* |*/req/rem/segments*
 ^|A |Each segment of the route (property `featureType` is "segment") SHALL be a GeoJSON feature with a Point geometry.
 ^|B |The point geometry of each segment SHALL be on the line string geometry of the route overview. The geometry represents the last position of the segment.
-^|C |Each segment SHALL have a property `length_m` (type: `number`) with the length of the segment in meters.
+^|C |Each segment SHALL have a property `length` (type: `number`) with the length of the segment in meters.
 |===
 
 [[req_rem_waypoints]]

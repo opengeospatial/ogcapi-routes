@@ -15,7 +15,7 @@ Given input to all tests is a Routing API with its landing page at `{apiURI}` an
 2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core
 |Target type |Web API
 |Requirements class |<<rc_core,Requirements Class "Core">>
-|Dependency |link:https://docs.ogc.org/DRAFTS/19-072.html#_conformance_class_json[OGC API - Common - Part 1: Core, Conformance Class "JSON"]
+|Dependency |link:https://docs.ogc.org/is/19-072/19-072.html#_conformance_class_json[OGC API - Common - Part 1: Core, Conformance Class "JSON"]
 |Indirect dependency |link:https://docs.ogc.org/DRAFTS/21-001.html#_conformance_class_route_exchange_model[OGC Route Exchange Model, Conformance Class "Route Exchange Model"]
 |===
 

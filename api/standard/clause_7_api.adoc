@@ -55,9 +55,7 @@ APIs implementing this Standard will support them. The following five operations
 
 ==== OGC API - Common - Part 1: Core
 
-At the time of writing, <<CommonCore,OGC API - Common - Part 1: Core>> has been voted on, but is not yet published. The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
-
-NOTE: Version 1.0 of this Standard will either reference a published version of the OGC API - Common - Part 1: Standard or directly include the relevant provisions from the requirements classes "Core", "Landing Page" and "JSON".
+The requirements classes "Core", "Landing Page" and "JSON" have to be supported. This includes support for the resources Landing Page, Conformance Declaration and API Definition. Support for the "HTML" and "OpenAPI 3.0" requirements classes is recommended.
 
 [[landing_page]]
 ==== API landing page
@@ -197,13 +195,13 @@ properties:
                 enum:
                   - MultiPoint
               coordinates:
+                title: Points along the route
                 type: array
                 minItems: 2
-                maxItems: 2
                 items:
-                  title: Points along the route
                   type: array
                   minItems: 2
+                  maxItems: 2
                   items:
                     type: number
       mode:
@@ -303,8 +301,8 @@ in Washington, D.C.
         ]
       },
       "properties": {
-        "featureType": "route overview",
-        "length_m": 8213,
+        "featureType": "overview",
+        "length": 8213,
         "duration_s": 483
       }
     },
@@ -334,7 +332,7 @@ in Washington, D.C.
       },
       "properties": {
         "featureType": "segment",
-        "length_m": 3314,
+        "length": 3314,
         "duration_s": 213,
         "instruction": "turn right",
         "roadName": "George Washington Memorial Pkwy",
@@ -356,7 +354,7 @@ in Washington, D.C.
       },
       "properties": {
         "featureType": "segment",
-        "length_m": 517,
+        "length": 517,
         "duration_s": 73,
         "roadName": "First Street",
         "speedLimit": 35,
@@ -839,7 +837,7 @@ This operation returns the schema of the mode with id `modeId`.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/get-mode-schema*
-^|A |The server SHALL support the HTTP GET operation at the path `/mode/{modeId}`
+^|A |The server SHALL support the HTTP GET operation at the path `/modes/{modeId}`
 for each mode referenced from the Modes resource at `/modes`.
 |===
 
@@ -863,7 +861,7 @@ The following is an example of modes supported in an implementation, together wi
     "name": "inspection",
     "description": "Generates a plan for a pipeline inspection",
     "title": "Pipeline Inspection"
-  },
+  }, {
     "name": "survey",
     "description": "Generates a plan for a bathymetric survey using multi-beam sonar",
     "title": "Survey Plan"
