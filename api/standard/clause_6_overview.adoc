@@ -17,3 +17,4 @@ Additionally, a Routing API may support the following optional routing parameter
 * Apply a weight restriction to the route computation.
 * Ability to define obstacles that have to be avoided.
 * Specify departure or arrival times.
+* Support asynchronous execution of route computations.

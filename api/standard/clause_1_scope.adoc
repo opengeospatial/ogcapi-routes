@@ -7,6 +7,7 @@ This standard defines modular API building blocks to:
 * Compute new routes,
 * Specify additional, commonly used routing parameters in addition to the start and end point of the route,
 * Manage routes on the server.
+* Support asynchronous execution of route computations.
 
 Routes are represented as a feature collection encoded in GeoJSON according to the <<REM,OGC Route Exchange Model>>.
 

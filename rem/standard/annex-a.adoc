@@ -142,7 +142,7 @@ Given:
 When:
 
 - the route position array is extracted (relative JSON Pointer `/geometry/coordinates` of the feature where `/properties/featureType` is "overview")
-- all segment positions are extracted (relative JSON Pointer `/geometry/coordinates` of the features where `/properties/featureType` is "segments")
+- all segment positions are extracted (relative JSON Pointer `/geometry/coordinates` of the features where `/properties/featureType` is "segment")
 
 Then:
 
@@ -256,8 +256,8 @@ Given:
 
 When:
 
-- the route length is extracted (relative JSON Pointer `/properties/length_m` of the feature where `/properties/featureType` is "overview")
-- all segment lengths are extracted (relative JSON Pointer `/properties/length_m` of the features where `/properties/featureType` is "segments")
+- the route length is extracted (relative JSON Pointer `/properties/length` of the feature where `/properties/featureType` is "overview")
+- all segment lengths are extracted (relative JSON Pointer `/properties/length` of the features where `/properties/featureType` is "segment")
 
 Then:
 
@@ -302,7 +302,7 @@ Given:
 When:
 
 - the route duration is extracted (relative JSON Pointer `/properties/duration_s` of the feature where `/properties/featureType` is "overview")
-- all segment durations are extracted (relative JSON Pointer `/properties/duration_s` of the features where `/properties/featureType` is "segments")
+- all segment durations are extracted (relative JSON Pointer `/properties/duration_s` of the features where `/properties/featureType` is "segment")
 
 Then:
 
@@ -324,7 +324,7 @@ Given:
 When:
 
 - the route height restriction is extracted (relative JSON Pointer `/properties/maxHeight_m` of the feature where `/properties/featureType` is "overview")
-- all segment height restrictions are extracted (relative JSON Pointer `/properties/maxHeight_m` of the features where `/properties/featureType` is "segments")
+- all segment height restrictions are extracted (relative JSON Pointer `/properties/maxHeight_m` of the features where `/properties/featureType` is "segment")
 
 Then:
 
@@ -346,7 +346,7 @@ Given:
 When:
 
 - the route weight restriction is extracted (relative JSON Pointer `/properties/maxWeight_t` of the feature where `/properties/featureType` is "overview")
-- all segment weight restrictions are extracted (relative JSON Pointer `/properties/maxWeight_t` of the features where `/properties/featureType` is "segments")
+- all segment weight restrictions are extracted (relative JSON Pointer `/properties/maxWeight_t` of the features where `/properties/featureType` is "segment")
 
 Then:
 

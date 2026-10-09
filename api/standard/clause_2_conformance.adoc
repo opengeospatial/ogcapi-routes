@@ -1,6 +1,6 @@
 == Conformance
 
-The OGC API - Routes - Part 1: Core Standard defines the following eight requirements and conformance classes:
+The OGC API - Routes - Part 1: Core Standard defines the following nine requirements and conformance classes:
 
 * Minimal routing capability:
 ** <<rc_core,**Core**>>: Routing based on start/end point.
@@ -16,6 +16,8 @@ NOTE:  A metric ton (tonne) is equivalent to 1,000 kg, which is larger than the 
    
 ** <<rc_obstacles,**Obstacles**>>: Avoid obstacles.
 ** <<rc_time,**Temporal constraints**>>: Specify departure/arrival time.
+* Additional execution capabilities:
+** <<rc_job_control,**Job Control**>>: Support asynchronous execution of route computations using the OGC API - Processes execution model.
 
 Requirements for a single standardization target types are considered: Web API.
 
@@ -40,4 +42,5 @@ NOTE: All implementations must implement the Core conformance class.
 |<<conf_weight,Weight restrictions>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/weight`
 |<<conf_obstacles,Obstacles>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/obstacles`
 |<<conf_time,Temporal constraints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time`
+|<<conf_job-control,Job Control>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/job-control`
 !===
