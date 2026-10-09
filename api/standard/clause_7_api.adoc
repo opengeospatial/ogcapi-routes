@@ -232,7 +232,7 @@ NOTE: This requirements class provides no mechanism to change the default, and f
 ^|B |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
 |===
 
-This requirements class only specifies requirements for the synchronous execution of a routing request. Requirements for the asynchronous execution can be added in a future extension to this Standard.
+This requirements class only specifies requirements for the synchronous execution of a routing request. For asynchronous execution, see <<rc_job_control>>.
 
 [[req_core_error]]
 [width="90%",cols="2,6a"]
@@ -548,7 +548,6 @@ See <<example_route>> for an example of a route.
 
 This operation deletes a route with identifier `routeId`.
 If the route is still in processing, the routing process is canceled.
-
 [[req_manage-routes_delete-route-op]]
 [width="90%",cols="2,6a"]
 |===
@@ -560,11 +559,79 @@ If the route is still in processing, the routing process is canceled.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/manage-routes/delete-route-success*
-^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200` or `204`.
-^|B |If the operation is not executed immediately, but is added to a processing queue, the response SHALL have a HTTP status code `202`.
+^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200` with a status document in the response body.
+^|B |The status document SHALL include at least the following properties:
+** `routeId`: a unique identifier for the route
+** `type`: SHALL be "route"
+** `status`: SHALL be "dismissed"
+** `message`: a human-readable message describing the result
+** `created`: the timestamp when the route calculation was created (ISO 8601)
+** `started`: the timestamp when the route calculation started (ISO 8601, optional)
+** `finished`: the timestamp when the route calculation finished (ISO 8601, optional)
+^|C |The server SHALL respond with HTTP status code `404` if the route does not exist.
+^|D |The server SHALL respond with HTTP status code `500` if an unexpected server failure occurs.
 |===
 
-After the execution of the request, the route will no longer be included in the Routes resource (path `/routes`) and a GET request to `/routes/{routeId}` will return a response with a HTTP status code `404`.
+The behavior depends on the state of the route:
+
+|Situation |Behavior |Response
+|Calculation accepted or running |The server cancels the calculation, releases its resources, and dismisses the job. |200 OK with status document (application/json)
+|Calculation complete (route exists) |The server deletes the stored route. |200 OK with status document (application/json)
+|Route does not exist (unknown, already deleted, or expired) |Nothing to delete. |404 Not Found with problem details (RFC 9457)
+|Unexpected server failure |The server encounters an unexpected error. |500 Internal Server Error with problem details (RFC 9457)
+|===
+
+After a successful DELETE, a GET request to `/routes/{routeId}` returns `404 Not Found`.
+A repeated DELETE on the same route returns `404 Not Found`.
+
+[[example_delete_route]]
+.Example: DELETE request for a running calculation
+==================
+[source,HTTP]
+----
+DELETE /routes/6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10 HTTP/1.1
+----
+
+[source,HTTP]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "routeId": "6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10",
+  "type": "route",
+  "status": "dismissed",
+  "message": "Route calculation cancelled",
+  "created": "2025-05-07T14:03:11Z",
+  "started": "2025-05-07T14:03:12Z",
+  "finished": "2025-05-07T14:03:18Z"
+}
+----
+==================
+
+[[example_delete_route_not_found]]
+.Example: DELETE request for a non-existent route
+==================
+[source,HTTP]
+----
+DELETE /routes/6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10 HTTP/1.1
+----
+
+[source,HTTP]
+----
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json
+
+{
+  "type": "http://www.opengis.net/def/exceptions/ogcapi-routes-1/1.0/not-found",
+  "title": "Route not found",
+  "status": 404,
+  "detail": "No route with id 6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10 exists on this server.",
+  "instance": "/routes/6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10"
+}
+----
+==================
+
 
 [[route_definition]]
 ==== Route definition
@@ -736,8 +803,16 @@ items:
         enum: ["air", "maritime", "ground"]
       minItems: 1
       description: The domain(s) in which this mode operates
+    jobControlOptions:
+      type: array
+      description: Execution modes supported for route computation
+      items:
+        type: string
+        enum: ["sync-execute", "async-execute"]
+      default: ["sync-execute"]
+      description: If omitted, clients assume ["sync-execute"]
   required: ["name", "description", "domain"]
-  additionalProperties: false
+  additionalProperties: true
 ----
 |===
 
@@ -1512,33 +1587,47 @@ This requirement enable the API request to specify the time of departure or arri
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/time/input*
-^|A |The server SHALL support a member at the JSON Pointer `/inputs/when` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (an time constraint object, wrapped into a "value" member):
+^|A |The server SHALL support a member at the JSON Pointer `/inputs/temporal_constraint` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (a time constraint object):
 
 [source,YAML]
 ----
 type: object
 required:
-  - value
+  - id
+  - title
+  - timePoint
+  - type
 properties:
-  value:
-    type: object
-    required:
-      - timestamp
-    properties:
-      timestamp:
-        type: string
-        format: date-time
-      type:
-        type: string
-        default: departure
+  id:
+    type: string
+    description: constraint identifier
+  title:
+    type: string
+    description: human-readable title
+  description:
+    type: string
+    description: detailed description
+  timePoint:
+    type: string
+    format: date-time
+    description: the time point (RFC 3339 date-time)
+  delta:
+    type: number
+    default: 0
+    description: time deviation in seconds
+  type:
+    type: string
+    description: constraint type
         enum:
-          - departure
-          - arrival
+          - noEarlierThan
+          - noLaterThan
+          - interval
+          
 ----
 ^|B |The `timestamp` value SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z").
 |===
 
-[[example_route_definition_when]]
+[[example_route_definition_temporal_constraint]]
 .Route definition with a desired arrival time
 =================
 The following is an example request for the fastest route from Reagan National Airport to the U.S. Capitol building
@@ -1564,11 +1653,11 @@ in Washington, D.C, that arrives at 6pm local time on February 24th, 2022.
         ]
       }
     },
-    "when": {
-      "value": {
-        "timestamp": "2022-02-24T13:00:00Z",
-        "type": "arrival"
-      }
+    "temporal_constraint": {
+        "id": "TC-001"
+        "title": "Earliest departure",
+        "type": "noEarlierThan",
+        "timePoint": "2022-02-24T13:00:00Z"
     }
   }
 }
@@ -1579,14 +1668,190 @@ in Washington, D.C, that arrives at 6pm local time on February 24th, 2022.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/time/success*
-^|A |All temporal information in the route SHALL be based on the values in the "when" member (the time of departure or arrival, the default value is an immediate departure).
+^|A |All temporal information in the route SHALL be based on the values in the temporal_constraint member.
 ^|B |The start and end of the route SHALL include the `timestamp` property.
 ^|C |The route overview and the segments SHALL include the `duration_s` properties.
 |===
+
+[[rc_job_control]]
+=== Requirements Class "Job Control"
+
+This requirement class enables the API to support asynchronous execution of route computation requests using the same execution model as OGC API - Processes.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/job-control
+|Target type |Web API
+|Dependency |<<rc_core>>
+|Dependency |<<OGCAPIProcesses,OGC API - Processes - Part 1: Core>>
+|===
+
+[[req_job_control_async]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/job-control/async*
+
+A client MAY request asynchronous execution of a route computation by sending a HTTP POST request to `/routes` with the header `Prefer: respond-async` (RFC 7240).
+
+The server response depends on whether the server supports asynchronous execution for the requested mode:
+
+* If the server supports asynchronous execution for the mode:
+  - The server SHALL respond with status code `201 Created`
+  - The response SHALL include a `Location` header with the route ID
+  - The response SHALL include a `Preference-Applied: respond-async` header
+  - The response body SHALL be a status document with at least the following properties:
+    - `routeId`: a unique identifier for the route computation
+    - `type`: SHALL be "route"
+    - `status`: the current status of the computation (one of: "accepted", "running", "successful", "failed", "dismissed")
+
+* If the server does not support asynchronous execution for the mode:
+  - The server SHALL respond with status code `400 Bad Request`
+  - The response body SHALL be a problem details document (RFC 9457) explaining that asynchronous execution is not supported
+
+|===
+
+[[example_route_async_request]]
+.Route definition with asynchronous execution request
+==================
+The following is an example request for asynchronous route computation:
+
+[source,HTTP]
+----
+POST /routes HTTP/1.1
+Prefer: respond-async
+Content-Type: application/json
+
+{
+  "mode": "drone",
+  "waypoints": {
+    "type": "MultiPoint",
+    "coordinates": [[-122.42, 37.77], [-122.27, 37.80]]
+  }
+}
+----
+
+[source,HTTP]
+----
+HTTP/1.1 201 Created
+Location: /routes/6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10
+Preference-Applied: respond-async
+Content-Type: application/json
+
+{
+  "routeId": "6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10",
+  "type": "route",
+  "status": "accepted"
+}
+----
+==================
+
+[[req_job_control_status]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/job-control/status*
+
+The server SHALL support the HTTP GET operation at the path `/routes/{routeId}` to retrieve the status of a route computation.
+
+The response depends on the status of the computation:
+
+|Situation |Response
+|Calculation in progress (status is "accepted" or "running") |200 OK with status document (application/json)
+|Calculation complete (status is "successful") |200 OK with the route (application/geo+json)
+|Route does not exist |404 Not Found with problem details (RFC 9457)
+|Valid request, but no route can be computed |422 Unprocessable Entity with problem details (RFC 9457)
+|Unexpected server failure |500 Internal Server Error with problem details (RFC 9457)
+|===
+
+[[example_route_status_accepted]]
+.Status document when calculation is in progress
+==================
+[source,JSON]
+----
+{
+  "routeId": "6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10",
+  "type": "route",
+  "status": "running"
+}
+----
+==================
+
+[[example_route_status_successful]]
+.Route response when calculation is complete
+==================
+[source,JSON]
+----
+{
+  "type": "FeatureCollection",
+  "name": "Reagan Airport to Capitol",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-122.42, 37.77], [-122.27, 37.80]]
+      },
+      "properties": {
+        "featureType": "overview",
+        "length": 5000,
+        "duration_s": 300
+      }
+    }
+  ]
+}
+----
+==================
+
+[[req_job_control_modes]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/job-control/modes*
+
+Each mode supported by the server SHALL include a `jobControlOptions` property in the response from `/modes` and `/modes/{modeId}`.
+
+The `jobControlOptions` property is an array of strings that indicates which execution modes are supported for the route computation. Valid values are:
+* `sync-execute`: Synchronous execution is supported (default if property is omitted)
+* `async-execute`: Asynchronous execution is supported
+
+|===
+
+[[example_modes_with_job_control]]
+.Mode response with job control options
+==================
+[source,JSON]
+----
+[
+  {
+    "name": "drone",
+    "description": "Routing for unmanned aerial vehicles",
+    "domain": ["air"],
+    "supported_regions": [
+      {
+        "bbox": [-123.5, 37.7, -122.3, 38.1],
+        "description": "San Francisco Bay Area"
+      }
+    ],
+    "jobControlOptions": ["sync-execute", "async-execute"]
+  },
+  {
+    "name": "car",
+    "description": "Car routing",
+    "domain": ["ground"],
+    "supported_regions": [
+      {
+        "bbox": [-123.5, 37.7, -122.3, 38.1],
+        "description": "San Francisco Bay Area"
+      }
+    ],
+    "jobControlOptions": ["sync-execute"]
+  }
+]
+----
+==================
 
 [[rec_time_success]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Recommendation {counter:rec-id}* |*/rec/time/success*
-^|A |The route SHOULD consider the expected traffic situation at the time specified in the "when" member.
+^|A |The route SHOULD consider the expected traffic situation at the time specified in the temporal_constraint member.
 |===
