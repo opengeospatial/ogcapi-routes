@@ -645,6 +645,59 @@ Then:
 * assert that a non-negative integer `n` exists where `/links/n/rel` is "item", where `/links/n/href` is (after URI normalization) equal to `{apiURI}/routes/{routeId}` and where `links/n/title` includes the sub-string "foo bar".
 |===
 
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/manage-routes/get-routes-limit
+|Requirements: | <<req_manage-routes_get-routes-limit,/req/manage-routes/get-routes-limit>> A/B/C, <<req_manage-routes_get-routes-error,/req/manage-routes/get-routes-error>> A
+|Test purpose: | Check that the Routes resource supports paging
+|Test method: |
+Given:
+
+* test /conf/manage-routes/get-routes-success has just been passed
+* more routes are stored on the server than are returned in the response when a small value of `limit` is requested (if needed, create additional routes by repeating the test /conf/manage-routes/routes-success-1)
+
+When:
+
+* a request with a small `limit` is executed
+** method: `GET`
+** path: `{apiURI}/routes`
+** query parameters: `limit=2`
+** header: `Accept: application/json`
+** authentication, if authentication credentials are provided
+
+Then:
+
+* assert successful execution (status code is "200", `Content-Type` header is "application/json");
+* assert that the response content validates against the schema in <<req_manage-routes_get-routes-success,/req/manage-routes/get-routes-success>> B;
+* assert that the number of links with `/links/i/rel` equal to "item" does not exceed 2;
+* assert that, if more routes are available to the client than returned, a non-negative integer `n` exists where `/links/n/rel` is "next";
+* when the "next" link is dereferenced, assert successful execution (status code is "200") and that the links with link relation type "item" are different from those in the first page;
+* repeat the request with `limit=-1` and assert a response with status code "400".
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/manage-routes/get-routes-counts
+|Requirements: | <<req_manage-routes_get-routes-counts,/req/manage-routes/get-routes-counts>> A
+|Test purpose: | Check that numberMatched and numberReturned, if present, are consistent
+|Test method: |
+Given:
+
+* test /conf/manage-routes/get-routes-limit has just been passed
+* `{routesResponse}` is the content of the response of the request with `limit=2` in test /conf/manage-routes/get-routes-limit
+
+When:
+
+* the members `numberMatched` and `numberReturned` are present in `{routesResponse}`
+
+Then:
+
+* assert that `numberMatched` and `numberReturned` are non-negative integers;
+* assert that `numberReturned` is equal to the number of links with `/links/i/rel` equal to "item" in `{routesResponse}`;
+* assert that `numberMatched` is greater than or equal to `numberReturned` and, if a "next" link is present in `{routesResponse}`, greater than `numberReturned`.
+|===
 
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]

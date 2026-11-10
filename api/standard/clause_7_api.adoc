@@ -131,7 +131,13 @@ Requirements classes can support options and parsing the API definition may be u
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time"
-  ]
+  ],
+  "properties": {
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes": {
+      "defaultRoutesPageSize": 100,
+      "maximumRoutesPageSize": 10000
+    }
+  }
 }
 ----
 =================
@@ -437,6 +443,8 @@ Typically, routes will be removed after a reasonable time, for example, a few ho
 
 This operation returns a list of routes that are currently available.
 
+To support access to servers with many stored routes without overloading the client, the API supports paged access with links to the next page, if more routes are available than the page size. The `limit` parameter can be used to control the subset of the routes that will be returned in the response, the page size. Each page can include information about the number of routes available to the client and the number of routes returned in the response (`numberMatched` and `numberReturned`) as well as links to support paging (link relation `next`). This approach is aligned with the paging of the Features resource in <<OGCAPIFeatures,OGC API - Features - Part 1: Core>>.
+
 [[req_manage-routes_get-routes-op]]
 [width="90%",cols="2,6a"]
 |===
@@ -455,6 +463,15 @@ This operation returns a list of routes that are currently available.
 ----
 type: object
 properties:
+  numberMatched:
+    type: integer
+    minimum: 0
+    description: The total number of routes available to the client on the server
+      (across all pages).
+  numberReturned:
+    type: integer
+    minimum: 0
+    description: The number of links with link relation type "item" in this response.
   links:
     type: array
     items:
@@ -505,6 +522,150 @@ to routes that the client is authorized to access.
       "rel": "item",
       "type": "application/geo+json",
       "title": "Lafayette Square to Zoo"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes/j6gdg3",
+      "rel": "item",
+      "type": "application/geo+json",
+      "title": "DCA to hotel"
+    }
+  ]
+}
+----
+=================
+
+[[req_manage-routes_get-routes-limit]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-routes-limit*
+^|A |For the HTTP GET operation at the path `/routes`, the server SHALL support a query parameter `limit` based upon the following OpenAPI 3.0 schema:
+
+[source,YAML]
+----
+name: limit
+in: query
+description: The maximum number of routes to return in the response.
+  If the value is larger than the maximum supported by the server,
+  the maximum value is used instead.
+required: false
+schema:
+  type: integer
+  minimum: 1
+  default: 100
+  example: 100
+style: form
+explode: false
+----
+^|B |If the server does not return all routes available to the client in the response, the response SHALL include a link with link relation type `next` that conforms to the schema in `/req/manage-routes/get-routes-success` B.
+^|C |The URI of the `next` link SHALL refer to the same resource (path `/routes`) and, when dereferenced, SHALL return the next page of routes, that is, the routes that immediately follow the routes in the response that included the `next` link.
+|===
+
+NOTE: Servers are free in how they implement the `next` link. Two common approaches from <<OGCAPIFeatures,OGC API - Features>> apply here as well: opaque continuation links that are managed by the server (clients have to be prepared to receive a `404` response for expired links), or links that add an implementation-specific query parameter to `/routes`, for example an `offset` parameter (as in `GET /routes?limit=50&offset=50`).
+
+NOTE: Clients cannot assume that paging is safe against changes to the routes stored on the server while a client iterates through `next` links. If a server provides opaque links these could be safe and maintain the state during the original request. Using a parameter for the start index, however, will not be safe. Additional requirements classes for safe paging can be added in extensions to this specification.
+
+[[per_manage-routes_get-routes-prev]]
+[width="90%",cols="2,6a"]
+|===
+^|*Permission {counter:per-id}* |*/per/manage-routes/get-routes-prev*
+^|A |The response to a request to `/routes` MAY include links with link relation types `prev` (and, for consistency, `first` and `last`) to support navigating back and forth between pages.
+|===
+
+[[req_manage-routes_get-routes-counts]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-routes-counts*
+^|A |If the response includes the members `numberMatched` and `numberReturned`, their values SHALL be non-negative integers where `numberMatched` is the total number of routes available to the client on the server (across all pages, that is, the number of links with link relation type `item` that would be returned if all pages were requested) and `numberReturned` is the number of links with link relation type `item` in this response.
+|===
+
+[[rec_manage-routes_get-routes-counts]]
+[width="90%",cols="2,6a"]
+|===
+^|*Recommendation {counter:rec-id}* |*/rec/manage-routes/get-routes-counts*
+^|A |Servers that can compute the total number of routes available to the client efficiently SHOULD include the members `numberMatched` and `numberReturned` in the response to a request to `/routes`.
+|===
+
+[[per_manage-routes_get-routes-limit-options]]
+[width="90%",cols="2,6a"]
+|===
+^|*Permission {counter:per-id}* |*/per/manage-routes/get-routes-limit-options*
+^|A |Servers MAY state the default and maximum values of the `limit` parameter in the `properties` member of the conformance declaration for the "Manage routes" conformance class, using the keys `defaultRoutesPageSize` and `maximumRoutesPageSize`.
+|===
+
+[[req_manage-routes_get-routes-error]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/manage-routes/get-routes-error*
+^|A |If the query parameter `limit` is not an integer or is less than 1, a response with status code `400` SHALL be returned.
+|===
+
+[[example_routes_paged]]
+.The Routes resource: A paged server response with available routes
+=================
+The request:
+
+[source,HTTP]
+----
+GET /api/routing/v1/routes?limit=2 HTTP/1.1
+Host: example.org
+Accept: application/json
+----
+
+returns the first page:
+
+[source,JSON]
+----
+{
+  "numberMatched": 3,
+  "numberReturned": 2,
+  "links": [
+    {
+      "href": "https://example.org/api/routing/v1/routes?limit=2",
+      "rel": "self",
+      "type": "application/json",
+      "title": "This document"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes?limit=2&offset=2",
+      "rel": "next",
+      "type": "application/json",
+      "title": "Next page"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes/5hsb32",
+      "rel": "item",
+      "type": "application/geo+json",
+      "title": "Lincoln Memorial to hotel"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes/9fg3dh",
+      "rel": "item",
+      "type": "application/geo+json",
+      "title": "Lafayette Square to Zoo"
+    }
+  ]
+}
+----
+
+Following the `next` link returns the second and last page, which has no `next` link (and, if the server supports `prev` links per `/per/manage-routes/get-routes-prev`, a `prev` link back to the first page):
+
+[source,JSON]
+----
+{
+  "numberMatched": 3,
+  "numberReturned": 1,
+  "links": [
+    {
+      "href": "https://example.org/api/routing/v1/routes?limit=2&offset=2",
+      "rel": "self",
+      "type": "application/json",
+      "title": "This document"
+    },
+    {
+      "href": "https://example.org/api/routing/v1/routes?limit=2",
+      "rel": "prev",
+      "type": "application/json",
+      "title": "Previous page"
     },
     {
       "href": "https://example.org/api/routing/v1/routes/j6gdg3",
@@ -573,7 +734,10 @@ If the route is still in processing, the routing process is canceled.
 |===
 
 The behavior depends on the state of the route:
-
+[#tldr,reftext='{table-caption} {counter:table-num}']
+.DELETE Behaviour
+[options="header"]
+|===
 |Situation |Behavior |Response
 |Calculation accepted or running |The server cancels the calculation, releases its resources, and dismisses the job. |200 OK with status document (application/json)
 |Calculation complete (route exists) |The server deletes the stored route. |200 OK with status document (application/json)
@@ -674,10 +838,9 @@ when computing the route.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/intermediate-waypoints/input*
-^|A |The server SHALL support at least five points in the member with the
+^|A |The server SHALL support arbitrary number points in the member with the
 name "waypoints" in the route definition in a HTTP POST request to the
-path `/routes` (i.e. `maxItems` may be removed from the schema definition
-or increased to a value larger than '4').
+path `/routes`.
 |===
 
 [[req_intermediate-waypoints_success]]
@@ -1136,37 +1299,77 @@ items:
 
 [[action_names_table]]
 [#tldr,reftext='{table-caption} {counter:table-num}']
-.Recommended of action names, definitions and applicability
+.Recommended action names, definitions and applicability (Common Command Registry)
 [cols="18,18,60,18,18",options="header"]
 !===
-|loiter |Loiter |Maintain position or circle waypoint for surveillance/waiting. |Seconds |UAV/UUV/USV/UGV
-|hover |Hover |Stationary hover above/below waypoint. |Seconds |UAV/UUV/USV
-|land |Land |Touch down and stop at waypoint. |Seconds |UAV/UGV/USV
-|takeoff |Takeoff |Ascend/depart from waypoint surface. |Seconds |UAV/UGV/USV
-|dock |Dock |Connect to charging/refueling station. |Seconds |UUV/USV/UGV
-|undock |Undock |Disconnect from station. |Seconds |UUV/USV/UGV
-|inspect |Inspect |Sensor scan (camera/LiDAR/sonar) of waypoint area. |Seconds |All
-|photo |Photo |Capture image/multispectral photo. |Seconds |UAV/UUV/USV
-|video |Video |Record video stream. |Seconds |UAV/UUV/USV
-|sample |Sample |Collect physical/environmental sample. |Seconds |UAV/UUV/USV/UGV
-|drop |Drop |Release payload/object. |Seconds |UAV/USV/UGV
-|pick |Pickup |Retrieve payload/object. |Seconds |UAV/USV/UGV
-|measure |Measure |Take precise measurement (alt/depth/temp/etc.). |Seconds |All
-|relay |Relay |Act as comms/data relay node. |Seconds |All
-|sync |Sync |Coordinate timing with other assets. |Seconds |All
-|wait |Wait |Pause until condition/time/external trigger. |Seconds |All
-|orbit |Orbit |Fly predefined pattern around waypoint. |Seconds |UAV/UUV/USV
-|spiral |Spiral |Spiral ascent/descent through waypoint. |Seconds |UAV/UUV
-|figure8 |Figure-8 |Fly figure-8 pattern through waypoint. |Seconds |UAV/UUV/USV
-|scan |Scan |Sweeping sensor coverage (radar/sonar/LiDAR). |Seconds |All
-|map |Map |Generate local 3D map/cloud. |Seconds |UAV/UUV/USV/UGV
-|charge |Charge |Perform battery recharge cycle. |Seconds |All
-|refuel |Refuel |Perform fuel transfer. |Seconds |USV/UGV
-|service |Service |Run self-diagnostic/maintenance routine. |Seconds |All
-|report |Report |Transmit status/data summary. |Seconds |All
-|abort |Abort |Cancel mission, initiate safe return. |N/A |All
-|divert |Divert |Switch to alternate route/mission. |N/A |All
-|hold |Hold |Pause all motion, maintain attitude. | Seconds |All 
+|Name |Label |Definition |Duration |Applicability
+|vehicle.goto |Go to position |Move to a position, then stop or continue to the next instruction. |Seconds |All
+|vehicle.follow-path |Follow path |Follow an ordered list of positions. |N/A |All
+|vehicle.hold-position |Hold position |Hold position: hover (UAV), stand still (UGV), station-keep (USV, UUV). |Seconds |All
+|vehicle.orbit |Orbit a point |Circle around a centre point. |Seconds |All
+|vehicle.set-heading |Set heading |Rotate to a heading (yaw in place, or turn on the spot for a ground vehicle). |N/A |All
+|vehicle.move-relative |Move relative to current position |Move a given distance along a bearing (drive forward, back up, sidestep, climb). |N/A |All
+|vehicle.return-to-home |Return to home |Return to a recovery point and perform a final action. |N/A |All
+|vehicle.stop |Stop |Stop movement and hold the current position. |N/A |All
+|vehicle.set-vertical-position |Set vertical position |Change altitude, height or depth, keeping the horizontal position. |N/A |UAV/UUV/USV
+|vehicle.takeoff |Take off |Take off and climb to a height. |N/A |UAV
+|vehicle.land |Land |Descend and land. |N/A |UAV
+|vehicle.transition |Transition flight mode |Transition a hybrid aircraft between hover and forward flight. |N/A |UAV
+|vehicle.surface |Surface |Ascend to the water surface (submerged vehicles). |Seconds |UUV/USV
+|vehicle.dock |Dock or undock |Dock with, or leave, a docking or charging station. |N/A |All
+|vehicle.set-speed |Set speed |Set the speed used by later movement commands. |N/A |All
+|vehicle.set-mode |Set operating mode |Change the operating mode. |N/A |All
+|vehicle.set-armed |Arm or disarm |Enable or disable actuators (motors, thrusters, drive). |N/A |All
+|vehicle.set-home |Set home position |Set the home (recovery) position. |N/A |All
+|vehicle.reboot |Restart |Restart or shut down a vehicle subsystem. |N/A |All
+|mission.start |Start mission |Start executing an uploaded or queued mission. |N/A |All
+|mission.pause |Pause mission |Pause mission execution. |N/A |All
+|mission.resume |Resume mission |Resume a paused mission. |N/A |All
+|mission.abort |Abort mission |Abandon the mission and perform a fallback action. |N/A |All
+|mission.wait |Wait |Wait for a duration or until a time. |Seconds |All
+|vehicle.emergency-stop |Emergency stop |Stop actuators as fast as possible. May cause an uncontrolled descent or drift. |N/A |All
+|vehicle.terminate |Terminate |End operation irreversibly (flight termination, scuttling, deploying a recovery device). |N/A |All
+|sensor.set-power |Set power state |Power a sensor on, off, or to standby. |N/A |All
+|sensor.start-acquisition |Start acquisition |Start producing observations. |Seconds |All
+|sensor.stop-acquisition |Stop acquisition |Stop producing observations. |N/A |All
+|sensor.trigger |Trigger a measurement |Take one measurement or a short series (image, ping, spectrum). |Seconds |All
+|sensor.set-sampling-rate |Set sampling rate |Set the rate at which observations are produced. |N/A |All
+|sensor.apply-configuration |Apply configuration |Apply a named, previously stored configuration. |N/A |All
+|sensor.calibrate |Calibrate |Run a calibration. |N/A |All
+|sensor.self-test |Self-test |Run a built-in self-test. |N/A |All
+|sensor.reset |Reset |Reset the sensor. |N/A |All
+|sensor.get-status |Get status |Return the state and health of the sensor. |N/A |All
+|data.start-recording |Start recording |Start recording data to onboard storage. |Seconds |All
+|data.stop-recording |Stop recording |Stop recording. |N/A |All
+|data.mark-event |Mark event |Insert a labelled marker into the recorded data. |N/A |All
+|camera.capture-image |Capture image |Capture still images. |Seconds |All
+|camera.stop-image-capture |Stop image capture |Stop an ongoing image sequence. |N/A |All
+|camera.start-video |Start video |Start video recording. |Seconds |All
+|camera.stop-video |Stop video |Stop video recording. |N/A |All
+|camera.set-mode |Set camera mode |Switch between still and video operation. |N/A |All
+|camera.configure-image |Configure image |Set image size, format and quality. |N/A |All
+|camera.set-exposure |Set exposure |Set exposure control. |Seconds |All
+|camera.set-zoom |Set zoom |Set zoom. Exactly one of the three parameters is required. |N/A |All
+|camera.set-focus |Set focus |Set focus. |N/A |All
+|camera.select-source |Select image source |Select which imaging sensor of a multi-sensor camera is used. |N/A |All
+|camera.set-trigger-distance |Set trigger distance |Capture an image every given distance travelled (survey mode). A value of 0 disables it. |N/A |UAV/USV/UGV
+|gimbal.point |Point gimbal |Point a gimbal or pan-tilt unit by angle or rate. At least one angle or one rate is required. |N/A |All
+|gimbal.point-at |Point at location |Keep a sensor pointed at a geographic location (region of interest). |N/A |All
+|gimbal.clear-target |Clear pointing target |Release the region of interest and return to the neutral or previous pointing. |N/A |All
+|gimbal.set-mode |Set gimbal mode |Set the stabilization mode. |N/A |All
+|gimbal.track-image-point |Track image point |Track a point in the image. Stopped by `gimbal.clear-target`. |N/A |All
+|ranging.set-range |Set range |Set the range scale of a lidar, radar or sonar. |N/A |All
+|ranging.set-gain |Set gain |Set receiver gain. |N/A |All
+|ranging.set-frequency |Set operating frequency |Select the operating frequency of a radar or sonar. |N/A |All
+|ranging.set-scan-sector |Set scan sector |Limit scanning to a sector. |N/A |All
+|ranging.set-transmit |Enable or disable transmission |Switch an active sensor between transmitting and silent. |N/A |All
+|sample.collect |Collect sample |Collect a physical sample (water, soil, air, sediment). |N/A |All
+|payload.gripper |Operate gripper |Open or close a gripper. |N/A |All
+|payload.release |Release payload |Drop or deploy an item. |N/A |All
+|payload.winch |Operate winch |Deploy, retract or hold a winch. |N/A |All
+|payload.set-lights |Set lights |Control lights or illuminators. |N/A |All
+|payload.set-switch |Set switch |Switch a discrete output (relay). |N/A |All
+|payload.set-actuator |Set actuator output |Set a continuous output (servo, motor). |N/A |All
 !===
 
 The following are some examples of the list of actions of a routing API that implements this Standard.
@@ -1180,8 +1383,8 @@ Response of HTTP GET operation at the path `/actions`.
 [source,JSON]
 ----
 [
-  "land",
-  "loiter"
+  "vehicle.land",
+  "vehicle.loiter"
 ]
 ----
 =================
@@ -1215,14 +1418,14 @@ The following is an example of the specific schemas of actions listed in <<examp
 [[example_action_land]]
 .Schema of action land
 
-Response of HTTP GET operation at the path `/actions/land`.
+Response of HTTP GET operation at the path `/actions/vehicle.land`.
 
 =================
 [source,JSON]
 ----
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.com/schemas/land.schema.json",
+  "$id": "https://example.com/schemas/vehicle.land.schema.json",
   "title": "Land",
   "allOf": [
     {
@@ -1275,7 +1478,7 @@ Encoding of a valid land action
 {
   "id": "8a56e7bc-218f-4c48-8e71-02c00a5a67de",
   "description": "Initiate automated landing at main base",
-  "name": "land",
+  "name": "vehicle.land",
   "point": {
     "type": "Point",
     "coordinates": [34.0522, -118.2437]
@@ -1287,7 +1490,7 @@ Encoding of a valid land action
 [[example_action_loiter]]
 .Schema of action loiter
 
-Response of HTTP GET operation at the path `/actions/loiter`.
+Response of HTTP GET operation at the path `/actions/vehicle.loiter`.
 
 =================
 [source,JSON]
@@ -1295,7 +1498,7 @@ Response of HTTP GET operation at the path `/actions/loiter`.
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/schemas/loiter.schema.json",
-  "title": "Loiter",
+  "title": "vehicle.loiter",
   "allOf": [
     {
       "$ref": "https://example.com/schemas/action.schema.json"
@@ -1346,7 +1549,7 @@ Encoding of a valid loiter action
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "description": "Loiter over the west ridge for 10 minutes",
-  "name": "loiter",
+  "name": "vehicle.loiter",
   "radius": 250,
   "altitude": 100,
   "duration": 600,
