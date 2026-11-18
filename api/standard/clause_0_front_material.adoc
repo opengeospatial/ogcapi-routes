@@ -16,13 +16,13 @@ For users, applications, and enterprises, the capability to get routes across a 
  
 Finally, the OGC recognizes that there are many environments for implementing open routing including on road, off road, air, sea, and many others. In addition, some communities may require specialized parameters in their Routing API.
  
-Accordingly, any routing API will accept two waypoints, the start and end position. APIs are free to find routes within a single or across multiple environments, support additional waypoints between the start and end positions, and be extensible to support parameters required by diverse implementation communities.
+Accordingly, any routing API will accept two waypoints, the start and end position. APIs are free to find routes within a single or across multiple environments, support additional waypoints between the start and end positions, and be extensible to support parameters required by diverse implementation communities. A Routing API declares the capabilities that it supports, including the transport modes it offers and their domains, the actions that can be executed while traversing a route, the contingencies that provide fallback plans, and a catalog of attributes that clients can use to interpret the properties of routes and route segments.
 
 [big]*ii.    Keywords*
 
 The following are keywords to be used by search engines and document catalogues.
 
-OGC, Routing, Routing API, Route Exchange Model
+OGC, Routing, Routing API, Route Exchange Model, Route, Waypoint, Mode, Action, Attribute, Contingency
 
 [big]*iii.   Preface*
 

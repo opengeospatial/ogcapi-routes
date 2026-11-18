@@ -1,0 +1,1071 @@
+{
+  "registry": "Common Attributes Registry",
+  "version": "0.1.0-draft",
+  "baseUri": "http://www.opengis.net/def/actions/",
+  "attributes": [
+    {
+      "id": "routeId",
+      "name": "Route ID",
+      "definition": "Unique identifier of the route within the API.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    {
+      "id": "segId",
+      "name": "Segment ID",
+      "definition": "Unique identifier of the segment within a route.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "uuid"
+      }
+    },
+    {
+      "id": "routeName",
+      "name": "Route name",
+      "definition": "Human-readable name for the route.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "segName",
+      "name": "Segment name",
+      "definition": "Human-readable name for the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "routeDesc",
+      "name": "Route description",
+      "definition": "Text describing purpose or characteristics of the route.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "segDesc",
+      "name": "Segment description",
+      "definition": "Text describing characteristics of the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "created",
+      "name": "Creation time",
+      "definition": "Timestamp when the route was created.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "updated",
+      "name": "Last update time",
+      "definition": "Timestamp when the route was last modified.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "validFrom",
+      "name": "Validity period start",
+      "definition": "Start of time window for which the route is valid.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "validTo",
+      "name": "Validity period end",
+      "definition": "End of time window for which the route is valid.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "version",
+      "name": "Version",
+      "definition": "Version tag of the route definition.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    {
+      "id": "source",
+      "name": "Source system",
+      "definition": "Identifier of the planning system or algorithm that generated the route.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "mission",
+      "name": "Mission ID",
+      "definition": "External mission identifier the route belongs to.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "length",
+      "name": "Total length",
+      "definition": "Full 2D length of the route geometry.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "segLength",
+      "name": "Segment length",
+      "definition": "2D length of the segment geometry.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "segCumLen",
+      "name": "Cumulative length at segment start",
+      "definition": "Distance from origin to start of this segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "minAlt",
+      "name": "Minimum altitude/depth",
+      "definition": "Lowest altitude or greatest depth along segment. Reference datum is implementation-defined.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number"
+      },
+      "unit": "m"
+    },
+    {
+      "id": "maxAlt",
+      "name": "Maximum altitude/depth",
+      "definition": "Highest altitude or shallowest depth along segment. Reference datum is implementation-defined.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number"
+      },
+      "unit": "m"
+    },
+    {
+      "id": "avgAlt",
+      "name": "Average altitude/depth",
+      "definition": "Mean altitude or depth over the segment. Reference datum is implementation-defined.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number"
+      },
+      "unit": "m"
+    },
+    {
+      "id": "curve",
+      "name": "Horizontal curvature index",
+      "definition": "Measure of curvature of the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "1/m"
+    },
+    {
+      "id": "vProfile",
+      "name": "Vertical profile type",
+      "definition": "Classification of vertical profile of the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "level",
+          "climb",
+          "descent"
+        ]
+      }
+    },
+    {
+      "id": "segType",
+      "name": "Segment type",
+      "definition": "Role of the segment within the route.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "straight",
+          "turn",
+          "loiter",
+          "ascent",
+          "descent"
+        ]
+      }
+    },
+    {
+      "id": "startTime",
+      "name": "Planned start time",
+      "definition": "Planned time when route execution starts.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "arriveTime",
+      "name": "Planned arrival time",
+      "definition": "Planned time at final destination.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "segEntry",
+      "name": "Segment entry time",
+      "definition": "Planned time when vehicle enters the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "segExit",
+      "name": "Segment exit time",
+      "definition": "Planned time when vehicle leaves the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    {
+      "id": "segDur",
+      "name": "Segment duration",
+      "definition": "Planned duration required to traverse the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "s"
+    },
+    {
+      "id": "totalDur",
+      "name": "Total duration",
+      "definition": "Planned overall travel time including holds.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "s"
+    },
+    {
+      "id": "avgSpeed",
+      "name": "Average speed",
+      "definition": "Planned mean speed over segment length.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m/s"
+    },
+    {
+      "id": "maxSpeed",
+      "name": "Maximum speed",
+      "definition": "Maximum allowed or expected speed on segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m/s"
+    },
+    {
+      "id": "minSpeed",
+      "name": "Minimum speed",
+      "definition": "Minimum allowed speed for safe operation.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m/s"
+    },
+    {
+      "id": "accel",
+      "name": "Acceleration limit",
+      "definition": "Maximum allowed linear acceleration magnitude.",
+      "scope": [
+        "route",
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m/s²"
+    },
+    {
+      "id": "turnRate",
+      "name": "Turn rate limit",
+      "definition": "Maximum allowed yaw rate when changing heading.",
+      "scope": [
+        "route",
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "deg/s"
+    },
+    {
+      "id": "loiter",
+      "name": "Hover/loiter duration",
+      "definition": "Planned duration for hover or loiter.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "s"
+    },
+    {
+      "id": "mode",
+      "name": "Transport mode",
+      "definition": "High-level transport mode.",
+      "scope": [
+        "route",
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "road",
+          "rail",
+          "air",
+          "surface",
+          "underwater",
+          "offRoad",
+          "indoor"
+        ]
+      }
+    },
+    {
+      "id": "vehicle",
+      "name": "Vehicle class",
+      "definition": "Platform category.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "UAV",
+          "UUV",
+          "USV",
+          "UGV",
+          "mannedGround",
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "vType",
+      "name": "Vehicle type",
+      "definition": "Specific platform type (e.g., quadcopter, AUV, tracked UGV).",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    },
+    {
+      "id": "vSize",
+      "name": "Vehicle dimensions",
+      "definition": "Physical envelope for clearance checks.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "length": {
+            "type": "number",
+            "minimum": 0
+          },
+          "width": {
+            "type": "number",
+            "minimum": 0
+          },
+          "height": {
+            "type": "number",
+            "minimum": 0
+          },
+          "draft": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "length",
+          "width",
+          "height"
+        ]
+      },
+      "unit": "m"
+    },
+    {
+      "id": "vMass",
+      "name": "Vehicle mass",
+      "definition": "Total mass at planning time.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "kg"
+    },
+    {
+      "id": "hRestrict",
+      "name": "Height restriction",
+      "definition": "Allowed altitude range over entire route.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ]
+      },
+      "unit": "m"
+    },
+    {
+      "id": "dRestrict",
+      "name": "Depth restriction",
+      "definition": "Allowed depth band for underwater segments, measured below the surface.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "minimum": 0
+          },
+          "max": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ]
+      },
+      "unit": "m"
+    },
+    {
+      "id": "speedMax",
+      "name": "Speed restriction",
+      "definition": "Route-level maximum allowed speed.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m/s"
+    },
+    {
+      "id": "segLimit",
+      "name": "Segment speed restriction",
+      "definition": "Segment-level maximum permitted speed.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m/s"
+    },
+    {
+      "id": "maneuver",
+      "name": "Maneuverability requirement",
+      "definition": "Required maneuvering capability level for the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      }
+    },
+    {
+      "id": "gnssReq",
+      "name": "GNSS dependency",
+      "definition": "Indicates if segment assumes GNSS availability.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "boolean"
+      }
+    },
+    {
+      "id": "commReq",
+      "name": "Communication requirement",
+      "definition": "Required communications level for the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "none",
+          "intermittent",
+          "continuous"
+        ]
+      }
+    },
+    {
+      "id": "obstClr",
+      "name": "Obstacle clearance",
+      "definition": "Minimum distance from known obstacles along segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "terrClr",
+      "name": "Terrain clearance",
+      "definition": "Minimum vertical distance between vehicle and terrain.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "buffer",
+      "name": "Safety buffer radius",
+      "definition": "Radial buffer around planned path intended to be obstacle-free.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "risk",
+      "name": "Risk level",
+      "definition": "Qualitative or numeric risk level associated with the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "nogoDist",
+      "name": "No-go proximity",
+      "definition": "Minimum distance to nearest no-go zone.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "m"
+    },
+    {
+      "id": "collProb",
+      "name": "Collision likelihood",
+      "definition": "Probability of collision for the segment under stated assumptions.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    {
+      "id": "backup",
+      "name": "Redundancy requirement",
+      "definition": "Indicates if redundant routing is required.",
+      "scope": [
+        "route",
+        "segment"
+      ],
+      "schema": {
+        "type": "boolean"
+      }
+    },
+    {
+      "id": "exitOpt",
+      "name": "Emergency exit availability",
+      "definition": "Indicates if safe diversion options exist from segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "boolean"
+      }
+    },
+    {
+      "id": "safAlt",
+      "name": "Minimum safety altitude/depth",
+      "definition": "Safety-driven minimum altitude or maximum depth along segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "number"
+      },
+      "unit": "m"
+    },
+    {
+      "id": "env",
+      "name": "Environment domain",
+      "definition": "Primary operating environment.",
+      "scope": [
+        "route",
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "urban",
+          "rural",
+          "coastal",
+          "openSea",
+          "underwater",
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "surface",
+      "name": "Surface type",
+      "definition": "Dominant surface type along the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "paved",
+          "dirt",
+          "gravel",
+          "rockySeabed",
+          "other"
+        ]
+      }
+    },
+    {
+      "id": "seaState",
+      "name": "Sea state",
+      "definition": "Sea state classification (Douglas sea scale, 0-9) affecting marine operations.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9
+      }
+    },
+    {
+      "id": "windBand",
+      "name": "Wind/current band",
+      "definition": "Range classification of wind or current intensity, as a category label or numeric band index.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer",
+            "minimum": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "vis",
+      "name": "Visibility condition",
+      "definition": "Assumed visibility condition.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "good",
+          "moderate",
+          "poor",
+          "night",
+          "fog"
+        ]
+      }
+    },
+    {
+      "id": "gnssQual",
+      "name": "GNSS quality",
+      "definition": "Expected GNSS robustness.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "good",
+          "degraded",
+          "denied"
+        ]
+      }
+    },
+    {
+      "id": "commCov",
+      "name": "Communication coverage",
+      "definition": "Expected communications quality.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "string",
+        "enum": [
+          "continuous",
+          "intermittent",
+          "none"
+        ]
+      }
+    },
+    {
+      "id": "energy0",
+      "name": "Initial energy",
+      "definition": "Energy/fuel level at route start.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "J",
+              "Wh",
+              "percent"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "unit"
+        ]
+      }
+    },
+    {
+      "id": "segEnergy",
+      "name": "Segment energy",
+      "definition": "Estimated energy consumed while traversing the segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "J",
+              "Wh",
+              "percent"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "unit"
+        ]
+      }
+    },
+    {
+      "id": "cumEnergy",
+      "name": "Cumulative energy",
+      "definition": "Total energy consumed up to end of segment.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "J",
+              "Wh",
+              "percent"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "unit"
+        ]
+      }
+    },
+    {
+      "id": "minEnergy",
+      "name": "Minimum required energy",
+      "definition": "Minimum energy needed at segment start for safe completion.",
+      "scope": [
+        "segment"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "J",
+              "Wh",
+              "percent"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "unit"
+        ]
+      }
+    },
+    {
+      "id": "energyEnd",
+      "name": "Remaining energy",
+      "definition": "Predicted energy level at route completion.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "J",
+              "Wh",
+              "percent"
+            ]
+          }
+        },
+        "required": [
+          "amount",
+          "unit"
+        ]
+      }
+    },
+    {
+      "id": "payloadMass",
+      "name": "Payload mass",
+      "definition": "Mass of payload carried.",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": "kg"
+    },
+    {
+      "id": "payloadType",
+      "name": "Payload type",
+      "definition": "Type of payload (e.g., sensor, cargo, survey).",
+      "scope": [
+        "route"
+      ],
+      "schema": {
+        "type": "string"
+      }
+    }
+  ]
+}

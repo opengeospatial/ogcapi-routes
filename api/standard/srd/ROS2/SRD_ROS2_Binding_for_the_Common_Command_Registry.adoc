@@ -1,0 +1,2394 @@
+[appendix]
+:appendix-caption: Annex
+
+== A ROS 2 Binding for the Common Command Registry for Uncrewed Systems
+
+=== Carrying Registry Commands over ROS 2 Actions, Services and Topics
+
+Companion files: `uxs-ros2-binding.json` (machine-readable Binding Descriptors for every registry command) and `uxs_interfaces.tar.gz` (proposed ROS 2 interface package, Tier 3)._
+
+==== Purpose
+
+ROS 2 (Robot Operating System 2) is an open-source, component-based middleware for robot software development. It provides a language-neutral publish--subscribe and request--reply communication model over DDS, with concepts such as nodes, topics, services, actions and parameters. ROS 2 is transport-agnostic and supports real-time, multi-robot and security-hardened deployments through SROS2 and DDS security.
+
+The Common Command Registry defines 67 protocol-neutral commands for UAV, UGV, USV and UUV vehicles and their sensors. This document specifies how each registry command is carried over ROS 2: which existing service, action or topic realizes it, how parameters and results are converted, and how the execution state is reported. It was written by surveying the ROS 2 interface definitions themselves, not by assuming what exists (Clause 1.2).
+
+The binding has three tiers, because ROS 2 has no complete command vocabulary for uncrewed systems:
+
+|===
+| Tier | Source | Used for
+
+| *1*
+| Standard and widely deployed ROS 2 packages: Nav2 (`nav2_msgs`), `std_srvs`, `lifecycle_msgs`, `rcl_interfaces`, `diagnostic_msgs`, `control_msgs`, `rosbag2_interfaces`, `geographic_msgs`
+| Ground and surface navigation, generic sensor lifecycle, grippers, recording
+
+| *2*
+| Autopilot bridges: MAVROS (`mavros_msgs`) and PX4 uXRCE-DDS (`px4_msgs`)
+| Aerial commands, gimbals, camera triggers, mode and arming, MAVLink-based surface and underwater vehicles
+
+| *3*
+| A proposed package `uxs_interfaces`, generated from the registry
+| Every command that neither tier covers, and a uniform alternative for all others
+|===
+
+Of the 67 registry commands, 57 have at least one Tier 1 or Tier 2 interface, and 10 have none and can only be carried by Tier 3 (Clause 1.2). The Tier 3 package has 67 interface definitions generated from the registry (25 actions, 42 services, 2 shared messages).
+
+==== Non-goals
+
+* Does not define a ROS 2 transport, DDS configuration or discovery beyond what ROS 2 provides.
+* Does not define how a vehicle loads or executes a route, or what it does with a parameter it cannot honor. That is vehicle specific and outside OGC API -- Routes (registry Clause 2.11). The REC clauses describe a typical approach.
+* Does not define low-level control (velocity commands, thruster or joint trajectories). `cmd_vel` and trajectory controllers are outside the registry.
+* Does not replace the registry or the MAVLink profile. MAVROS and PX4 are bridges to MAVLink and PX4, and the MAVLink mapping stays authoritative for what a `MAV_CMD` means.
+* Does not define perception, SLAM, map or localization interfaces, except where a command needs a coordinate conversion (Clause 4.3).
+
+==== Requirements and recommendations
+
+This document labels its statements in two ways. *REQ* marks a proposed requirement on the Routes side: what a routing server lists, serves, validates and generates. *REC* marks a recommendation for the loading side: what a component that loads a route onto a vehicle, or the vehicle itself, typically does. Loading is vehicle specific and outside OGC API -- Routes, so a REC uses SHOULD. It records the reasoning behind this document, and an implementation may depart from it. Like every SRD in this series, the document is non-binding. Every statement in this document is a REC.
+
+'''
+
+=== Terminology mapping
+
+|===
+| Registry concept | ROS 2 concept | Notes
+
+| Command (`vehicle.goto`)
+| An *action* (goal, feedback, result) or a *service* (request, response)
+| Registry `completion`: `until-goal`/`until-duration` → action, `immediate` → service
+
+| Command parameters
+| Goal or request fields
+| Clause 4.3, 4.4
+
+| Command result
+| Result or response fields
+|
+
+| System (vehicle, sensor)
+| A *node* or group of nodes in a *namespace*
+| Clause 4.2
+
+| Control stream
+| An *action server* or *service server*
+|
+
+| Command instance
+| A *goal* (action) or a *call* (service)
+|
+
+| `CommandStatus`
+| `action_msgs/GoalStatus`, service outcome
+| Clause 4.5
+
+| `ACCEPTED`, `EXECUTING`, `COMPLETED`, `CANCELED`, `FAILED`, `REJECTED`
+| `STATUS_ACCEPTED`, `STATUS_EXECUTING`, `STATUS_SUCCEEDED`, `STATUS_CANCELED`, `STATUS_ABORTED`, goal rejection
+|
+
+| Cancel (`DELETE` on a command)
+| `action_msgs/srv/CancelGoal` on the action server
+|
+
+| `Position`
+| `geographic_msgs/GeoPose` / `GeoPoint`, `geometry_msgs/PoseStamped` in `map`, `mavros_msgs` lat/lon fields
+| Clause 4.3
+
+| Vertical reference
+| No ROS 2 equivalent; MAVLink frames in Tier 2
+|
+
+| Persistence `latched`
+| A ROS parameter or a stateful setting of the node
+|
+|===
+
+'''
+
+=== Conformance classes
+
+|===
+| Class | Kind | URI (suggested) | Depends on | Needs a live ROS graph?
+
+| (a) Interface Catalog
+| Recommended level
+| `+.../conf/ros2-catalog+`
+| Registry
+| No
+
+| (b) Parameter Conversion
+| Recommended level
+| `+.../conf/ros2-conversion+`
+| (a)
+| No
+
+| (c) Live Binding
+| Recommended level
+| `+.../conf/ros2-live-binding+`
+| (b), a ROS 2 system
+| Yes
+
+| (d) Execution Feedback
+| Recommended level
+| `+.../conf/ros2-execution-feedback+`
+| (c)
+| Yes
+
+| (e) Interface Package
+| Recommended level
+| `+.../conf/ros2-interface-package+`
+| (a)
+| No (for definitions), yes for nodes implementing them
+|===
+
+Classes (a) and (b) let a planner or simulator check offline that a route can be mapped to ROS 2 interfaces and convert its parameters. Class (c) is a gateway that calls a ROS 2 graph. Class (e) covers nodes that implement the Tier 3 interfaces.
+
+All classes are recommended levels. This binding describes what a component that loads a route onto a ROS 2 system typically does. Loading is vehicle specific and outside OGC API -- Routes.
+
+'''
+
+=== Requirements and recommendations
+
+==== Tiers and the Binding Descriptor
+
+*REC 1* -- Every registry command SHOULD have at most one *active* binding per System, chosen from the list in its Binding Descriptor. The control stream's `commandOptions` (registry REC R7) SHOULD list only the parameters that the active interface can carry. A parameter the interface cannot carry SHOULD NOT be listed.
+
+*REC 2* -- A Binding Descriptor entry has the members:
+
+[,json]
+----
+{
+  "tier": 1,
+  "package": "nav2_msgs",
+  "interface": "NavigateToPose",
+  "kind": "action",
+  "name": "navigate_to_pose",
+  "fit": "partial",
+  "parameterMap": "location → pose (PoseStamped, frame map); heading → pose.orientation",
+  "conversions": "lat/lon → map frame with robot_localization /fromLL; ENU yaw = π/2 − heading",
+  "notes": "speed, acceptanceRadius, holdTime, passThrough are not goal fields."
+}
+----
+
+`kind` is `action`, `service` or `topic`. `name` is relative to the System namespace unless it starts with `/`. `fit` is `exact` (all registry parameters carried), `partial` (some optional parameters cannot be carried), or `generic` (a transport that can carry any MAVLink command, used for one command).
+
+*REC 3* -- Partial fit. When the active interface cannot carry an optional parameter, a gateway SHOULD drop it and report a warning (registry Clause 2.11). Whether it rejects the command instead (registry REC R9) is vehicle specific. A required parameter that the interface cannot carry makes the command unloadable.
+
+*REC 4* -- Generic MAVLink transports (`mavros_msgs/CommandLong`, `CommandInt`, `px4_msgs/VehicleCommand`) SHOULD be used only with the MAVLink command given in the registry mapping for that command (registry Annex A). A gateway SHOULD NOT expose arbitrary command numbers.
+
+==== Naming and discovery
+
+*REC 5* -- A System SHOULD correspond to a ROS 2 namespace. The System description SHOULD carry that namespace as an identifier (`ros2:namespace`), and, for multi-domain systems, the DDS domain id (`ros2:domain`).
+
+*REC 6* -- Tier 1 and Tier 2 interfaces SHOULD be used under the names given in the descriptor, relative to the System namespace (for example `/rover1/navigate_to_pose`). Tier 3 interfaces SHOULD be named `+uxs/{family}/{command}+` with hyphens replaced by underscores (for example `/rover1/uxs/camera/capture_image`).
+
+*REC 7* -- Discovery. A gateway SHOULD determine the supported commands of a System from the ROS graph: it lists action and service names and types in the System's namespace and matches them with the descriptor by *type and name*. A name match with a different type SHOULD be ignored. The gateway builds the control streams (with `commandType` and `commandOptions`) from the matches.
+
+*REC 8* -- Options. For a Tier 3 interface, the node SHOULD declare a string-array parameter `+uxs.options.{command}+` listing the supported optional parameters. Where it is absent, the gateway assumes that only required parameters are supported.
+
+==== Conventions: units, frames, geodesy
+
+*REC 9* -- Units. ROS 2 follows REP 103 (SI units, angles in radians). Registry angles are in degrees. Conversions SHOULD be as declared in the descriptor. Tier 2 interfaces that pass values through to MAVLink keep the MAVLink units (for example the `GimbalManagerPitchyaw` service takes degrees and deg/s).
+
+*REC 10* -- Headings. A registry heading is degrees clockwise from true north. REP 103 yaw is positive counter-clockwise about the up axis, with 0 along east in ENU frames. The conversion is
+
+----
+yaw_ENU(rad) = π/2 − heading(deg) · π/180,   wrapped to (−π, π]
+----
+
+For `reference = magnetic-north`, the gateway applies the local declination first. For `reference = relative`, the gateway adds the heading to the current yaw taken from TF. Nav2's `Spin` takes a *relative* rotation: the gateway computes `wrap(target yaw − current yaw)`.
+
+*REC 11* -- Geodetic positions. Nav2 goals are poses in a local frame (normally `map`). To convert a registry `Position`, a gateway SHOULD use the `robot_localization` service `/fromLL` (request `ll_point` of type `geographic_msgs/GeoPoint`, response `map_point` of type `geometry_msgs/Point`), which requires the `navsat_transform_node` to be running. `FollowGPSWaypoints` accepts `GeoPose` directly and performs the same conversion itself. Where no conversion service is available, the command SHOULD be rejected.
+
+*REC 12* -- Vertical reference. Nav2 is planar: for ground vehicles the `vertical` and `verticalReference` of a position are ignored. For MAVROS and PX4, `verticalReference` maps to the MAVLink frame (`msl` → `MAV_FRAME_GLOBAL`, `home` → `MAV_FRAME_GLOBAL_RELATIVE_ALT`, `terrain` → `MAV_FRAME_GLOBAL_TERRAIN_ALT`). `ellipsoid` has no MAVLink frame and requires a geoid conversion (registry and MAVLink profile). `depth` and `seabed` have no ROS 2 or MAVLink frame and require a vendor convention, for example a negative relative altitude.
+
+*REC 13* -- Precision. `mavros_msgs` services `CommandTOL` and `CommandHome`, and `GimbalManagerSetRoi`, carry latitude, longitude and altitude as `float32`. A `float32` near 45° has a resolution of about 4 × 10⁻⁶ degrees (about 0.4 m), and larger values up to about 0.9 m. A gateway SHOULD use `CommandInt` (int32 degE7 coordinates) where metre-level accuracy matters, and SHOULD declare the resolution of any binding that uses `float32`.
+
+==== Tier 3: generated interface conventions
+
+*REC 14 (e)* -- Tier 3 interfaces SHOULD be generated from the registry entry, with one interface per command: an *action* for `until-goal` and `until-duration` commands, a *service* for `immediate` commands. The package is `uxs_interfaces`; interface names are the camel-cased identifier (`vehicle.set-heading` → `VehicleSetHeading`).
+
+*REC 15 (e)* -- Type mapping:
+
+|===
+| Registry type | ROS 2 type | Unset value (optional parameter)
+
+| Quantity
+| `float64`
+| `NaN`
+
+| Count (required, ≥ 0)
+| `uint32`
+| --
+
+| Count (optional or signed)
+| `int32`
+| `-1`
+
+| Boolean (required)
+| `bool`
+| --
+
+| Boolean (optional)
+| `uint8` with `+{NAME}_FALSE = 0+`, `+{NAME}_TRUE = 1+`, `+{NAME}_UNSET = 255+`
+| `255`
+
+| Category
+| `uint8` with constants `+{NAME}_{VALUE}+` numbered from 0 in registry order
+| `+{NAME}_UNSET = 255+`
+
+| Text
+| `string`
+| empty string
+
+| Time
+| `builtin_interfaces/Time`
+| zero
+
+| Position, VerticalTarget
+| `uxs_interfaces/Position`, `uxs_interfaces/VerticalTarget` (optional: companion `+bool has_{name}+`)
+| `+has_{name} = false+`
+
+| Position[]
+| `uxs_interfaces/Position[]`
+| empty array
+|===
+
+Field names are the registry names in snake_case. Angles are in radians and all other units are the registry unit, documented in the field comment.
+
+*REC 16 (e)* -- Every Tier 3 result or response SHOULD contain `bool success`, `uint16 error_code` with the constants `ERROR_NONE` (0), `ERROR_UNSUPPORTED_PARAMETER` (1), `ERROR_INVALID_VALUE` (2), `ERROR_PRECONDITION_FAILED` (3), `ERROR_TIMEOUT` (4), `ERROR_HARDWARE_FAULT` (5), `ERROR_UNKNOWN` (99), and `string message`, followed by the result fields of the registry entry. Every Tier 3 action feedback SHOULD contain `float32 progress` (0 to 1, NaN if unknown) and `builtin_interfaces/Duration elapsed`.
+
+*REC 17 (e)* -- A Tier 3 server SHOULD reject (goal rejected, or `success = false` with `ERROR_UNSUPPORTED_PARAMETER`) a request that sets an optional parameter it does not list in `+uxs.options.{command}+` (REC 8).
+
+==== Execution mapping
+
+*REC 18 (d)* -- Completion. A command implemented by an action is `until-goal` or `until-duration` and reaches `COMPLETED` when the action result reports success. A command implemented by a service is `immediate` and is `COMPLETED` when the response reports success. A `topic` binding has no acknowledgment: a gateway SHOULD report it `COMPLETED` on publication and SHOULD mark the status as unconfirmed.
+
+*REC 19 (d)* -- Status mapping:
+
+|===
+| ROS 2 signal | CS API `CommandStatus` | Notes
+
+| Goal rejected by the action server
+| `REJECTED`
+|
+
+| `GoalStatus.STATUS_ACCEPTED` (1)
+| `ACCEPTED`
+|
+
+| `STATUS_EXECUTING` (2)
+| `EXECUTING`
+| `percentCompletion` from feedback where possible
+
+| `STATUS_CANCELING` (3)
+| `EXECUTING`
+| Cancellation requested
+
+| `STATUS_SUCCEEDED` (4)
+| `COMPLETED`
+|
+
+| `STATUS_CANCELED` (5)
+| `CANCELED`
+|
+
+| `STATUS_ABORTED` (6)
+| `FAILED`
+| `message` from the result `error_msg`
+
+| Service response `success = false` (or a MAVROS `result` of a failure code)
+| `FAILED`
+|
+
+| Service not available within the timeout
+| `REJECTED`
+| Reason `server unavailable`
+
+| Action server or service not found
+| `REJECTED`
+|
+
+| Result or response not received within the timeout
+| `FAILED`
+| Reason `timeout`
+|===
+
+*REC 20 (d)* -- Progress. Where the action feedback provides a progress measure, a gateway SHOULD map it to `percentCompletion`. For Nav2 `NavigateToPose` and `NavigateThroughPoses`, progress is derived from `distance_remaining` against the initial distance. Nav2 error codes (for example `TF_ERROR`, `TIMEOUT`) SHOULD be carried in the status `message`.
+
+*REC 21 (d)* -- Supersession and cancellation. A new movement goal sent to an action server that supports one active goal can preempt the previous goal, which then ends `STATUS_ABORTED` or `STATUS_CANCELED`. The gateway SHOULD report such a goal as `CANCELED` with a `message` naming the replacing command. Explicit cancellation uses `action_msgs/srv/CancelGoal`; to stop all goals on a server, the request has a zero goal id and a zero timestamp.
+
+==== Live binding
+
+*REC 22 (c)* -- A class (c) gateway SHOULD use one ROS 2 client per bound interface, wait for the server within a configured timeout (default 5 s) before sending, and apply a result timeout per command. It SHOULD NOT send a goal to a lifecycle node that is not in the `active` state (`lifecycle_msgs/GetState`).
+
+*REC 23 (c)* -- Concurrency. A gateway SHOULD send at most one in-flight goal to an action server that supports one active goal, in `sequence` order (Routes), unless the registry `pipeline` option permits otherwise.
+
+*REC 24 (c)* -- Time. A gateway and the robot SHOULD use consistent time sources. When `use_sim_time` is true on the robot, the gateway SHOULD stamp headers in simulation time.
+
+*REC 25 (c)* -- Multi-robot. Every System SHOULD have its own namespace (REC 5). Gateways SHOULD NOT use absolute interface names shared by several Systems, and SHOULD respect the DDS domain declared in the System description.
+
+==== Safety and security
+
+*REC 26* -- Hazard. The hazard class of the registry entry applies to the ROS 2 binding. A `destructive` command (for example a forced disarm, reboot, or flight termination through `CommandLong`) SHOULD require separate authorization and SHOULD NOT be issued from an automatically executed route (registry REQ R16). A gateway SHOULD NOT bind a `destructive` command to a `topic`.
+
+*REC 27* -- Security. Production deployments SHOULD use SROS2 (DDS security) or an equivalent, so that only authenticated nodes can call command interfaces. A gateway SHOULD authenticate clients of its own API and SHOULD NOT forward a command on behalf of an unauthenticated client.
+
+==== Composite and non-route commands
+
+*REC 28 (d)* -- `mission.abort`. The registry command `mission.abort` (`Completion: immediate`, `Persistence: mode`, `Scope: none`, `Hazard: flight-critical`) has one required parameter, `action`, with the values `hold`, `return-to-home`, `land`, `surface` and `stop`. A gateway SHOULD perform it as follows:
+
+. Resolve the fallback first. The fallback is the registry command of the same name (`hold` → `vehicle.hold-position`, `return-to-home` → `vehicle.return-to-home`, `land` → `vehicle.land`, `surface` → `vehicle.surface`, `stop` → `vehicle.stop`) with default parameters, through its active binding (REC 1). If no binding can carry it, the gateway SHOULD end `mission.abort` as `REJECTED` with a `message`, and SHOULD NOT have sent any cancellation.
+. Cancel every active goal that the gateway has on the movement action servers of the System, using `action_msgs/srv/CancelGoal` with a zero goal id and a zero timestamp (REC 21). The cancelled goals end as `CANCELED` with a `message` naming `mission.abort`.
+. Send the fallback, unless it is `stop`: the cancellation in step 2 already is the registry binding of `vehicle.stop` for Nav2 (Annex B), and a second request SHOULD NOT be sent.
+. Report `mission.abort` as `COMPLETED` when the cancellation has been accepted and the fallback has been accepted by its server (action goal accepted, or service `success = true`). The progress of a fallback that is an action (for example `return-to-home`) is not part of `mission.abort`. If the cancellation or the fallback fails, `mission.abort` is `FAILED` with the cause in `message`.
+
+The gateway SHOULD stop sending the remaining Commands of the aborted route to that System.
+
+*REC 29 (c)* -- Commands outside a route. A registry command whose scope is `none` (for example `mission.start`, `mission.pause`, `mission.abort`, `vehicle.set-armed`, `vehicle.reboot`) is not a route action. A gateway SHOULD execute it only on an explicit, authenticated request (REC 27), and SHOULD NOT issue it as a step of a route sequence (registry REQ R16). Its status is reported as in REC 18--19.
+
+'''
+
+=== Worked example
+
+*Scenario:* the survey route from the earlier profiles, executed by a ground rover `rover1` (Nav2, GPS localization) carrying a camera `camera1`. Three waypoints. Waypoints 1 and 2 capture a photo, waypoint 3 holds for ten seconds.
+
+==== Discovery
+
+The gateway lists the graph in the `/rover1` namespace:
+
+|===
+| ROS 2 name | Type | Matched registry command | Tier
+
+| `/rover1/navigate_to_pose`
+| `nav2_msgs/action/NavigateToPose`
+| `vehicle.goto` (partial)
+| 1
+
+| `/rover1/follow_gps_waypoints`
+| `nav2_msgs/action/FollowGPSWaypoints`
+| `vehicle.follow-path` (partial)
+| 1
+
+| `/rover1/wait`
+| `nav2_msgs/action/Wait`
+| `vehicle.hold-position`, `mission.wait` (partial)
+| 1
+
+| `/rover1/spin`
+| `nav2_msgs/action/Spin`
+| `vehicle.set-heading` (partial)
+| 1
+
+| `/rover1/camera1/uxs/camera/capture_image`
+| `uxs_interfaces/action/CameraCaptureImage`
+| `camera.capture-image`
+| 3
+|===
+
+Active bindings: `vehicle.goto` → `NavigateToPose`, `mission.wait` → `Wait`, `camera.capture-image` → Tier 3. The derived `commandOptions` for `vehicle.goto` is `["heading"]`: `NavigateToPose` carries a pose (position and orientation), so `heading` can be carried, while `speed`, `acceptanceRadius`, `holdTime` and `passThrough` are not listed (REC 1, 3).
+
+==== Mapping a route
+
+|===
+| # | Action | Interface | Converted request
+
+| 1
+| `vehicle.goto` (waypoint 1)
+| `/rover1/navigate_to_pose`
+| `pose.header.frame_id = map`; `pose.position` from `/fromLL` (lon 7.63, lat 45.02); orientation unset (identity)
+
+| 2
+| `camera.capture-image`
+| `/rover1/camera1/uxs/camera/capture_image`
+| `count = 1`, `interval = NaN`
+
+| 3
+| `vehicle.goto` (waypoint 2)
+| `/rover1/navigate_to_pose`
+| position from `/fromLL` (lon 7.64, lat 45.03)
+
+| 4
+| `camera.capture-image`
+| as row 2
+| `count = 1`
+
+| 5
+| `vehicle.goto` (waypoint 3)
+| `/rover1/navigate_to_pose`
+| position from `/fromLL` (lon 7.65, lat 45.04)
+
+| 6
+| `mission.wait`
+| `/rover1/wait`
+| `time = 10 s`
+|===
+
+The gateway sends one goal at a time, waits for `STATUS_SUCCEEDED` (mapped to `COMPLETED`) and then sends the next. The hold at waypoint 3 is `mission.wait` (registry scope `waypoint`), not a plugin of the waypoint follower (Clause 1.2, finding 5).
+
+==== Execution feedback
+
+While goal 1 runs, the `NavigateToPose` feedback (`distance_remaining`, `estimated_time_remaining`) provides `percentCompletion`. If the planner gives up, the result carries a Nav2 error code and `error_msg`; the gateway reports `FAILED` with that text and applies the route's `onFailure` policy.
+
+==== The same route on a UAV
+
+For `drone7` flying through MAVROS, the same registry commands map differently:
+
+|===
+| Registry command | Interface | Note
+
+| `vehicle.takeoff`
+| `mavros_msgs/srv/CommandTOL` at `cmd/takeoff`
+| `altitude`, `latitude`, `longitude` are `float32` (REC 13)
+
+| `vehicle.goto`
+| `mavros_msgs/srv/CommandInt` at `cmd/command_int`, `DO_REPOSITION` (192)
+| degE7 coordinates, `speed` → param 1
+
+| `camera.capture-image`
+| `mavros_msgs/srv/CommandLong` at `cmd/command`, `IMAGE_START_CAPTURE` (2000)
+| generic transport
+
+| `vehicle.land`
+| `mavros_msgs/srv/CommandTOL` at `cmd/land`
+| `descentRate` unsupported
+
+| `vehicle.set-armed`
+| `mavros_msgs/srv/CommandBool` at `cmd/arming`
+| `force` unsupported
+|===
+
+MAVROS services return a `success` flag and a MAVLink `result` byte; the gateway maps them by REC 19. Because `DO_REPOSITION` returns when the command is acknowledged and not when the position is reached, the gateway SHALL detect arrival from position telemetry (`global_position/global`) to report `COMPLETED`.
+
+==== What a class (a)+(b) client does
+
+. Reads the interface catalog (Annex B) once and caches it with the registry version.
+. Checks which parameters each bound interface can carry, and drops the others with a warning (REC 3).
+. Converts parameters (REC 9--13) with no ROS graph, for example a heading to an ENU yaw.
+
+==== What a class (c)--(d) client additionally does
+
+. Lists the graph in the System namespace and matches names and types (REC 7).
+. Sends one goal at a time, in sequence order, once the server is available and any lifecycle node is `active` (REC 22--23).
+. Maps `GoalStatus` and feedback to `CommandStatus` and `percentCompletion` (REC 19--20), and reports a preempted goal as `CANCELED` (REC 21).
+
+==== Abandoning the mission with `mission.abort`
+
+`mission.abort` ("Abandon the mission and perform a fallback action") is a Core command with `Completion: immediate`, `Persistence: mode`, `Scope: none` and `Hazard: flight-critical`. It is not a route action (REC 29). Two cases show how it differs between vehicles.
+
+*Rover `rover1` with `action = stop`.* Goal 5 of the route (`NavigateToPose`) is `EXECUTING`. An authorized operator sends `mission.abort` with `{"action": "stop"}`.
+
+|===
+| Step | Interface | Result
+
+| 1. Resolve the fallback
+| `vehicle.stop` → `action_msgs/srv/CancelGoal` (Tier 1)
+| Available (REC 28, step 1)
+
+| 2. Cancel
+| `CancelGoal` on `/rover1/navigate_to_pose/_action/cancel_goal`, goal id zero, stamp zero
+| Goal ends `STATUS_CANCELED`, reported as `CANCELED` with a `message` naming `mission.abort`
+
+| 3. Fallback
+| none: the cancellation is the binding of `vehicle.stop`
+| No second request
+
+| 4. Report
+| `CancelGoal` response accepted
+| `mission.abort` is `COMPLETED`
+|===
+
+The gateway sends no further Commands of the route (row 6 of Clause 5.2, the hold at waypoint 3).
+
+*Drone `drone7` with `action = return-to-home`.* MAVROS has no action servers, so step 2 has nothing to cancel. The gateway resolves `vehicle.return-to-home` to `mavros_msgs/srv/CommandLong` at `cmd/command` with `NAV_RETURN_TO_LAUNCH` (20) (Annex B, Tier 2, `generic`). The `finalAction` and `vertical` parameters of the registry command are not set by `mission.abort`, so nothing is dropped (REC 3). The call returns `success = true`, which the gateway maps to `COMPLETED` for `mission.abort` (REC 19). The aircraft's flight home is then a separate matter, observed through telemetry. The same `action = surface` would be `REJECTED` for `drone7`, because `vehicle.surface` has no Tier 1 or Tier 2 interface, unless the System offers the Tier 3 interface `uxs/vehicle/surface` (REC 28, step 1).
+
+'''
+
+=== Implementation notes
+
+These are notes on the ROS 2 packages surveyed in Clause 1.2, not requirements, and they change between distributions. Verify against the target distribution.
+
+|===
+| Topic | Note
+
+| Distribution differences
+| Interfaces were extracted from development branches. Some of them (for example `DockRobot`, `UndockRobot`, `FollowObject`) may not exist, or may have different fields, in older distributions. Check the target distribution.
+
+| Action names
+| The Nav2 action names used here (`navigate_to_pose`, `navigate_through_poses`, `follow_path`, `follow_waypoints`, `follow_gps_waypoints`, `spin`, `backup`, `drive_on_heading`, `wait`, `dock_robot`, `undock_robot`) appear as string literals in the Nav2 sources, but deployments remap them.
+
+| Waypoint task executors
+| `WaitAtWaypoint`, `PhotoAtWaypoint`, `InputAtWaypoint` are plugins configured by parameters; they cannot express per-waypoint commands.
+
+| GPS conversion
+| `FollowGPSWaypoints` calls `/fromLL` for each GPS pose and skips or aborts when the conversion fails, depending on its `stop_on_failure` parameter.
+
+| MAVROS
+| Most services are under `mavros/cmd/*`, `mavros/mission/*`, and (extras) `mavros/gimbal_control/*`; the prefix depends on the node name and namespace. `SetMode` and `set_message_interval` are at the plugin root.
+
+| PX4
+| `px4_msgs` messages are used through the uXRCE-DDS agent (`/fmu/in/*`, `/fmu/out/*`). The `VehicleCommand` message has over 100 command constants in this snapshot, and the acknowledgment arrives on `VehicleCommandAck`.
+
+| Lifecycle
+| Sensor drivers that are lifecycle nodes publish only when active, so `sensor.start-acquisition` is an `ACTIVATE` transition, and `sensor.stop-acquisition` a `DEACTIVATE`.
+
+| Quality of service
+| Services and actions use the default reliable QoS. Topic bindings (`speed_limit`) should use reliable QoS to match the subscriber.
+
+| Not compiled
+| The `uxs_interfaces` files were linted for syntax (types, names, sections) but not built with `rosidl`.
+|===
+
+=== What each standard owns
+
+|===
+| Concern | Owned by
+
+| Command names, parameters, semantics, hazard
+| Common Command Registry
+
+| Geometry, timing, route actions
+| OGC API -- Routes
+
+| Command issuance, status, results
+| OGC API -- Connected Systems
+
+| Ground navigation interfaces
+| Nav2 (`nav2_msgs`)
+
+| Generic sensor lifecycle and diagnostics
+| `std_srvs`, `lifecycle_msgs`, `diagnostic_msgs`, `rcl_interfaces`
+
+| Aerial and MAVLink-based commands
+| MAVLink via MAVROS (`mavros_msgs`) or PX4 (`px4_msgs`)
+
+| Units and frame conventions
+| REP 103 and REP 105
+
+| ROS 2 mapping of registry commands, conversions, Tier 3 interfaces
+| *This document*
+|===
+
+'''
+
+=== References
+
+* OGC API -- Routes, Part 1: Core (`docs.ogc.org/DRAFTS/21-000.html`)
+* OGC API -- Connected Systems, Part 2: Dynamic Data (`docs.ogc.org/DRAFTS/23-002r0.html`): ControlStream, Command, CommandStatus, CommandResult, Feasibility
+* OGC SWE Common Data Model 3.0 (components, constraints, encodings)
+* Nav2: `github.com/ros-navigation/navigation2` (`nav2_msgs`, `nav2_waypoint_follower`, `nav2_behaviors`)
+* ROS 2 common interfaces: `github.com/ros2/common_interfaces`; `github.com/ros2/rcl_interfaces`; `github.com/ros-controls/control_msgs`; `github.com/ros-geographic-info/geographic_info`; `github.com/ros2/rosbag2`
+* MAVROS: `github.com/mavlink/mavros` (`mavros_msgs`, plugins)
+* PX4 ROS 2 messages: `github.com/PX4/px4_msgs`
+* REP 103 (units and coordinate conventions), REP 105 (coordinate frames), REP 147 (aerial vehicles, status Deferred), `ros.org/reps`
+* Related SRDs in this series:
+ ** _Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)_
+ ** _A Connected Systems Profile for OGC API -- Routes Actions_
+ ** _A MAVLink Binding Profile for OGC API -- Routes Actions_
+
+'''
+
+=== Extracted interface definitions
+
+The 46 interfaces below were extracted from the source files listed in Clause 1.2. Field lists show `type name` with defaults; constants are summarized (their full list is in the source). They are the interfaces that the mappings in Annex B refer to.
+
+==== `action_msgs/msg/GoalStatus`
+
+* *Fields:* `GoalInfo goal_info`, `int8 status`. Constants (7): `STATUS_UNKNOWN`, `STATUS_ACCEPTED`, `STATUS_EXECUTING`, `STATUS_CANCELING`, `STATUS_SUCCEEDED`, `STATUS_CANCELED`, ....
+
+==== `action_msgs/srv/CancelGoal`
+
+* *Request:* `GoalInfo goal_info`.
+* *Response:* `int8 return_code`, `GoalInfo[] goals_canceling`. Constants (4): `ERROR_NONE`, `ERROR_REJECTED`, `ERROR_UNKNOWN_GOAL_ID`, `ERROR_GOAL_TERMINATED`.
+* *Used by:* `mission.abort`, `vehicle.stop`
+
+==== `control_msgs/action/GripperCommand`
+
+* *Goal:* `GripperCommand command`.
+* *Result:* `float64 position`, `float64 effort`, `bool stalled`, `bool reached_goal`.
+* *Feedback:* `float64 position`, `float64 effort`, `bool stalled`, `bool reached_goal`.
+* *Used by:* `payload.gripper`
+
+==== `control_msgs/action/PointHead`
+
+* *Goal:* `geometry_msgs/PointStamped target`, `geometry_msgs/Vector3 pointing_axis`, `string pointing_frame`, `builtin_interfaces/Duration min_duration`, `float64 max_velocity`.
+* *Result:* _empty_.
+* *Feedback:* `float64 pointing_angle_error`.
+* *Used by:* `gimbal.point-at`
+
+==== `diagnostic_msgs/srv/SelfTest`
+
+* *Request:* _empty_.
+* *Response:* `string id`, `byte passed`, `DiagnosticStatus[] status`.
+* *Used by:* `sensor.self-test`
+
+==== `geographic_msgs/msg/GeoPoint`
+
+* *Fields:* `float64 latitude`, `float64 longitude`, `float64 altitude`.
+
+==== `geographic_msgs/msg/GeoPose`
+
+* *Fields:* `GeoPoint position`, `geometry_msgs/Quaternion orientation`.
+
+==== `lifecycle_msgs/srv/ChangeState`
+
+* *Request:* `Transition transition`.
+* *Response:* `bool success`.
+* *Used by:* `sensor.reset`, `sensor.set-power`, `sensor.start-acquisition`, `sensor.stop-acquisition`
+
+==== `lifecycle_msgs/srv/GetState`
+
+* *Request:* _empty_.
+* *Response:* `State current_state`.
+* *Used by:* `sensor.get-status`
+
+==== `mavros_msgs/msg/Waypoint`
+
+* *Fields:* `uint8 frame`, `uint16 command`, `bool is_current`, `bool autocontinue`, `float32 param1`, `float32 param2`, `float32 param3`, `float32 param4`, `float64 x_lat`, `float64 y_long`, `float64 z_alt`. Constants (22): `FRAME_GLOBAL`, `FRAME_LOCAL_NED`, `FRAME_MISSION`, `FRAME_GLOBAL_REL_ALT`, `FRAME_LOCAL_ENU`, `FRAME_GLOBAL_INT`, ....
+
+==== `mavros_msgs/srv/CommandBool`
+
+* *Request:* `bool value`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `vehicle.set-armed`
+
+==== `mavros_msgs/srv/CommandHome`
+
+* *Request:* `bool current_gps`, `float32 yaw`, `float32 latitude`, `float32 longitude`, `float32 altitude`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `vehicle.set-home`
+
+==== `mavros_msgs/srv/CommandInt`
+
+* *Request:* `bool broadcast`, `uint8 frame`, `uint16 command`, `uint8 current`, `uint8 autocontinue`, `float32 param1`, `float32 param2`, `float32 param3`, `float32 param4`, `int32 x`, `int32 y`, `float32 z`.
+* *Response:* `bool success`.
+* *Used by:* `vehicle.goto`, `vehicle.orbit`
+
+==== `mavros_msgs/srv/CommandLong`
+
+* *Request:* `bool broadcast`, `uint16 command`, `uint8 confirmation`, `float32 param1`, `float32 param2`, `float32 param3`, `float32 param4`, `float32 param5`, `float32 param6`, `float32 param7`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `camera.capture-image`, `camera.select-source`, `camera.set-focus`, `camera.set-mode`, `camera.set-trigger-distance`, `camera.set-zoom`, `camera.start-video`, `camera.stop-image-capture`, `camera.stop-video`, `mission.pause`, `mission.resume`, `mission.start`, `payload.release`, `payload.set-actuator`, `payload.set-lights`, `payload.set-switch`, `payload.winch`, `sensor.calibrate`, `vehicle.emergency-stop`, `vehicle.reboot`, `vehicle.return-to-home`, `vehicle.set-speed`, `vehicle.set-vertical-position`, `vehicle.terminate`
+
+==== `mavros_msgs/srv/CommandTOL`
+
+* *Request:* `float32 min_pitch`, `float32 yaw`, `float32 latitude`, `float32 longitude`, `float32 altitude`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `vehicle.land`, `vehicle.takeoff`
+
+==== `mavros_msgs/srv/CommandTriggerInterval`
+
+* *Request:* `float32 cycle_time`, `float32 integration_time`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `camera.set-trigger-distance`
+
+==== `mavros_msgs/srv/CommandVtolTransition`
+
+* *Request:* `std_msgs/Header header`, `uint8 state`. Constants (2): `STATE_MC`, `STATE_FW`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `vehicle.transition`
+
+==== `mavros_msgs/srv/GimbalManagerCameraTrack`
+
+* *Request:* `uint8 mode`, `float32 x`, `float32 y`, `float32 radius`, `float32 top_left_x`, `float32 top_left_y`, `float32 bottom_right_x`, `float32 bottom_right_y`. Constants (3): `CAMERA_TRACK_MODE_POINT`, `CAMERA_TRACK_MODE_RECTANGLE`, `CAMERA_TRACK_MODE_STOP_TRACKING`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `gimbal.track-image-point`
+
+==== `mavros_msgs/srv/GimbalManagerPitchyaw`
+
+* *Request:* `float32 pitch`, `float32 yaw`, `float32 pitch_rate`, `float32 yaw_rate`, `uint32 flags`, `uint8 gimbal_device_id`. Constants (5): `GIMBAL_MANAGER_FLAGS_RETRACT`, `GIMBAL_MANAGER_FLAGS_NEUTRAL`, `GIMBAL_MANAGER_FLAGS_ROLL_LOCK`, `GIMBAL_MANAGER_FLAGS_PITCH_LOCK`, `GIMBAL_MANAGER_FLAGS_YAW_LOCK`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `gimbal.point`, `gimbal.set-mode`
+
+==== `mavros_msgs/srv/GimbalManagerSetRoi`
+
+* *Request:* `uint8 mode`, `uint8 gimbal_device_id`, `float32 latitude`, `float32 longitude`, `float32 altitude`, `float32 pitch_offset`, `float32 roll_offset`, `float32 yaw_offset`, `uint8 sysid`. Constants (4): `ROI_MODE_LOCATION`, `ROI_MODE_WP_NEXT_OFFSET`, `ROI_MODE_SYSID`, `ROI_MODE_NONE`.
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `gimbal.clear-target`, `gimbal.point-at`
+
+==== `mavros_msgs/srv/MessageInterval`
+
+* *Request:* `uint32 message_id`, `float32 message_rate`.
+* *Response:* `bool success`.
+* *Used by:* `sensor.set-sampling-rate`
+
+==== `mavros_msgs/srv/MountConfigure`
+
+* *Request:* `std_msgs/Header header`, `uint8 mode`, `bool stabilize_roll`, `bool stabilize_pitch`, `bool stabilize_yaw`, `uint8 roll_input`, `uint8 pitch_input`, `uint8 yaw_input`. Constants (8): `MODE_RETRACT`, `MODE_NEUTRAL`, `MODE_MAVLINK_TARGETING`, `MODE_RC_TARGETING`, `MODE_GPS_POINT`, `INPUT_ANGLE_BODY_FRAME`, ....
+* *Response:* `bool success`, `uint8 result`.
+* *Used by:* `gimbal.point`
+
+==== `mavros_msgs/srv/SetMode`
+
+* *Request:* `uint8 base_mode`, `string custom_mode`. Constants (11): `MAV_MODE_PREFLIGHT`, `MAV_MODE_STABILIZE_DISARMED`, `MAV_MODE_STABILIZE_ARMED`, `MAV_MODE_MANUAL_DISARMED`, `MAV_MODE_MANUAL_ARMED`, `MAV_MODE_GUIDED_DISARMED`, ....
+* *Response:* `bool mode_sent`.
+* *Used by:* `vehicle.return-to-home`, `vehicle.set-mode`
+
+==== `mavros_msgs/srv/WaypointPush`
+
+* *Request:* `uint16 start_index`, `mavros_msgs/Waypoint[] waypoints`.
+* *Response:* `bool success`, `uint32 wp_transfered`.
+
+==== `nav2_msgs/action/BackUp`
+
+* *Goal:* `geometry_msgs/Point target`, `float32 speed`, `builtin_interfaces/Duration time_allowance`, `bool disable_collision_checks` (default false).
+* *Result:* `builtin_interfaces/Duration total_elapsed_time`, `uint16 error_code`, `string error_msg`. Constants (8): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `TIMEOUT`, `TF_ERROR`, ....
+* *Feedback:* `float32 distance_traveled`.
+* *Used by:* `vehicle.move-relative`
+
+==== `nav2_msgs/action/DockRobot`
+
+* *Goal:* `bool use_dock_id` (default true), `string dock_id`, `geometry_msgs/PoseStamped dock_pose`, `string dock_type`, `float32 max_staging_time` (default 1000.0), `bool navigate_to_staging_pose` (default true).
+* *Result:* `bool success` (default true), `uint16 error_code` (default 0), `uint16 num_retries` (default 0), `string error_msg`. Constants (11): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `DOCK_NOT_IN_DB`, `DOCK_NOT_VALID`, `FAILED_TO_STAGE`, ....
+* *Feedback:* `uint16 state`, `builtin_interfaces/Duration docking_time`, `uint16 num_retries` (default 0). Constants (6): `NONE`, `NAV_TO_STAGING_POSE`, `INITIAL_PERCEPTION`, `CONTROLLING`, `WAIT_FOR_CHARGE`, `RETRY`.
+* *Used by:* `vehicle.dock`
+
+==== `nav2_msgs/action/DriveOnHeading`
+
+* *Goal:* `geometry_msgs/Point target`, `float32 speed`, `builtin_interfaces/Duration time_allowance`, `bool disable_collision_checks` (default false).
+* *Result:* `builtin_interfaces/Duration total_elapsed_time`, `uint16 error_code`, `string error_msg`. Constants (8): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `TIMEOUT`, `TF_ERROR`, ....
+* *Feedback:* `float32 distance_traveled`.
+* *Used by:* `vehicle.move-relative`
+
+==== `nav2_msgs/action/FollowGPSWaypoints`
+
+* *Goal:* `uint32 number_of_loops`, `uint32 goal_index` (default 0), `geographic_msgs/GeoPose[] gps_poses`.
+* *Result:* `WaypointStatus[] missed_waypoints`, `int16 error_code`, `string error_msg`. Constants (5): `NONE`, `UNKNOWN`, `TASK_EXECUTOR_FAILED`, `NO_WAYPOINTS_GIVEN`, `STOP_ON_MISSED_WAYPOINT`.
+* *Feedback:* `uint32 current_waypoint`.
+* *Used by:* `vehicle.follow-path`, `vehicle.goto`
+
+==== `nav2_msgs/action/FollowPath`
+
+* *Goal:* `nav_msgs/Path path`, `string controller_id`, `string goal_checker_id`, `string progress_checker_id`, `string path_handler_id`.
+* *Result:* `std_msgs/Empty result`, `uint16 error_code`, `string error_msg`. Constants (12): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `INVALID_CONTROLLER`, `TF_ERROR`, ....
+* *Feedback:* `nav2_msgs/TrackingFeedback tracking_feedback`.
+* *Used by:* `vehicle.follow-path`
+
+==== `nav2_msgs/action/NavigateThroughPoses`
+
+* *Goal:* `nav_msgs/Goals poses`, `string behavior_tree`.
+* *Result:* `uint16 error_code`, `string error_msg`, `WaypointStatus[] waypoint_statuses`. Constants (7): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `FAILED_TO_LOAD_BEHAVIOR_TREE`, `TF_ERROR`, ....
+* *Feedback:* `geometry_msgs/PoseStamped current_pose`, `builtin_interfaces/Duration navigation_time`, `builtin_interfaces/Duration estimated_time_remaining`, `int16 number_of_recoveries`, `float32 distance_remaining`, `float32 position_tracking_error`, `float32 heading_tracking_error`, `int16 number_of_poses_remaining`, `WaypointStatus[] waypoint_statuses`.
+* *Used by:* `vehicle.follow-path`
+
+==== `nav2_msgs/action/NavigateToPose`
+
+* *Goal:* `geometry_msgs/PoseStamped pose`, `string behavior_tree`.
+* *Result:* `uint16 error_code`, `string error_msg`. Constants (7): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `FAILED_TO_LOAD_BEHAVIOR_TREE`, `TF_ERROR`, ....
+* *Feedback:* `geometry_msgs/PoseStamped current_pose`, `builtin_interfaces/Duration navigation_time`, `builtin_interfaces/Duration estimated_time_remaining`, `int16 number_of_recoveries`, `float32 distance_remaining`, `float32 position_tracking_error`, `float32 heading_tracking_error`.
+* *Used by:* `vehicle.goto`
+
+==== `nav2_msgs/action/Spin`
+
+* *Goal:* `float32 target_yaw`, `builtin_interfaces/Duration time_allowance`, `bool disable_collision_checks` (default false).
+* *Result:* `builtin_interfaces/Duration total_elapsed_time`, `uint16 error_code`, `string error_msg`. Constants (7): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `TIMEOUT`, `TF_ERROR`, ....
+* *Feedback:* `float32 angular_distance_traveled`.
+* *Used by:* `vehicle.set-heading`
+
+==== `nav2_msgs/action/UndockRobot`
+
+* *Goal:* `string dock_type`, `float32 max_undocking_time` (default 30.0).
+* *Result:* `bool success` (default true), `uint16 error_code` (default 0), `string error_msg`. Constants (7): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `DOCK_NOT_VALID`, `FAILED_TO_CONTROL`, `TIMEOUT`, ....
+* *Feedback:* _empty_.
+* *Used by:* `vehicle.dock`
+
+==== `nav2_msgs/action/Wait`
+
+* *Goal:* `builtin_interfaces/Duration time`.
+* *Result:* `builtin_interfaces/Duration total_elapsed_time`, `uint16 error_code`, `string error_msg`. Constants (5): `NONE`, `GOAL_REJECTED`, `SEND_GOAL_FAILURE`, `UNKNOWN`, `TIMEOUT`.
+* *Feedback:* `builtin_interfaces/Duration time_left`.
+* *Used by:* `mission.wait`, `vehicle.hold-position`
+
+==== `nav2_msgs/msg/SpeedLimit`
+
+* *Fields:* `std_msgs/Header header`, `bool percentage`, `float64 speed_limit`.
+* *Used by:* `vehicle.set-speed`
+
+==== `nav2_msgs/msg/WaypointStatus`
+
+* *Fields:* `uint8 waypoint_status`, `uint32 waypoint_index`, `geometry_msgs/PoseStamped waypoint_pose`, `uint16 error_code`, `string error_msg`. Constants (4): `PENDING`, `COMPLETED`, `SKIPPED`, `FAILED`.
+
+==== `nav2_msgs/srv/ManageLifecycleNodes`
+
+* *Request:* `uint8 command`. Constants (7): `STARTUP`, `PAUSE`, `RESUME`, `RESET`, `SHUTDOWN`, `CONFIGURE`, ....
+* *Response:* `bool success`.
+* *Used by:* `mission.pause`, `mission.resume`
+
+==== `px4_msgs/msg/VehicleCommand`
+
+* *Fields:* `uint64 timestamp`, `float32 param1`, `float32 param2`, `float32 param3`, `float32 param4`, `float64 param5`, `float64 param6`, `float32 param7`, `uint32 command`, `uint8 target_system`, `uint8 target_component`, `uint8 source_system`, `uint16 source_component`, `uint8 confirmation`, `bool from_external`. Constants (203): `MESSAGE_VERSION`, `VEHICLE_CMD_CUSTOM_0`, `VEHICLE_CMD_CUSTOM_1`, `VEHICLE_CMD_CUSTOM_2`, `VEHICLE_CMD_NAV_WAYPOINT`, `VEHICLE_CMD_NAV_LOITER_UNLIM`, ....
+* *Used by:* `vehicle.takeoff`
+
+==== `px4_msgs/msg/VehicleCommandAck`
+
+* *Fields:* `uint64 timestamp`, `uint32 command`, `uint8 result`, `uint8 result_param1`, `int32 result_param2`, `uint8 target_system`, `uint16 target_component`, `bool from_external`. Constants (18): `MESSAGE_VERSION`, `ORB_QUEUE_LENGTH`, `VEHICLE_CMD_RESULT_ACCEPTED`, `VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED`, `VEHICLE_CMD_RESULT_DENIED`, `VEHICLE_CMD_RESULT_UNSUPPORTED`, ....
+
+==== `px4_msgs/srv/VehicleCommand`
+
+* *Request:* `VehicleCommand request`.
+* *Response:* `VehicleCommandAck reply`.
+
+==== `rcl_interfaces/srv/SetParameters`
+
+* *Request:* `Parameter[] parameters`.
+* *Response:* `SetParametersResult[] results`.
+* *Used by:* `sensor.apply-configuration`, `sensor.set-sampling-rate`
+
+==== `rosbag2_interfaces/srv/Record`
+
+* *Request:* `string uri`, `builtin_interfaces/Time start_time`.
+* *Response:* `int32 return_code`, `string error_string`.
+* *Used by:* `data.start-recording`
+
+==== `rosbag2_interfaces/srv/Stop`
+
+* *Request:* _empty_.
+* *Response:* `int32 return_code`, `string error_string`.
+* *Used by:* `data.stop-recording`
+
+==== `sensor_msgs/srv/SetCameraInfo`
+
+* *Request:* `sensor_msgs/CameraInfo camera_info`.
+* *Response:* `bool success`, `string status_message`.
+* *Used by:* `sensor.calibrate`
+
+==== `std_srvs/srv/SetBool`
+
+* *Request:* `bool data`.
+* *Response:* `bool success`, `string message`.
+* *Used by:* `sensor.set-power`, `vehicle.set-armed`
+
+==== `std_srvs/srv/Trigger`
+
+* *Request:* _empty_.
+* *Response:* `bool success`, `string message`.
+* *Used by:* `sensor.start-acquisition`, `sensor.stop-acquisition`, `sensor.trigger`
+
+'''
+
+=== Command-by-command mapping
+
+==== Interfaces per command
+
+Tier 1 is standard ROS 2 and Nav2; Tier 2 is the autopilot bridges; Tier 3 is the proposed `uxs_interfaces` (Annex C), available for every command.
+
+|===
+| Registry command | Tier 1: standard ROS 2 / Nav2 | Tier 2: autopilot bridge | Tier 3: proposed `uxs_interfaces`
+
+| `vehicle.goto`
+| `nav2_msgs/action/NavigateToPose`; `nav2_msgs/action/FollowGPSWaypoints`
+| `mavros_msgs/srv/CommandInt`
+| `action/VehicleGoto`
+
+| `vehicle.follow-path`
+| `nav2_msgs/action/FollowGPSWaypoints`; `nav2_msgs/action/NavigateThroughPoses`; `nav2_msgs/action/FollowPath`
+| --
+| `action/VehicleFollowPath`
+
+| `vehicle.hold-position`
+| `nav2_msgs/action/Wait`
+| --
+| `action/VehicleHoldPosition`
+
+| `vehicle.orbit`
+| --
+| `mavros_msgs/srv/CommandInt`
+| `action/VehicleOrbit`
+
+| `vehicle.set-heading`
+| `nav2_msgs/action/Spin`
+| --
+| `action/VehicleSetHeading`
+
+| `vehicle.move-relative`
+| `nav2_msgs/action/DriveOnHeading`; `nav2_msgs/action/BackUp`
+| --
+| `action/VehicleMoveRelative`
+
+| `vehicle.return-to-home`
+| --
+| `mavros_msgs/srv/SetMode`; `mavros_msgs/srv/CommandLong`
+| `action/VehicleReturnToHome`
+
+| `vehicle.stop`
+| `action_msgs/srv/CancelGoal`
+| --
+| `action/VehicleStop`
+
+| `vehicle.set-vertical-position`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `action/VehicleSetVerticalPosition`
+
+| `vehicle.takeoff`
+| --
+| `mavros_msgs/srv/CommandTOL`; `px4_msgs/msg/VehicleCommand`
+| `action/VehicleTakeoff`
+
+| `vehicle.land`
+| --
+| `mavros_msgs/srv/CommandTOL`
+| `action/VehicleLand`
+
+| `vehicle.transition`
+| --
+| `mavros_msgs/srv/CommandVtolTransition`
+| `action/VehicleTransition`
+
+| `vehicle.surface`
+| --
+| --
+| `action/VehicleSurface`
+
+| `vehicle.dock`
+| `nav2_msgs/action/DockRobot`; `nav2_msgs/action/UndockRobot`
+| --
+| `action/VehicleDock`
+
+| `vehicle.set-speed`
+| `nav2_msgs/msg/SpeedLimit`
+| `mavros_msgs/srv/CommandLong`
+| `srv/VehicleSetSpeed`
+
+| `vehicle.set-mode`
+| --
+| `mavros_msgs/srv/SetMode`
+| `srv/VehicleSetMode`
+
+| `vehicle.set-armed`
+| `std_srvs/srv/SetBool`
+| `mavros_msgs/srv/CommandBool`
+| `srv/VehicleSetArmed`
+
+| `vehicle.set-home`
+| --
+| `mavros_msgs/srv/CommandHome`
+| `srv/VehicleSetHome`
+
+| `vehicle.reboot`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/VehicleReboot`
+
+| `mission.start`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/MissionStart`
+
+| `mission.pause`
+| `nav2_msgs/srv/ManageLifecycleNodes`
+| `mavros_msgs/srv/CommandLong`
+| `srv/MissionPause`
+
+| `mission.resume`
+| `nav2_msgs/srv/ManageLifecycleNodes`
+| `mavros_msgs/srv/CommandLong`
+| `srv/MissionResume`
+
+| `mission.abort`
+| `action_msgs/srv/CancelGoal`
+| --
+| `srv/MissionAbort`
+
+| `mission.wait`
+| `nav2_msgs/action/Wait`
+| --
+| `action/MissionWait`
+
+| `vehicle.emergency-stop`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/VehicleEmergencyStop`
+
+| `vehicle.terminate`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/VehicleTerminate`
+
+| `sensor.set-power`
+| `lifecycle_msgs/srv/ChangeState`; `std_srvs/srv/SetBool`
+| --
+| `srv/SensorSetPower`
+
+| `sensor.start-acquisition`
+| `std_srvs/srv/Trigger`; `lifecycle_msgs/srv/ChangeState`
+| --
+| `srv/SensorStartAcquisition`
+
+| `sensor.stop-acquisition`
+| `std_srvs/srv/Trigger`; `lifecycle_msgs/srv/ChangeState`
+| --
+| `srv/SensorStopAcquisition`
+
+| `sensor.trigger`
+| `std_srvs/srv/Trigger`
+| --
+| `action/SensorTrigger`
+
+| `sensor.set-sampling-rate`
+| `rcl_interfaces/srv/SetParameters`
+| `mavros_msgs/srv/MessageInterval`
+| `srv/SensorSetSamplingRate`
+
+| `sensor.apply-configuration`
+| `rcl_interfaces/srv/SetParameters`
+| --
+| `srv/SensorApplyConfiguration`
+
+| `sensor.calibrate`
+| `sensor_msgs/srv/SetCameraInfo`
+| `mavros_msgs/srv/CommandLong`
+| `action/SensorCalibrate`
+
+| `sensor.self-test`
+| `diagnostic_msgs/srv/SelfTest`
+| --
+| `action/SensorSelfTest`
+
+| `sensor.reset`
+| `lifecycle_msgs/srv/ChangeState`
+| --
+| `action/SensorReset`
+
+| `sensor.get-status`
+| `lifecycle_msgs/srv/GetState`
+| --
+| `srv/SensorGetStatus`
+
+| `data.start-recording`
+| `rosbag2_interfaces/srv/Record`
+| --
+| `srv/DataStartRecording`
+
+| `data.stop-recording`
+| `rosbag2_interfaces/srv/Stop`
+| --
+| `srv/DataStopRecording`
+
+| `data.mark-event`
+| --
+| --
+| `srv/DataMarkEvent`
+
+| `camera.capture-image`
+| `nav2_msgs/msg/PhotoAtWaypoint`
+| `mavros_msgs/srv/CommandLong`
+| `action/CameraCaptureImage`
+
+| `camera.stop-image-capture`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraStopImageCapture`
+
+| `camera.start-video`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraStartVideo`
+
+| `camera.stop-video`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraStopVideo`
+
+| `camera.set-mode`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraSetMode`
+
+| `camera.configure-image`
+| --
+| --
+| `srv/CameraConfigureImage`
+
+| `camera.set-exposure`
+| --
+| --
+| `srv/CameraSetExposure`
+
+| `camera.set-zoom`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraSetZoom`
+
+| `camera.set-focus`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraSetFocus`
+
+| `camera.select-source`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/CameraSelectSource`
+
+| `camera.set-trigger-distance`
+| --
+| `mavros_msgs/srv/CommandTriggerInterval`; `mavros_msgs/srv/CommandLong`
+| `srv/CameraSetTriggerDistance`
+
+| `gimbal.point`
+| --
+| `mavros_msgs/srv/GimbalManagerPitchyaw`; `mavros_msgs/srv/MountConfigure`
+| `action/GimbalPoint`
+
+| `gimbal.point-at`
+| `control_msgs/action/PointHead`
+| `mavros_msgs/srv/GimbalManagerSetRoi`
+| `srv/GimbalPointAt`
+
+| `gimbal.clear-target`
+| --
+| `mavros_msgs/srv/GimbalManagerSetRoi`
+| `srv/GimbalClearTarget`
+
+| `gimbal.set-mode`
+| --
+| `mavros_msgs/srv/GimbalManagerPitchyaw`
+| `srv/GimbalSetMode`
+
+| `gimbal.track-image-point`
+| --
+| `mavros_msgs/srv/GimbalManagerCameraTrack`
+| `srv/GimbalTrackImagePoint`
+
+| `ranging.set-range`
+| --
+| --
+| `srv/RangingSetRange`
+
+| `ranging.set-gain`
+| --
+| --
+| `srv/RangingSetGain`
+
+| `ranging.set-frequency`
+| --
+| --
+| `srv/RangingSetFrequency`
+
+| `ranging.set-scan-sector`
+| --
+| --
+| `srv/RangingSetScanSector`
+
+| `ranging.set-transmit`
+| --
+| --
+| `srv/RangingSetTransmit`
+
+| `sample.collect`
+| --
+| --
+| `action/SampleCollect`
+
+| `payload.gripper`
+| `control_msgs/action/GripperCommand`
+| --
+| `action/PayloadGripper`
+
+| `payload.release`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `action/PayloadRelease`
+
+| `payload.winch`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `action/PayloadWinch`
+
+| `payload.set-lights`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/PayloadSetLights`
+
+| `payload.set-switch`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/PayloadSetSwitch`
+
+| `payload.set-actuator`
+| --
+| `mavros_msgs/srv/CommandLong`
+| `srv/PayloadSetActuator`
+|===
+
+==== Binding details
+
+`fit`: *exact* carries all registry parameters, *partial* cannot carry some optional parameters (REC 3), *generic* is a MAVLink escape hatch (REC 4). `+{action}+` and `+{node}+` stand for the name of the action server or node concerned.
+
+|===
+| Command | Tier | Interface | ROS name | Fit | Parameter mapping | Conversions | Notes
+
+| `vehicle.goto`
+| 1
+| `nav2_msgs` action `NavigateToPose`
+| `navigate_to_pose`
+| partial
+| `location` → `pose` (PoseStamped, frame `map`); `heading` → `pose.orientation`
+| lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`); ENU yaw = π/2 − heading (rad), wrapped to (−π, π]; quaternion about z
+| `speed`, `acceptanceRadius`, `holdTime`, `passThrough` are not goal fields (controller and goal-checker parameters). Commands carrying them are rejected.
+
+| `vehicle.goto`
+| 1
+| `nav2_msgs` action `FollowGPSWaypoints`
+| `follow_gps_waypoints`
+| partial
+| `location` → `gps_poses[0]` (GeoPose); `heading` → orientation
+| Nav2 converts lat/lon itself through `/fromLL`; ENU yaw = π/2 − heading (rad), wrapped to (−π, π]; quaternion about z
+| Single-element list. Same unsupported parameters as above.
+
+| `vehicle.goto`
+| 2
+| `mavros_msgs` service `CommandInt`
+| `cmd/command_int`
+| generic
+| `DO_REPOSITION` (192): `speed` → param1, `location` → x (lat×1e7), y (lon×1e7), z
+| degE7 integer conversion; frame from vertical reference
+| Guided-mode reposition; supports `speed`, `heading` (param4 yaw).
+
+| `vehicle.follow-path`
+| 1
+| `nav2_msgs` action `FollowGPSWaypoints`
+| `follow_gps_waypoints`
+| partial
+| `path` → `gps_poses[]`; `closed` → not supported
+| Nav2 converts lat/lon; orientations derived from path direction
+| Waypoint task executors run at each waypoint and are configured by parameters, not per goal.
+
+| `vehicle.follow-path`
+| 1
+| `nav2_msgs` action `NavigateThroughPoses`
+| `navigate_through_poses`
+| partial
+| `path` → `poses` (Goals, frame `map`)
+| lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)
+| Through-poses planning; `interpolation` is planner-defined.
+
+| `vehicle.follow-path`
+| 1
+| `nav2_msgs` action `FollowPath`
+| `follow_path`
+| partial
+| `path` → `path` (nav_msgs/Path in `map`); controller ids left empty
+| lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)
+| Follows a given path exactly; no planning. `speed` is not a goal field.
+
+| `vehicle.hold-position`
+| 1
+| `nav2_msgs` action `Wait`
+| `wait`
+| partial
+| `duration` → `time`
+| seconds → builtin_interfaces/Duration
+| Ground vehicles only (robot stays stationary). `holdMode`, `radius`, `location` unsupported; unlimited duration unsupported.
+
+| `vehicle.orbit`
+| 2
+| `mavros_msgs` service `CommandInt`
+| `cmd/command_int`
+| generic
+| `DO_ORBIT` (34): `radius` → param1 (sign = direction), `speed` → param2, `center` → x, y, z
+| degE7; radius sign from `direction`
+| `turns`, `duration` unsupported.
+
+| `vehicle.set-heading`
+| 1
+| `nav2_msgs` action `Spin`
+| `spin`
+| partial
+| `heading` → `target_yaw` (relative), `direction` → sign
+| relative yaw = wrap(ENU yaw target − current yaw from TF); ENU yaw = π/2 − heading (rad), wrapped to (−π, π]; quaternion about z
+| `target_yaw` is a relative rotation in radians. `rate`, `lock` unsupported.
+
+| `vehicle.move-relative`
+| 1
+| `nav2_msgs` action `DriveOnHeading`
+| `drive_on_heading`
+| partial
+| `distance` → `target.x`; `speed` → `speed`
+| metres, m/s
+| Forward motion only (`bearing` = 0 relative to vehicle). `verticalDistance` unsupported.
+
+| `vehicle.move-relative`
+| 1
+| `nav2_msgs` action `BackUp`
+| `backup`
+| partial
+| `distance` → `target.x`; `speed` → `speed`
+| metres, m/s
+| Used for `bearing` = 180°; the behavior always drives backwards, whatever the sign of `target.x`.
+
+| `vehicle.return-to-home`
+| 2
+| `mavros_msgs` service `SetMode`
+| `set_mode`
+| partial
+| `destination` = home → `custom_mode` of the RTL mode (autopilot specific)
+| --
+| Mode names depend on the autopilot (for example `RTL`).
+
+| `vehicle.return-to-home`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `NAV_RETURN_TO_LAUNCH` (20), no parameters
+| --
+| `finalAction` and `vertical` are not carried.
+
+| `vehicle.stop`
+| 1
+| `action_msgs` service `CancelGoal`
+| `+{action}/_action/cancel_goal+`
+| partial
+| `mode` = controlled → cancel all goals on the movement action servers (goal id zero, stamp zero)
+| --
+| Stops by cancellation; the platform then holds. For `immediate`, also publish a zero `geometry_msgs/Twist` on the velocity command topic.
+
+| `vehicle.set-vertical-position`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_CHANGE_ALTITUDE` (186): `target.value` → param1, reference → frame param2
+| reference → MAV_FRAME
+| `rate` unsupported.
+
+| `vehicle.takeoff`
+| 2
+| `mavros_msgs` service `CommandTOL`
+| `cmd/takeoff`
+| partial
+| `target.value` → `altitude`; `location` → `latitude`, `longitude`; `heading` → `yaw`
+| degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)
+| `climbRate` unsupported. `min_pitch` left 0.
+
+| `vehicle.takeoff`
+| 2
+| `px4_msgs` topic `VehicleCommand`
+| `/fmu/in/vehicle_command`
+| generic
+| `VEHICLE_CMD_NAV_TAKEOFF` (22): `heading` → param4, `location` → param5/6, altitude → param7
+| float64 param5/6 (full precision)
+| PX4 uXRCE-DDS; ack on `VehicleCommandAck`. A `px4_msgs/srv/VehicleCommand` service (request `VehicleCommand`, reply `VehicleCommandAck`) is also defined.
+
+| `vehicle.land`
+| 2
+| `mavros_msgs` service `CommandTOL`
+| `cmd/land`
+| partial
+| `location` → `latitude`, `longitude`; `heading` → `yaw`
+| degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)
+| `descentRate`, `precision`, `disarmAfter` unsupported.
+
+| `vehicle.transition`
+| 2
+| `mavros_msgs` service `CommandVtolTransition`
+| `cmd/vtol_transition`
+| exact
+| `state`: hover → `STATE_MC` (3), forward-flight → `STATE_FW` (4)
+| --
+| --
+
+| `vehicle.dock`
+| 1
+| `nav2_msgs` action `DockRobot`
+| `dock_robot`
+| partial
+| `station` → `dock_id` (`use_dock_id` true) or `location` → `dock_pose` (`use_dock_id` false)
+| lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)
+| `action` = dock. `heading` unsupported.
+
+| `vehicle.dock`
+| 1
+| `nav2_msgs` action `UndockRobot`
+| `undock_robot`
+| exact
+| `action` = undock; `station` → `dock_type`
+| --
+| --
+
+| `vehicle.set-speed`
+| 1
+| `nav2_msgs` topic `SpeedLimit`
+| `speed_limit`
+| partial
+| `speed` → `speed_limit` (`percentage` false)
+| m/s
+| Nav2 controller server subscribes to it. `speedType`, `throttle` unsupported. Topic, not a service: completion is immediate without acknowledgment.
+
+| `vehicle.set-speed`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_CHANGE_SPEED` (178): `speedType` → param1, `speed` → param2, `throttle` → param3
+| absent optional value → −1
+| --
+
+| `vehicle.set-mode`
+| 2
+| `mavros_msgs` service `SetMode`
+| `set_mode`
+| partial
+| `platformMode` → `custom_mode`; generic `mode` → autopilot mapping
+| --
+| Generic modes have no standard string mapping.
+
+| `vehicle.set-armed`
+| 2
+| `mavros_msgs` service `CommandBool`
+| `cmd/arming`
+| partial
+| `armed` → `value`
+| --
+| `force` unsupported (send through `CommandLong` with the force code under explicit authorization).
+
+| `vehicle.set-armed`
+| 1
+| `std_srvs` service `SetBool`
+| `arm`
+| partial
+| `armed` → `data`
+| --
+| Convention for drivers that expose arming as SetBool. No standard service name.
+
+| `vehicle.set-home`
+| 2
+| `mavros_msgs` service `CommandHome`
+| `cmd/set_home`
+| exact
+| `location` absent → `current_gps` true; else `latitude`, `longitude`, `altitude`
+| degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)
+| --
+
+| `vehicle.reboot`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `PREFLIGHT_REBOOT_SHUTDOWN` (246)
+| --
+| Destructive: separate authorization required.
+
+| `mission.start`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `MISSION_START` (300): `firstItem` → param1, `lastItem` → param2
+| --
+| --
+
+| `mission.pause`
+| 1
+| `nav2_msgs` service `ManageLifecycleNodes`
+| `lifecycle_manager_navigation/manage_nodes`
+| partial
+| command `PAUSE` (1)
+| --
+| Pauses the Nav2 lifecycle nodes. `behavior` unsupported.
+
+| `mission.pause`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_PAUSE_CONTINUE` (193): param1 = 0
+| --
+| --
+
+| `mission.resume`
+| 1
+| `nav2_msgs` service `ManageLifecycleNodes`
+| `lifecycle_manager_navigation/manage_nodes`
+| exact
+| command `RESUME` (2)
+| --
+| --
+
+| `mission.resume`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_PAUSE_CONTINUE` (193): param1 = 1
+| --
+| --
+
+| `mission.abort`
+| 1
+| `action_msgs` service `CancelGoal`
+| `+{action}/_action/cancel_goal+`
+| partial
+| cancel all goals, then issue the fallback (`hold`, `return-to-home`, `land`, `surface`, `stop`) as a new command (REC 28)
+| --
+| Composite of cancel and another registry command.
+
+| `mission.wait`
+| 1
+| `nav2_msgs` action `Wait`
+| `wait`
+| partial
+| `duration` → `time`; `until` → `time` = until − now
+| seconds → Duration
+| Ground behavior. Not suitable for aerial vehicles that must keep flying.
+
+| `vehicle.emergency-stop`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| Platform specific (for example `DO_FLIGHTTERMINATION` (185))
+| --
+| Destructive. There is no standard ROS 2 emergency-stop service.
+
+| `vehicle.terminate`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_FLIGHTTERMINATION` (185) or `DO_PARACHUTE` (208)
+| --
+| Destructive: separate authorization required.
+
+| `sensor.set-power`
+| 1
+| `lifecycle_msgs` service `ChangeState`
+| `+{node}/change_state+`
+| partial
+| `state` on → transition `ACTIVATE` (3); standby → `DEACTIVATE` (4); off → `INACTIVE_SHUTDOWN` (6) or `ACTIVE_SHUTDOWN` (7)
+| --
+| Applies to sensor driver nodes that are lifecycle nodes. Physical power switching is outside ROS.
+
+| `sensor.set-power`
+| 1
+| `std_srvs` service `SetBool`
+| `set_power`
+| partial
+| `state` on → `data` true; off → false
+| --
+| Convention for drivers. `standby` unsupported.
+
+| `sensor.start-acquisition`
+| 1
+| `std_srvs` service `Trigger`
+| `start`
+| partial
+| no parameters
+| --
+| Convention for drivers. `duration`, `sampleCount`, `rate` unsupported; `rate` is set through `SetParameters`.
+
+| `sensor.start-acquisition`
+| 1
+| `lifecycle_msgs` service `ChangeState`
+| `+{node}/change_state+`
+| partial
+| transition `ACTIVATE` (3)
+| --
+| Lifecycle drivers publish only while active.
+
+| `sensor.stop-acquisition`
+| 1
+| `std_srvs` service `Trigger`
+| `stop`
+| exact
+| no parameters
+| --
+| Convention for drivers.
+
+| `sensor.stop-acquisition`
+| 1
+| `lifecycle_msgs` service `ChangeState`
+| `+{node}/change_state+`
+| exact
+| transition `DEACTIVATE` (4)
+| --
+| --
+
+| `sensor.trigger`
+| 1
+| `std_srvs` service `Trigger`
+| `trigger`
+| partial
+| no parameters
+| --
+| Convention for camera and sensor drivers. `count` and `interval` unsupported (call repeatedly).
+
+| `sensor.set-sampling-rate`
+| 1
+| `rcl_interfaces` service `SetParameters`
+| `+{node}/set_parameters+`
+| partial
+| `rate` → a driver-specific parameter (for example `frame_rate`)
+| Hz
+| Parameter name is driver-specific and declared in the System description.
+
+| `sensor.set-sampling-rate`
+| 2
+| `mavros_msgs` service `MessageInterval`
+| `set_message_interval`
+| partial
+| `rate` → `message_rate`; message id identifies the stream
+| Hz (0 disables; negative = default)
+| MAVLink message streams only.
+
+| `sensor.apply-configuration`
+| 1
+| `rcl_interfaces` service `SetParameters`
+| `+{node}/set_parameters+`
+| partial
+| `configuration` → parameter file or parameter set identified by name
+| --
+| Named configuration sets are a deployment convention.
+
+| `sensor.calibrate`
+| 1
+| `sensor_msgs` service `SetCameraInfo`
+| `set_camera_info`
+| partial
+| stores a calibration result (`camera_info`)
+| --
+| Stores the result of a calibration, it does not perform one.
+
+| `sensor.calibrate`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `PREFLIGHT_CALIBRATION` (241)
+| --
+| Flight-critical for vehicle-state sensors.
+
+| `sensor.self-test`
+| 1
+| `diagnostic_msgs` service `SelfTest`
+| `self_test`
+| partial
+| response `passed` → `passed`; `status[]` → `details`
+| --
+| `level` unsupported (the service has no request fields).
+
+| `sensor.reset`
+| 1
+| `lifecycle_msgs` service `ChangeState`
+| `+{node}/change_state+`
+| partial
+| `CLEANUP` (2) then `CONFIGURE` (1)
+| --
+| `scope` granularity unsupported.
+
+| `sensor.get-status`
+| 1
+| `lifecycle_msgs` service `GetState`
+| `+{node}/get_state+`
+| partial
+| `current_state` → `state`
+| --
+| `health` from the `/diagnostics` topic (`DiagnosticStatus.level`: OK, WARN, ERROR, STALE).
+
+| `data.start-recording`
+| 1
+| `rosbag2_interfaces` service `Record`
+| `rosbag2_recorder/record`
+| partial
+| `label` → `uri`
+| `start_time` left zero
+| `storage` and `maxDuration` unsupported. Response is `return_code` and `error_string`.
+
+| `data.stop-recording`
+| 1
+| `rosbag2_interfaces` service `Stop`
+| `rosbag2_recorder/stop`
+| exact
+| no parameters
+| --
+| --
+
+| `camera.capture-image`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `IMAGE_START_CAPTURE` (2000): `interval` → param2, `count` → param3
+| --
+| MAVLink camera protocol. Produced image location is not returned.
+
+| `camera.capture-image`
+| 1
+| `nav2_msgs` topic `PhotoAtWaypoint`
+| `(waypoint task executor plugin)`
+| partial
+| one image at each waypoint, configured by parameters
+| --
+| Plugin of the Nav2 waypoint follower. Per-waypoint parameters are not possible.
+
+| `camera.stop-image-capture`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `IMAGE_STOP_CAPTURE` (2001)
+| --
+| --
+
+| `camera.start-video`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `VIDEO_START_CAPTURE` (2500)
+| --
+| `maxDuration`, `label` unsupported.
+
+| `camera.stop-video`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `VIDEO_STOP_CAPTURE` (2501)
+| --
+| --
+
+| `camera.set-mode`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `SET_CAMERA_MODE` (530)
+| --
+| --
+
+| `camera.set-zoom`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `SET_CAMERA_ZOOM` (531)
+| --
+| --
+
+| `camera.set-focus`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `SET_CAMERA_FOCUS` (532)
+| --
+| --
+
+| `camera.select-source`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `SET_CAMERA_SOURCE` (534)
+| --
+| --
+
+| `camera.set-trigger-distance`
+| 2
+| `mavros_msgs` service `CommandTriggerInterval`
+| `cmd/trigger_interval`
+| partial
+| time-based: `cycle_time`, `integration_time`
+| --
+| Distance-based triggering uses `CommandLong` `DO_SET_CAM_TRIGG_DIST` (206).
+
+| `camera.set-trigger-distance`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_SET_CAM_TRIGG_DIST` (206): `distance` → param1, `triggerNow` → param3
+| --
+| --
+
+| `gimbal.point`
+| 2
+| `mavros_msgs` service `GimbalManagerPitchyaw`
+| `gimbal_control/manager/pitchyaw`
+| partial
+| `pitch` → `pitch`, `yaw` → `yaw`, `pitchRate` → `pitch_rate`, `yawRate` → `yaw_rate`; `frame` → `flags` lock bits
+| degrees and deg/s (passed through to the MAVLink command); radians → degrees
+| `roll` unsupported. `gimbal_device_id` 0 = all.
+
+| `gimbal.point`
+| 2
+| `mavros_msgs` service `MountConfigure`
+| `mount_control/configure`
+| partial
+| `frame`/mode → `mode` and stabilize flags
+| --
+| Older mount protocol.
+
+| `gimbal.point-at`
+| 2
+| `mavros_msgs` service `GimbalManagerSetRoi`
+| `gimbal_control/manager/set_roi`
+| exact
+| `location` → `latitude`, `longitude`, `altitude`; `mode` = `ROI_MODE_LOCATION` (0)
+| degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)
+| --
+
+| `gimbal.point-at`
+| 1
+| `control_msgs` action `PointHead`
+| `point_head`
+| partial
+| `location` → `target` (PointStamped in a local frame)
+| lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)
+| For pan-tilt heads driven through TF; `pointing_axis`, `min_duration` from configuration.
+
+| `gimbal.clear-target`
+| 2
+| `mavros_msgs` service `GimbalManagerSetRoi`
+| `gimbal_control/manager/set_roi`
+| exact
+| `mode` = `ROI_MODE_NONE` (3)
+| --
+| --
+
+| `gimbal.set-mode`
+| 2
+| `mavros_msgs` service `GimbalManagerPitchyaw`
+| `gimbal_control/manager/pitchyaw`
+| partial
+| `stow` → `flags` RETRACT (1); `follow` → no lock flags; `lock` → lock flags (4, 8, 16)
+| --
+| Angles are left unset.
+
+| `gimbal.track-image-point`
+| 2
+| `mavros_msgs` service `GimbalManagerCameraTrack`
+| `gimbal_control/manager/camera_track`
+| exact
+| `x`, `y` → `x`, `y` with `mode` = `CAMERA_TRACK_MODE_POINT` (0)
+| normalized image coordinates
+| --
+
+| `payload.gripper`
+| 1
+| `control_msgs` action `GripperCommand`
+| `gripper_cmd`
+| partial
+| `action` open/close → `command.position`; `force` → `command.max_effort`
+| position in metres or radians as the gripper defines
+| Mapping of open/close to positions is gripper configuration.
+
+| `payload.release`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_GRIPPER` (211) or `DO_SET_SERVO` (183)
+| --
+| Airframe specific.
+
+| `payload.winch`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_WINCH` (42600)
+| --
+| --
+
+| `payload.set-lights`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `ILLUMINATOR_ON_OFF` (2200)
+| --
+| `intensity` and `lightId` unsupported.
+
+| `payload.set-switch`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_SET_RELAY` (181): `channel` → param1, `on` → param2
+| --
+| --
+
+| `payload.set-actuator`
+| 2
+| `mavros_msgs` service `CommandLong`
+| `cmd/command`
+| generic
+| `DO_SET_SERVO` (183): `channel` → param1, `value` → PWM param2
+| normalized [−1, 1] → PWM µs
+| Flight-critical.
+|===
+
+Registry commands with neither a Tier 1 nor a Tier 2 interface (10): `vehicle.surface`, `data.mark-event`, `camera.configure-image`, `camera.set-exposure`, `ranging.set-range`, `ranging.set-gain`, `ranging.set-frequency`, `ranging.set-scan-sector`, `ranging.set-transmit`, `sample.collect`.
+
+'''
+
+=== Proposed `uxs_interfaces` package (Tier 3)
+
+The package is generated from the registry and delivered as `uxs_interfaces.tar.gz` (67 interface files, `CMakeLists.txt`, `package.xml`). It has 25 actions, 42 services and 2 shared messages (`Position`, `VerticalTarget`). The index gives the interface for each command; three generated files follow as examples.
+
+|===
+| Registry command | Interface | Kind | Default ROS name (relative to the System namespace)
+
+| `vehicle.goto`
+| `uxs_interfaces/action/VehicleGoto`
+| action
+| `uxs/vehicle/goto`
+
+| `vehicle.follow-path`
+| `uxs_interfaces/action/VehicleFollowPath`
+| action
+| `uxs/vehicle/follow_path`
+
+| `vehicle.hold-position`
+| `uxs_interfaces/action/VehicleHoldPosition`
+| action
+| `uxs/vehicle/hold_position`
+
+| `vehicle.orbit`
+| `uxs_interfaces/action/VehicleOrbit`
+| action
+| `uxs/vehicle/orbit`
+
+| `vehicle.set-heading`
+| `uxs_interfaces/action/VehicleSetHeading`
+| action
+| `uxs/vehicle/set_heading`
+
+| `vehicle.move-relative`
+| `uxs_interfaces/action/VehicleMoveRelative`
+| action
+| `uxs/vehicle/move_relative`
+
+| `vehicle.return-to-home`
+| `uxs_interfaces/action/VehicleReturnToHome`
+| action
+| `uxs/vehicle/return_to_home`
+
+| `vehicle.stop`
+| `uxs_interfaces/action/VehicleStop`
+| action
+| `uxs/vehicle/stop`
+
+| `vehicle.set-vertical-position`
+| `uxs_interfaces/action/VehicleSetVerticalPosition`
+| action
+| `uxs/vehicle/set_vertical_position`
+
+| `vehicle.takeoff`
+| `uxs_interfaces/action/VehicleTakeoff`
+| action
+| `uxs/vehicle/takeoff`
+
+| `vehicle.land`
+| `uxs_interfaces/action/VehicleLand`
+| action
+| `uxs/vehicle/land`
+
+| `vehicle.transition`
+| `uxs_interfaces/action/VehicleTransition`
+| action
+| `uxs/vehicle/transition`
+
+| `vehicle.surface`
+| `uxs_interfaces/action/VehicleSurface`
+| action
+| `uxs/vehicle/surface`
+
+| `vehicle.dock`
+| `uxs_interfaces/action/VehicleDock`
+| action
+| `uxs/vehicle/dock`
+
+| `vehicle.set-speed`
+| `uxs_interfaces/srv/VehicleSetSpeed`
+| service
+| `uxs/vehicle/set_speed`
+
+| `vehicle.set-mode`
+| `uxs_interfaces/srv/VehicleSetMode`
+| service
+| `uxs/vehicle/set_mode`
+
+| `vehicle.set-armed`
+| `uxs_interfaces/srv/VehicleSetArmed`
+| service
+| `uxs/vehicle/set_armed`
+
+| `vehicle.set-home`
+| `uxs_interfaces/srv/VehicleSetHome`
+| service
+| `uxs/vehicle/set_home`
+
+| `vehicle.reboot`
+| `uxs_interfaces/srv/VehicleReboot`
+| service
+| `uxs/vehicle/reboot`
+
+| `mission.start`
+| `uxs_interfaces/srv/MissionStart`
+| service
+| `uxs/mission/start`
+
+| `mission.pause`
+| `uxs_interfaces/srv/MissionPause`
+| service
+| `uxs/mission/pause`
+
+| `mission.resume`
+| `uxs_interfaces/srv/MissionResume`
+| service
+| `uxs/mission/resume`
+
+| `mission.abort`
+| `uxs_interfaces/srv/MissionAbort`
+| service
+| `uxs/mission/abort`
+
+| `mission.wait`
+| `uxs_interfaces/action/MissionWait`
+| action
+| `uxs/mission/wait`
+
+| `vehicle.emergency-stop`
+| `uxs_interfaces/srv/VehicleEmergencyStop`
+| service
+| `uxs/vehicle/emergency_stop`
+
+| `vehicle.terminate`
+| `uxs_interfaces/srv/VehicleTerminate`
+| service
+| `uxs/vehicle/terminate`
+
+| `sensor.set-power`
+| `uxs_interfaces/srv/SensorSetPower`
+| service
+| `uxs/sensor/set_power`
+
+| `sensor.start-acquisition`
+| `uxs_interfaces/srv/SensorStartAcquisition`
+| service
+| `uxs/sensor/start_acquisition`
+
+| `sensor.stop-acquisition`
+| `uxs_interfaces/srv/SensorStopAcquisition`
+| service
+| `uxs/sensor/stop_acquisition`
+
+| `sensor.trigger`
+| `uxs_interfaces/action/SensorTrigger`
+| action
+| `uxs/sensor/trigger`
+
+| `sensor.set-sampling-rate`
+| `uxs_interfaces/srv/SensorSetSamplingRate`
+| service
+| `uxs/sensor/set_sampling_rate`
+
+| `sensor.apply-configuration`
+| `uxs_interfaces/srv/SensorApplyConfiguration`
+| service
+| `uxs/sensor/apply_configuration`
+
+| `sensor.calibrate`
+| `uxs_interfaces/action/SensorCalibrate`
+| action
+| `uxs/sensor/calibrate`
+
+| `sensor.self-test`
+| `uxs_interfaces/action/SensorSelfTest`
+| action
+| `uxs/sensor/self_test`
+
+| `sensor.reset`
+| `uxs_interfaces/action/SensorReset`
+| action
+| `uxs/sensor/reset`
+
+| `sensor.get-status`
+| `uxs_interfaces/srv/SensorGetStatus`
+| service
+| `uxs/sensor/get_status`
+
+| `data.start-recording`
+| `uxs_interfaces/srv/DataStartRecording`
+| service
+| `uxs/data/start_recording`
+
+| `data.stop-recording`
+| `uxs_interfaces/srv/DataStopRecording`
+| service
+| `uxs/data/stop_recording`
+
+| `data.mark-event`
+| `uxs_interfaces/srv/DataMarkEvent`
+| service
+| `uxs/data/mark_event`
+
+| `camera.capture-image`
+| `uxs_interfaces/action/CameraCaptureImage`
+| action
+| `uxs/camera/capture_image`
+
+| `camera.stop-image-capture`
+| `uxs_interfaces/srv/CameraStopImageCapture`
+| service
+| `uxs/camera/stop_image_capture`
+
+| `camera.start-video`
+| `uxs_interfaces/srv/CameraStartVideo`
+| service
+| `uxs/camera/start_video`
+
+| `camera.stop-video`
+| `uxs_interfaces/srv/CameraStopVideo`
+| service
+| `uxs/camera/stop_video`
+
+| `camera.set-mode`
+| `uxs_interfaces/srv/CameraSetMode`
+| service
+| `uxs/camera/set_mode`
+
+| `camera.configure-image`
+| `uxs_interfaces/srv/CameraConfigureImage`
+| service
+| `uxs/camera/configure_image`
+
+| `camera.set-exposure`
+| `uxs_interfaces/srv/CameraSetExposure`
+| service
+| `uxs/camera/set_exposure`
+
+| `camera.set-zoom`
+| `uxs_interfaces/srv/CameraSetZoom`
+| service
+| `uxs/camera/set_zoom`
+
+| `camera.set-focus`
+| `uxs_interfaces/srv/CameraSetFocus`
+| service
+| `uxs/camera/set_focus`
+
+| `camera.select-source`
+| `uxs_interfaces/srv/CameraSelectSource`
+| service
+| `uxs/camera/select_source`
+
+| `camera.set-trigger-distance`
+| `uxs_interfaces/srv/CameraSetTriggerDistance`
+| service
+| `uxs/camera/set_trigger_distance`
+
+| `gimbal.point`
+| `uxs_interfaces/action/GimbalPoint`
+| action
+| `uxs/gimbal/point`
+
+| `gimbal.point-at`
+| `uxs_interfaces/srv/GimbalPointAt`
+| service
+| `uxs/gimbal/point_at`
+
+| `gimbal.clear-target`
+| `uxs_interfaces/srv/GimbalClearTarget`
+| service
+| `uxs/gimbal/clear_target`
+
+| `gimbal.set-mode`
+| `uxs_interfaces/srv/GimbalSetMode`
+| service
+| `uxs/gimbal/set_mode`
+
+| `gimbal.track-image-point`
+| `uxs_interfaces/srv/GimbalTrackImagePoint`
+| service
+| `uxs/gimbal/track_image_point`
+
+| `ranging.set-range`
+| `uxs_interfaces/srv/RangingSetRange`
+| service
+| `uxs/ranging/set_range`
+
+| `ranging.set-gain`
+| `uxs_interfaces/srv/RangingSetGain`
+| service
+| `uxs/ranging/set_gain`
+
+| `ranging.set-frequency`
+| `uxs_interfaces/srv/RangingSetFrequency`
+| service
+| `uxs/ranging/set_frequency`
+
+| `ranging.set-scan-sector`
+| `uxs_interfaces/srv/RangingSetScanSector`
+| service
+| `uxs/ranging/set_scan_sector`
+
+| `ranging.set-transmit`
+| `uxs_interfaces/srv/RangingSetTransmit`
+| service
+| `uxs/ranging/set_transmit`
+
+| `sample.collect`
+| `uxs_interfaces/action/SampleCollect`
+| action
+| `uxs/sample/collect`
+
+| `payload.gripper`
+| `uxs_interfaces/action/PayloadGripper`
+| action
+| `uxs/payload/gripper`
+
+| `payload.release`
+| `uxs_interfaces/action/PayloadRelease`
+| action
+| `uxs/payload/release`
+
+| `payload.winch`
+| `uxs_interfaces/action/PayloadWinch`
+| action
+| `uxs/payload/winch`
+
+| `payload.set-lights`
+| `uxs_interfaces/srv/PayloadSetLights`
+| service
+| `uxs/payload/set_lights`
+
+| `payload.set-switch`
+| `uxs_interfaces/srv/PayloadSetSwitch`
+| service
+| `uxs/payload/set_switch`
+
+| `payload.set-actuator`
+| `uxs_interfaces/srv/PayloadSetActuator`
+| service
+| `uxs/payload/set_actuator`
+|===
+
+=== Examples
+
+*`uxs_interfaces/action/VehicleGoto.action`*
+
+----
+# Go to position: Move to a position, then stop or continue to the next instruction.
+# Registry command: http://www.opengis.net/def/uxs-command/vehicle.goto
+# Completion: until-goal; persistence: none; hazard: flight-critical; level: Core
+# Note: For Routes waypoints, location is a context parameter filled from the waypoint geometry.
+# Goal
+uxs_interfaces/Position location	# Target position.
+float64 speed	# Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV). [m/s] Optional; NaN means unset.
+float64 acceptance_radius	# Distance from the target at which the target counts as reached. [m] Optional; NaN means unset.
+float64 hold_time	# Time to remain at the position after arrival before completing. [s] Optional; NaN means unset.
+float64 heading	# Heading to hold on arrival. [rad] Optional; NaN means unset.
+uint8 pass_through	# If true the vehicle does not stop at the position and may pass within acceptanceRadius. Optional; see tri-state constants.
+uint8 PASS_THROUGH_FALSE = 0
+uint8 PASS_THROUGH_TRUE = 1
+uint8 PASS_THROUGH_UNSET = 255
+---
+# Result
+bool success
+uint16 error_code
+uint16 ERROR_NONE = 0
+uint16 ERROR_UNSUPPORTED_PARAMETER = 1
+uint16 ERROR_INVALID_VALUE = 2
+uint16 ERROR_PRECONDITION_FAILED = 3
+uint16 ERROR_TIMEOUT = 4
+uint16 ERROR_HARDWARE_FAULT = 5
+uint16 ERROR_UNKNOWN = 99
+string message	# Explanation when success is false.
+---
+# Feedback
+float32 progress	# 0.0 to 1.0, NaN if unknown.
+builtin_interfaces/Duration elapsed
+----
+
+*`uxs_interfaces/action/CameraCaptureImage.action`*
+
+----
+# Capture image: Capture still images.
+# Registry command: http://www.opengis.net/def/uxs-command/camera.capture-image
+# Completion: until-goal; persistence: none; hazard: none; level: Core
+# Goal
+int32 count	# Number of images. 0 means continue until camera.stop-image-capture. Optional; -1 means unset.
+float64 interval	# Time between images. [s] Optional; NaN means unset.
+---
+# Result
+bool success
+uint16 error_code
+uint16 ERROR_NONE = 0
+uint16 ERROR_UNSUPPORTED_PARAMETER = 1
+uint16 ERROR_INVALID_VALUE = 2
+uint16 ERROR_PRECONDITION_FAILED = 3
+uint16 ERROR_TIMEOUT = 4
+uint16 ERROR_HARDWARE_FAULT = 5
+uint16 ERROR_UNKNOWN = 99
+string message	# Explanation when success is false.
+string[] data_uris	# URIs of the produced images.
+---
+# Feedback
+float32 progress	# 0.0 to 1.0, NaN if unknown.
+builtin_interfaces/Duration elapsed
+----
+
+*`uxs_interfaces/srv/SensorGetStatus.srv`*
+
+----
+# Get status: Return the state and health of the sensor.
+# Registry command: http://www.opengis.net/def/uxs-command/sensor.get-status
+# Completion: immediate; persistence: none; hazard: none; level: Core
+# Request
+---
+# Response
+bool success
+uint16 error_code
+uint16 ERROR_NONE = 0
+uint16 ERROR_UNSUPPORTED_PARAMETER = 1
+uint16 ERROR_INVALID_VALUE = 2
+uint16 ERROR_PRECONDITION_FAILED = 3
+uint16 ERROR_TIMEOUT = 4
+uint16 ERROR_HARDWARE_FAULT = 5
+uint16 ERROR_UNKNOWN = 99
+string message	# Explanation when success is false.
+uint8 state	# State: 0 off, 1 standby, 2 idle, 3 acquiring, 4 busy, 5 fault.
+uint8 health	# Health: 0 ok, 1 degraded, 2 failed.
+string status_message	# Message.
+----
+
+*`uxs_interfaces/msg/Position.msg`*
+
+----
+# Geographic position with an optional vertical component.
+# Registry type: http://www.opengis.net/def/uxs-command/type/Position
+float64 latitude	# deg, WGS 84
+float64 longitude	# deg, WGS 84
+float64 vertical	# m; NaN if unset. Positive up, except depth (positive down).
+uint8 vertical_reference	# see VERTICAL_REFERENCE_*
+uint8 VERTICAL_REFERENCE_ELLIPSOID = 0
+uint8 VERTICAL_REFERENCE_MSL = 1
+uint8 VERTICAL_REFERENCE_TERRAIN = 2
+uint8 VERTICAL_REFERENCE_HOME = 3
+uint8 VERTICAL_REFERENCE_DEPTH = 4
+uint8 VERTICAL_REFERENCE_SEABED = 5
+uint8 VERTICAL_REFERENCE_UNSET = 255
+----
+
+=== References
+
+* _Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)_, Draft 0.1.
+* _A ROS 2 Binding for the Common Command Registry for Uncrewed Systems_, Draft 0.1.
+* https://ogcapi.ogc.org/routes/overview.html[OGC API -- Routes -- Part 1: Core].
+* https://docs.ros.org/[ROS 2 Documentation], including https://docs.ros.org/en/rolling/Concepts.html[Concepts], https://docs.ros.org/en/rolling/Tutorials.html[Tutorials] and https://www.ros.org/reps/[REP index].
+* https://www.ros.org/reps/rep-0103.html[REP 103: Standard Units of Measure and Coordinate Conventions].
+* https://www.ros.org/reps/rep-0105.html[REP 105: Coordinate Frames for Mobile Platforms].
+* https://www.ros.org/reps/rep-0147.html[REP 147: A Standard Interface for Aerial Vehicles] (status: Deferred).
+* https://navigation.ros.org/[Nav2 (Navigation 2) Documentation], including https://github.com/ros-navigation/navigation2/tree/main/nav2_msgs[`nav2_msgs`] action and service definitions.
+* https://github.com/ros2/common_interfaces[ROS 2 Common Interfaces] (`std_srvs`, `sensor_msgs`, `diagnostic_msgs`, `nav_msgs`).
+* https://github.com/ros2/rcl_interfaces[ROS 2 `rcl_interfaces`] (`lifecycle_msgs`, `action_msgs`, `rcl_interfaces`).
+* https://github.com/ros-controls/control_msgs[ROS 2 `control_msgs`] (gripper and head-pointing actions).
+* https://github.com/ros-geographic-info/geographic_info[ROS 2 `geographic_info`] (`geographic_msgs`).
+* https://github.com/ros2/rosbag2[ROS 2 `rosbag2`] (recording services).
+* https://github.com/mavlink/mavros/tree/ros2[MAVROS (ROS 2)] (`mavros_msgs` services and plugins).
+* https://github.com/PX4/px4_msgs[PX4 ROS 2 Messages] (`px4_msgs` uXRCE-DDS message definitions).
+* https://json-schema.org/draft/2020-12/[JSON Schema Draft 2020-12].
+* https://www.rfc-editor.org/rfc/rfc7946[RFC 7946, The GeoJSON Format].

@@ -1,0 +1,1938 @@
+{
+  "binding": "ros2",
+  "registryBaseUri": "http://www.opengis.net/def/uxs-command/",
+  "sourceBranches": "ROS 2 rolling / main branches of the repositories listed in the document (fetched 2026-09-30)",
+  "tier3Package": "uxs_interfaces",
+  "commands": [
+    {
+      "id": "vehicle.goto",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "NavigateToPose",
+          "kind": "action",
+          "name": "navigate_to_pose",
+          "fit": "partial",
+          "parameterMap": "location \u2192 pose (PoseStamped, frame map); heading \u2192 pose.orientation",
+          "conversions": "lat/lon \u2192 map frame with robot_localization service /fromLL (GeoPoint \u2192 Point); ENU yaw = \u03c0/2 \u2212 heading (rad), wrapped to (\u2212\u03c0, \u03c0]; quaternion about z",
+          "notes": "speed, acceptanceRadius, holdTime, passThrough are not goal fields (controller and goal-checker parameters). Commands carrying them are rejected."
+        },
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "FollowGPSWaypoints",
+          "kind": "action",
+          "name": "follow_gps_waypoints",
+          "fit": "partial",
+          "parameterMap": "location \u2192 gps_poses[0] (GeoPose); heading \u2192 orientation",
+          "conversions": "Nav2 converts lat/lon itself through /fromLL; ENU yaw = \u03c0/2 \u2212 heading (rad), wrapped to (\u2212\u03c0, \u03c0]; quaternion about z",
+          "notes": "Single-element list. Same unsupported parameters as above."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandInt",
+          "kind": "service",
+          "name": "cmd/command_int",
+          "fit": "generic",
+          "parameterMap": "DO_REPOSITION (192): speed \u2192 param1, location \u2192 x (lat\u00d71e7), y (lon\u00d71e7), z",
+          "conversions": "degE7 integer conversion; frame from vertical reference",
+          "notes": "Guided-mode reposition; supports speed, heading (param4 yaw)."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleGoto",
+          "kind": "action",
+          "name": "uxs/vehicle/goto",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.follow-path",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "FollowGPSWaypoints",
+          "kind": "action",
+          "name": "follow_gps_waypoints",
+          "fit": "partial",
+          "parameterMap": "path \u2192 gps_poses[]; closed \u2192 not supported",
+          "conversions": "Nav2 converts lat/lon; orientations derived from path direction",
+          "notes": "Waypoint task executors run at each waypoint and are configured by parameters, not per goal."
+        },
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "NavigateThroughPoses",
+          "kind": "action",
+          "name": "navigate_through_poses",
+          "fit": "partial",
+          "parameterMap": "path \u2192 poses (Goals, frame map)",
+          "conversions": "lat/lon \u2192 map frame with robot_localization service /fromLL (GeoPoint \u2192 Point)",
+          "notes": "Through-poses planning; interpolation is planner-defined."
+        },
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "FollowPath",
+          "kind": "action",
+          "name": "follow_path",
+          "fit": "partial",
+          "parameterMap": "path \u2192 path (nav_msgs/Path in map); controller ids left empty",
+          "conversions": "lat/lon \u2192 map frame with robot_localization service /fromLL (GeoPoint \u2192 Point)",
+          "notes": "Follows a given path exactly; no planning. speed is not a goal field."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleFollowPath",
+          "kind": "action",
+          "name": "uxs/vehicle/follow_path",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.hold-position",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "Wait",
+          "kind": "action",
+          "name": "wait",
+          "fit": "partial",
+          "parameterMap": "duration \u2192 time",
+          "conversions": "seconds \u2192 builtin_interfaces/Duration",
+          "notes": "Ground vehicles only (robot stays stationary). holdMode, radius, location unsupported; unlimited duration unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleHoldPosition",
+          "kind": "action",
+          "name": "uxs/vehicle/hold_position",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.orbit",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandInt",
+          "kind": "service",
+          "name": "cmd/command_int",
+          "fit": "generic",
+          "parameterMap": "DO_ORBIT (34): radius \u2192 param1 (sign = direction), speed \u2192 param2, center \u2192 x, y, z",
+          "conversions": "degE7; radius sign from direction",
+          "notes": "turns, duration unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleOrbit",
+          "kind": "action",
+          "name": "uxs/vehicle/orbit",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-heading",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "Spin",
+          "kind": "action",
+          "name": "spin",
+          "fit": "partial",
+          "parameterMap": "heading \u2192 target_yaw (relative), direction \u2192 sign",
+          "conversions": "relative yaw = wrap(ENU yaw target \u2212 current yaw from TF); ENU yaw = \u03c0/2 \u2212 heading (rad), wrapped to (\u2212\u03c0, \u03c0]; quaternion about z",
+          "notes": "target_yaw is a relative rotation in radians. rate, lock unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSetHeading",
+          "kind": "action",
+          "name": "uxs/vehicle/set_heading",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.move-relative",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "DriveOnHeading",
+          "kind": "action",
+          "name": "drive_on_heading",
+          "fit": "partial",
+          "parameterMap": "distance \u2192 target.x; speed \u2192 speed",
+          "conversions": "metres, m/s",
+          "notes": "Forward motion only (bearing = 0 relative to vehicle). verticalDistance unsupported."
+        },
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "BackUp",
+          "kind": "action",
+          "name": "backup",
+          "fit": "partial",
+          "parameterMap": "distance \u2192 target.x; speed \u2192 speed",
+          "conversions": "metres, m/s",
+          "notes": "Used for bearing = 180\u00b0; the behaviour always drives backwards, whatever the sign of target.x."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleMoveRelative",
+          "kind": "action",
+          "name": "uxs/vehicle/move_relative",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.return-to-home",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "SetMode",
+          "kind": "service",
+          "name": "set_mode",
+          "fit": "partial",
+          "parameterMap": "destination = home \u2192 custom_mode of the RTL mode (autopilot specific)",
+          "conversions": "",
+          "notes": "Mode names depend on the autopilot (for example RTL)."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "NAV_RETURN_TO_LAUNCH (20), no parameters",
+          "conversions": "",
+          "notes": "finalAction and vertical are not carried."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleReturnToHome",
+          "kind": "action",
+          "name": "uxs/vehicle/return_to_home",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.stop",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "action_msgs",
+          "interface": "CancelGoal",
+          "kind": "service",
+          "name": "{action}/_action/cancel_goal",
+          "fit": "partial",
+          "parameterMap": "mode = controlled \u2192 cancel all goals on the movement action servers (goal id zero, stamp zero)",
+          "conversions": "",
+          "notes": "Stops by cancellation; the platform then holds. For immediate, also publish a zero geometry_msgs/Twist on the velocity command topic."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleStop",
+          "kind": "action",
+          "name": "uxs/vehicle/stop",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-vertical-position",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_CHANGE_ALTITUDE (186): target.value \u2192 param1, reference \u2192 frame param2",
+          "conversions": "reference \u2192 MAV_FRAME",
+          "notes": "rate unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSetVerticalPosition",
+          "kind": "action",
+          "name": "uxs/vehicle/set_vertical_position",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.takeoff",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandTOL",
+          "kind": "service",
+          "name": "cmd/takeoff",
+          "fit": "partial",
+          "parameterMap": "target.value \u2192 altitude; location \u2192 latitude, longitude; heading \u2192 yaw",
+          "conversions": "degrees; float32 latitude/longitude (resolution \u2248 0.4 m at 45\u00b0 N): unsuitable where metre accuracy matters; prefer CommandInt (int32 degE7)",
+          "notes": "climbRate unsupported. min_pitch left 0."
+        },
+        {
+          "tier": 2,
+          "package": "px4_msgs",
+          "interface": "VehicleCommand",
+          "kind": "topic",
+          "name": "/fmu/in/vehicle_command",
+          "fit": "generic",
+          "parameterMap": "VEHICLE_CMD_NAV_TAKEOFF (22): heading \u2192 param4, location \u2192 param5/6, altitude \u2192 param7",
+          "conversions": "float64 param5/6 (full precision)",
+          "notes": "PX4 uXRCE-DDS; ack on VehicleCommandAck. A px4_msgs/srv/VehicleCommand service (request VehicleCommand, reply VehicleCommandAck) is also defined."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleTakeoff",
+          "kind": "action",
+          "name": "uxs/vehicle/takeoff",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.land",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandTOL",
+          "kind": "service",
+          "name": "cmd/land",
+          "fit": "partial",
+          "parameterMap": "location \u2192 latitude, longitude; heading \u2192 yaw",
+          "conversions": "degrees; float32 latitude/longitude (resolution \u2248 0.4 m at 45\u00b0 N): unsuitable where metre accuracy matters; prefer CommandInt (int32 degE7)",
+          "notes": "descentRate, precision, disarmAfter unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleLand",
+          "kind": "action",
+          "name": "uxs/vehicle/land",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.transition",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandVtolTransition",
+          "kind": "service",
+          "name": "cmd/vtol_transition",
+          "fit": "exact",
+          "parameterMap": "state: hover \u2192 STATE_MC (3), forward-flight \u2192 STATE_FW (4)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleTransition",
+          "kind": "action",
+          "name": "uxs/vehicle/transition",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.surface",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSurface",
+          "kind": "action",
+          "name": "uxs/vehicle/surface",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.dock",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "DockRobot",
+          "kind": "action",
+          "name": "dock_robot",
+          "fit": "partial",
+          "parameterMap": "station \u2192 dock_id (use_dock_id true) or location \u2192 dock_pose (use_dock_id false)",
+          "conversions": "lat/lon \u2192 map frame with robot_localization service /fromLL (GeoPoint \u2192 Point)",
+          "notes": "action = dock. heading unsupported."
+        },
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "UndockRobot",
+          "kind": "action",
+          "name": "undock_robot",
+          "fit": "exact",
+          "parameterMap": "action = undock; station \u2192 dock_type",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleDock",
+          "kind": "action",
+          "name": "uxs/vehicle/dock",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-speed",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "SpeedLimit",
+          "kind": "topic",
+          "name": "speed_limit",
+          "fit": "partial",
+          "parameterMap": "speed \u2192 speed_limit (percentage false)",
+          "conversions": "m/s",
+          "notes": "Nav2 controller server subscribes to it. speedType, throttle unsupported. Topic, not a service: completion is immediate without acknowledgment."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_CHANGE_SPEED (178): speedType \u2192 param1, speed \u2192 param2, throttle \u2192 param3",
+          "conversions": "absent optional value \u2192 \u22121",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSetSpeed",
+          "kind": "service",
+          "name": "uxs/vehicle/set_speed",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-mode",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "SetMode",
+          "kind": "service",
+          "name": "set_mode",
+          "fit": "partial",
+          "parameterMap": "platformMode \u2192 custom_mode; generic mode \u2192 autopilot mapping",
+          "conversions": "",
+          "notes": "Generic modes have no standard string mapping."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSetMode",
+          "kind": "service",
+          "name": "uxs/vehicle/set_mode",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-armed",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandBool",
+          "kind": "service",
+          "name": "cmd/arming",
+          "fit": "partial",
+          "parameterMap": "armed \u2192 value",
+          "conversions": "",
+          "notes": "force unsupported (send through CommandLong with the force code under explicit authorization)."
+        },
+        {
+          "tier": 1,
+          "package": "std_srvs",
+          "interface": "SetBool",
+          "kind": "service",
+          "name": "arm",
+          "fit": "partial",
+          "parameterMap": "armed \u2192 data",
+          "conversions": "",
+          "notes": "Convention for drivers that expose arming as SetBool. No standard service name."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSetArmed",
+          "kind": "service",
+          "name": "uxs/vehicle/set_armed",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-home",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandHome",
+          "kind": "service",
+          "name": "cmd/set_home",
+          "fit": "exact",
+          "parameterMap": "location absent \u2192 current_gps true; else latitude, longitude, altitude",
+          "conversions": "degrees; float32 latitude/longitude (resolution \u2248 0.4 m at 45\u00b0 N): unsuitable where metre accuracy matters; prefer CommandInt (int32 degE7)",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleSetHome",
+          "kind": "service",
+          "name": "uxs/vehicle/set_home",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.reboot",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "PREFLIGHT_REBOOT_SHUTDOWN (246)",
+          "conversions": "",
+          "notes": "Destructive: separate authorization required."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleReboot",
+          "kind": "service",
+          "name": "uxs/vehicle/reboot",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "mission.start",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "MISSION_START (300): firstItem \u2192 param1, lastItem \u2192 param2",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "MissionStart",
+          "kind": "service",
+          "name": "uxs/mission/start",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "mission.pause",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "ManageLifecycleNodes",
+          "kind": "service",
+          "name": "lifecycle_manager_navigation/manage_nodes",
+          "fit": "partial",
+          "parameterMap": "command PAUSE (1)",
+          "conversions": "",
+          "notes": "Pauses the Nav2 lifecycle nodes. behaviour unsupported."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_PAUSE_CONTINUE (193): param1 = 0",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "MissionPause",
+          "kind": "service",
+          "name": "uxs/mission/pause",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "mission.resume",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "ManageLifecycleNodes",
+          "kind": "service",
+          "name": "lifecycle_manager_navigation/manage_nodes",
+          "fit": "exact",
+          "parameterMap": "command RESUME (2)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_PAUSE_CONTINUE (193): param1 = 1",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "MissionResume",
+          "kind": "service",
+          "name": "uxs/mission/resume",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "mission.abort",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "action_msgs",
+          "interface": "CancelGoal",
+          "kind": "service",
+          "name": "{action}/_action/cancel_goal",
+          "fit": "partial",
+          "parameterMap": "cancel all goals, then issue the fallback (return-to-home, land, surface, stop) as a new command",
+          "conversions": "",
+          "notes": "Composite of cancel and another registry command."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "MissionAbort",
+          "kind": "service",
+          "name": "uxs/mission/abort",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "mission.wait",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "Wait",
+          "kind": "action",
+          "name": "wait",
+          "fit": "partial",
+          "parameterMap": "duration \u2192 time; until \u2192 time = until \u2212 now",
+          "conversions": "seconds \u2192 Duration",
+          "notes": "Ground behaviour. Not suitable for aerial vehicles that must keep flying."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "MissionWait",
+          "kind": "action",
+          "name": "uxs/mission/wait",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.emergency-stop",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "Platform specific (for example DO_FLIGHTTERMINATION (185))",
+          "conversions": "",
+          "notes": "Destructive. There is no standard ROS 2 emergency-stop service."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleEmergencyStop",
+          "kind": "service",
+          "name": "uxs/vehicle/emergency_stop",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "vehicle.terminate",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_FLIGHTTERMINATION (185) or DO_PARACHUTE (208)",
+          "conversions": "",
+          "notes": "Destructive: separate authorization required."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "VehicleTerminate",
+          "kind": "service",
+          "name": "uxs/vehicle/terminate",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.set-power",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "lifecycle_msgs",
+          "interface": "ChangeState",
+          "kind": "service",
+          "name": "{node}/change_state",
+          "fit": "partial",
+          "parameterMap": "state on \u2192 transition ACTIVATE (3); standby \u2192 DEACTIVATE (4); off \u2192 INACTIVE_SHUTDOWN (6) or ACTIVE_SHUTDOWN (7)",
+          "conversions": "",
+          "notes": "Applies to sensor driver nodes that are lifecycle nodes. Physical power switching is outside ROS."
+        },
+        {
+          "tier": 1,
+          "package": "std_srvs",
+          "interface": "SetBool",
+          "kind": "service",
+          "name": "set_power",
+          "fit": "partial",
+          "parameterMap": "state on \u2192 data true; off \u2192 false",
+          "conversions": "",
+          "notes": "Convention for drivers. standby unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorSetPower",
+          "kind": "service",
+          "name": "uxs/sensor/set_power",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.start-acquisition",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "std_srvs",
+          "interface": "Trigger",
+          "kind": "service",
+          "name": "start",
+          "fit": "partial",
+          "parameterMap": "no parameters",
+          "conversions": "",
+          "notes": "Convention for drivers. duration, sampleCount, rate unsupported; rate is set through SetParameters."
+        },
+        {
+          "tier": 1,
+          "package": "lifecycle_msgs",
+          "interface": "ChangeState",
+          "kind": "service",
+          "name": "{node}/change_state",
+          "fit": "partial",
+          "parameterMap": "transition ACTIVATE (3)",
+          "conversions": "",
+          "notes": "Lifecycle drivers publish only while active."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorStartAcquisition",
+          "kind": "service",
+          "name": "uxs/sensor/start_acquisition",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.stop-acquisition",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "std_srvs",
+          "interface": "Trigger",
+          "kind": "service",
+          "name": "stop",
+          "fit": "exact",
+          "parameterMap": "no parameters",
+          "conversions": "",
+          "notes": "Convention for drivers."
+        },
+        {
+          "tier": 1,
+          "package": "lifecycle_msgs",
+          "interface": "ChangeState",
+          "kind": "service",
+          "name": "{node}/change_state",
+          "fit": "exact",
+          "parameterMap": "transition DEACTIVATE (4)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorStopAcquisition",
+          "kind": "service",
+          "name": "uxs/sensor/stop_acquisition",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.trigger",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "std_srvs",
+          "interface": "Trigger",
+          "kind": "service",
+          "name": "trigger",
+          "fit": "partial",
+          "parameterMap": "no parameters",
+          "conversions": "",
+          "notes": "Convention for camera and sensor drivers. count and interval unsupported (call repeatedly)."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorTrigger",
+          "kind": "action",
+          "name": "uxs/sensor/trigger",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.set-sampling-rate",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "rcl_interfaces",
+          "interface": "SetParameters",
+          "kind": "service",
+          "name": "{node}/set_parameters",
+          "fit": "partial",
+          "parameterMap": "rate \u2192 a driver-specific parameter (for example frame_rate)",
+          "conversions": "Hz",
+          "notes": "Parameter name is driver-specific and declared in the System description."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "MessageInterval",
+          "kind": "service",
+          "name": "set_message_interval",
+          "fit": "partial",
+          "parameterMap": "rate \u2192 message_rate; message id identifies the stream",
+          "conversions": "Hz (0 disables; negative = default)",
+          "notes": "MAVLink message streams only."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorSetSamplingRate",
+          "kind": "service",
+          "name": "uxs/sensor/set_sampling_rate",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.apply-configuration",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "rcl_interfaces",
+          "interface": "SetParameters",
+          "kind": "service",
+          "name": "{node}/set_parameters",
+          "fit": "partial",
+          "parameterMap": "configuration \u2192 parameter file or parameter set identified by name",
+          "conversions": "",
+          "notes": "Named configuration sets are a deployment convention."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorApplyConfiguration",
+          "kind": "service",
+          "name": "uxs/sensor/apply_configuration",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.calibrate",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "sensor_msgs",
+          "interface": "SetCameraInfo",
+          "kind": "service",
+          "name": "set_camera_info",
+          "fit": "partial",
+          "parameterMap": "stores a calibration result (camera_info)",
+          "conversions": "",
+          "notes": "Stores the result of a calibration, it does not perform one."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "PREFLIGHT_CALIBRATION (241)",
+          "conversions": "",
+          "notes": "Flight-critical for vehicle-state sensors."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorCalibrate",
+          "kind": "action",
+          "name": "uxs/sensor/calibrate",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.self-test",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "diagnostic_msgs",
+          "interface": "SelfTest",
+          "kind": "service",
+          "name": "self_test",
+          "fit": "partial",
+          "parameterMap": "response passed \u2192 passed; status[] \u2192 details",
+          "conversions": "",
+          "notes": "level unsupported (the service has no request fields)."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorSelfTest",
+          "kind": "action",
+          "name": "uxs/sensor/self_test",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.reset",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "lifecycle_msgs",
+          "interface": "ChangeState",
+          "kind": "service",
+          "name": "{node}/change_state",
+          "fit": "partial",
+          "parameterMap": "CLEANUP (2) then CONFIGURE (1)",
+          "conversions": "",
+          "notes": "scope granularity unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorReset",
+          "kind": "action",
+          "name": "uxs/sensor/reset",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sensor.get-status",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "lifecycle_msgs",
+          "interface": "GetState",
+          "kind": "service",
+          "name": "{node}/get_state",
+          "fit": "partial",
+          "parameterMap": "current_state \u2192 state",
+          "conversions": "",
+          "notes": "health from the /diagnostics topic (DiagnosticStatus.level: OK, WARN, ERROR, STALE)."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SensorGetStatus",
+          "kind": "service",
+          "name": "uxs/sensor/get_status",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "data.start-recording",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "rosbag2_interfaces",
+          "interface": "Record",
+          "kind": "service",
+          "name": "rosbag2_recorder/record",
+          "fit": "partial",
+          "parameterMap": "label \u2192 uri",
+          "conversions": "start_time left zero",
+          "notes": "storage and maxDuration unsupported. Response is return_code and error_string."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "DataStartRecording",
+          "kind": "service",
+          "name": "uxs/data/start_recording",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "data.stop-recording",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "rosbag2_interfaces",
+          "interface": "Stop",
+          "kind": "service",
+          "name": "rosbag2_recorder/stop",
+          "fit": "exact",
+          "parameterMap": "no parameters",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "DataStopRecording",
+          "kind": "service",
+          "name": "uxs/data/stop_recording",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "data.mark-event",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "DataMarkEvent",
+          "kind": "service",
+          "name": "uxs/data/mark_event",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.capture-image",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "IMAGE_START_CAPTURE (2000): interval \u2192 param2, count \u2192 param3",
+          "conversions": "",
+          "notes": "MAVLink camera protocol. Produced image location is not returned."
+        },
+        {
+          "tier": 1,
+          "package": "nav2_msgs",
+          "interface": "PhotoAtWaypoint",
+          "kind": "topic",
+          "name": "(waypoint task executor plugin)",
+          "fit": "partial",
+          "parameterMap": "one image at each waypoint, configured by parameters",
+          "conversions": "",
+          "notes": "Plugin of the Nav2 waypoint follower. Per-waypoint parameters are not possible."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraCaptureImage",
+          "kind": "action",
+          "name": "uxs/camera/capture_image",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.stop-image-capture",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "IMAGE_STOP_CAPTURE (2001)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraStopImageCapture",
+          "kind": "service",
+          "name": "uxs/camera/stop_image_capture",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.start-video",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "VIDEO_START_CAPTURE (2500)",
+          "conversions": "",
+          "notes": "maxDuration, label unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraStartVideo",
+          "kind": "service",
+          "name": "uxs/camera/start_video",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.stop-video",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "VIDEO_STOP_CAPTURE (2501)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraStopVideo",
+          "kind": "service",
+          "name": "uxs/camera/stop_video",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.set-mode",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "SET_CAMERA_MODE (530)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraSetMode",
+          "kind": "service",
+          "name": "uxs/camera/set_mode",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.configure-image",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraConfigureImage",
+          "kind": "service",
+          "name": "uxs/camera/configure_image",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.set-exposure",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraSetExposure",
+          "kind": "service",
+          "name": "uxs/camera/set_exposure",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.set-zoom",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "SET_CAMERA_ZOOM (531)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraSetZoom",
+          "kind": "service",
+          "name": "uxs/camera/set_zoom",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.set-focus",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "SET_CAMERA_FOCUS (532)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraSetFocus",
+          "kind": "service",
+          "name": "uxs/camera/set_focus",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.select-source",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "SET_CAMERA_SOURCE (534)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraSelectSource",
+          "kind": "service",
+          "name": "uxs/camera/select_source",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "camera.set-trigger-distance",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandTriggerInterval",
+          "kind": "service",
+          "name": "cmd/trigger_interval",
+          "fit": "partial",
+          "parameterMap": "time-based: cycle_time, integration_time",
+          "conversions": "",
+          "notes": "Distance-based triggering uses CommandLong DO_SET_CAM_TRIGG_DIST (206)."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_SET_CAM_TRIGG_DIST (206): distance \u2192 param1, triggerNow \u2192 param3",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "CameraSetTriggerDistance",
+          "kind": "service",
+          "name": "uxs/camera/set_trigger_distance",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "gimbal.point",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "GimbalManagerPitchyaw",
+          "kind": "service",
+          "name": "gimbal_control/manager/pitchyaw",
+          "fit": "partial",
+          "parameterMap": "pitch \u2192 pitch, yaw \u2192 yaw, pitchRate \u2192 pitch_rate, yawRate \u2192 yaw_rate; frame \u2192 flags lock bits",
+          "conversions": "degrees and deg/s (passed through to the MAVLink command); radians \u2192 degrees",
+          "notes": "roll unsupported. gimbal_device_id 0 = all."
+        },
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "MountConfigure",
+          "kind": "service",
+          "name": "mount_control/configure",
+          "fit": "partial",
+          "parameterMap": "frame/mode \u2192 mode and stabilize flags",
+          "conversions": "",
+          "notes": "Older mount protocol."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "GimbalPoint",
+          "kind": "action",
+          "name": "uxs/gimbal/point",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "gimbal.point-at",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "GimbalManagerSetRoi",
+          "kind": "service",
+          "name": "gimbal_control/manager/set_roi",
+          "fit": "exact",
+          "parameterMap": "location \u2192 latitude, longitude, altitude; mode = ROI_MODE_LOCATION (0)",
+          "conversions": "degrees; float32 latitude/longitude (resolution \u2248 0.4 m at 45\u00b0 N): unsuitable where metre accuracy matters; prefer CommandInt (int32 degE7)",
+          "notes": ""
+        },
+        {
+          "tier": 1,
+          "package": "control_msgs",
+          "interface": "PointHead",
+          "kind": "action",
+          "name": "point_head",
+          "fit": "partial",
+          "parameterMap": "location \u2192 target (PointStamped in a local frame)",
+          "conversions": "lat/lon \u2192 map frame with robot_localization service /fromLL (GeoPoint \u2192 Point)",
+          "notes": "For pan-tilt heads driven through TF; pointing_axis, min_duration from configuration."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "GimbalPointAt",
+          "kind": "service",
+          "name": "uxs/gimbal/point_at",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "gimbal.clear-target",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "GimbalManagerSetRoi",
+          "kind": "service",
+          "name": "gimbal_control/manager/set_roi",
+          "fit": "exact",
+          "parameterMap": "mode = ROI_MODE_NONE (3)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "GimbalClearTarget",
+          "kind": "service",
+          "name": "uxs/gimbal/clear_target",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "gimbal.set-mode",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "GimbalManagerPitchyaw",
+          "kind": "service",
+          "name": "gimbal_control/manager/pitchyaw",
+          "fit": "partial",
+          "parameterMap": "stow \u2192 flags RETRACT (1); follow \u2192 no lock flags; lock \u2192 lock flags (4, 8, 16)",
+          "conversions": "",
+          "notes": "Angles are left unset."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "GimbalSetMode",
+          "kind": "service",
+          "name": "uxs/gimbal/set_mode",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "gimbal.track-image-point",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "GimbalManagerCameraTrack",
+          "kind": "service",
+          "name": "gimbal_control/manager/camera_track",
+          "fit": "exact",
+          "parameterMap": "x, y \u2192 x, y with mode = CAMERA_TRACK_MODE_POINT (0)",
+          "conversions": "normalized image coordinates",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "GimbalTrackImagePoint",
+          "kind": "service",
+          "name": "uxs/gimbal/track_image_point",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "ranging.set-range",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "RangingSetRange",
+          "kind": "service",
+          "name": "uxs/ranging/set_range",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "ranging.set-gain",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "RangingSetGain",
+          "kind": "service",
+          "name": "uxs/ranging/set_gain",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "ranging.set-frequency",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "RangingSetFrequency",
+          "kind": "service",
+          "name": "uxs/ranging/set_frequency",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "ranging.set-scan-sector",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "RangingSetScanSector",
+          "kind": "service",
+          "name": "uxs/ranging/set_scan_sector",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "ranging.set-transmit",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "RangingSetTransmit",
+          "kind": "service",
+          "name": "uxs/ranging/set_transmit",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "sample.collect",
+      "bindings": [
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "SampleCollect",
+          "kind": "action",
+          "name": "uxs/sample/collect",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "payload.gripper",
+      "bindings": [
+        {
+          "tier": 1,
+          "package": "control_msgs",
+          "interface": "GripperCommand",
+          "kind": "action",
+          "name": "gripper_cmd",
+          "fit": "partial",
+          "parameterMap": "action open/close \u2192 command.position; force \u2192 command.max_effort",
+          "conversions": "position in metres or radians as the gripper defines",
+          "notes": "Mapping of open/close to positions is gripper configuration."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "PayloadGripper",
+          "kind": "action",
+          "name": "uxs/payload/gripper",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "payload.release",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_GRIPPER (211) or DO_SET_SERVO (183)",
+          "conversions": "",
+          "notes": "Airframe specific."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "PayloadRelease",
+          "kind": "action",
+          "name": "uxs/payload/release",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "payload.winch",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_WINCH (42600)",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "PayloadWinch",
+          "kind": "action",
+          "name": "uxs/payload/winch",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "payload.set-lights",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "ILLUMINATOR_ON_OFF (2200)",
+          "conversions": "",
+          "notes": "intensity and lightId unsupported."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "PayloadSetLights",
+          "kind": "service",
+          "name": "uxs/payload/set_lights",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "payload.set-switch",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_SET_RELAY (181): channel \u2192 param1, on \u2192 param2",
+          "conversions": "",
+          "notes": ""
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "PayloadSetSwitch",
+          "kind": "service",
+          "name": "uxs/payload/set_switch",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    },
+    {
+      "id": "payload.set-actuator",
+      "bindings": [
+        {
+          "tier": 2,
+          "package": "mavros_msgs",
+          "interface": "CommandLong",
+          "kind": "service",
+          "name": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "DO_SET_SERVO (183): channel \u2192 param1, value \u2192 PWM param2",
+          "conversions": "normalized [\u22121, 1] \u2192 PWM \u00b5s",
+          "notes": "Flight-critical."
+        },
+        {
+          "tier": 3,
+          "package": "uxs_interfaces",
+          "interface": "PayloadSetActuator",
+          "kind": "service",
+          "name": "uxs/payload/set_actuator",
+          "fit": "exact",
+          "parameterMap": "field names are the registry parameter names in snake_case",
+          "conversions": "angles in radians",
+          "notes": ""
+        }
+      ]
+    }
+  ]
+}

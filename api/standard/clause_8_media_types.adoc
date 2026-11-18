@@ -3,3 +3,5 @@
 For the media types of routes according to the Route Exchange Model, see <<REM>>.
 
 For all other resources, `application/json` applies for JSON documents and `text/html` for HTML documents.
+
+Error responses are encoded as problem details documents (`application/problem+json`) according to <<rfc9457,RFC 9457>>.

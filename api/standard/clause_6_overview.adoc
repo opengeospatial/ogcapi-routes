@@ -7,14 +7,25 @@ The bare minimum requirement for a Routing API is to compute a route based on a 
 
 Besides this basic requirement, additional optional requirements to the API are:
 
-* Storage and management of computed routes
+* Storage and management of computed routes, including fetching the route and
+  the definition that was used to compute it.
 
-Additionally, a Routing API may support the following optional routing parameters:
+Additionally, a Routing API may support the following optional routing parameters
+and capabilities:
 
-* Capability to add additional intermediate waypoints.
-* Select a transport mode for the route computation.
-* Apply a height restriction to the route computation.
-* Apply a weight restriction to the route computation.
-* Ability to define obstacles that have to be avoided.
-* Specify departure or arrival times.
+* Support for additional intermediate waypoints that the computed route has to
+  pass through.
+* Select a transport mode for the route computation. The API declares the modes
+  that it supports, and each mode may define a schema for mode-specific
+  parameters.
+* Apply spatial constraints to the route computation, for example areas that
+  the computed route has to avoid.
+* Specify departure or arrival times for the route.
+* Include actions that are executed during the traversal of the route, for
+  example activating a sensor or capturing an image. The API declares the
+  actions that it supports and the schema of each action.
+* Define contingencies for the route, that is, fallback plans such as rerouting
+  or returning to base that are executed when trigger conditions occur.
+* Enrich the representation of routes and route segments with attributes from a
+  discoverable attribute catalog.
 * Support asynchronous execution of route computations.

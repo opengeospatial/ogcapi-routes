@@ -1,0 +1,5537 @@
+{
+  "registry": "Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)",
+  "version": "0.1.0",
+  "baseUri": "http://www.opengis.net/def/uxs-command/",
+  "sharedTypes": {
+    "Position": {
+      "uri": "http://www.opengis.net/def/uxs-command/type/Position",
+      "type": "DataRecord",
+      "label": "Position",
+      "description": "WGS 84 position with an optional vertical component.",
+      "fields": [
+        {
+          "name": "latitude",
+          "type": "Quantity",
+          "label": "Latitude",
+          "uom": {
+            "code": "deg"
+          },
+          "constraint": {
+            "intervals": [
+              [
+                -90,
+                90
+              ]
+            ]
+          },
+          "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+        },
+        {
+          "name": "longitude",
+          "type": "Quantity",
+          "label": "Longitude",
+          "uom": {
+            "code": "deg"
+          },
+          "constraint": {
+            "intervals": [
+              [
+                -180,
+                180
+              ]
+            ]
+          },
+          "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+        },
+        {
+          "name": "vertical",
+          "type": "Quantity",
+          "label": "Vertical position",
+          "uom": {
+            "code": "m"
+          },
+          "optional": true,
+          "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+        },
+        {
+          "name": "verticalReference",
+          "type": "Category",
+          "label": "Vertical reference",
+          "optional": true,
+          "constraint": {
+            "values": [
+              "ellipsoid",
+              "msl",
+              "terrain",
+              "home",
+              "depth",
+              "seabed"
+            ]
+          },
+          "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+        }
+      ]
+    },
+    "VerticalTarget": {
+      "uri": "http://www.opengis.net/def/uxs-command/type/VerticalTarget",
+      "type": "DataRecord",
+      "label": "Vertical target",
+      "description": "A vertical value and the reference it is measured from.",
+      "fields": [
+        {
+          "name": "value",
+          "type": "Quantity",
+          "label": "Value",
+          "uom": {
+            "code": "m"
+          },
+          "definition": "http://www.opengis.net/def/uxs-command/param/value"
+        },
+        {
+          "name": "reference",
+          "type": "Category",
+          "label": "Reference",
+          "constraint": {
+            "values": [
+              "ellipsoid",
+              "msl",
+              "terrain",
+              "home",
+              "depth",
+              "seabed"
+            ]
+          },
+          "definition": "http://www.opengis.net/def/uxs-command/param/reference"
+        }
+      ]
+    },
+    "PositionArray": {
+      "uri": "http://www.opengis.net/def/uxs-command/type/PositionArray",
+      "type": "DataArray",
+      "label": "Position array",
+      "description": "Ordered positions.",
+      "elementType": {
+        "name": "position",
+        "type": "DataRecord",
+        "label": "Position",
+        "fields": [
+          {
+            "name": "latitude",
+            "type": "Quantity",
+            "label": "Latitude",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -90,
+                  90
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+          },
+          {
+            "name": "longitude",
+            "type": "Quantity",
+            "label": "Longitude",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -180,
+                  180
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+          },
+          {
+            "name": "vertical",
+            "type": "Quantity",
+            "label": "Vertical position",
+            "uom": {
+              "code": "m"
+            },
+            "optional": true,
+            "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+          },
+          {
+            "name": "verticalReference",
+            "type": "Category",
+            "label": "Vertical reference",
+            "optional": true,
+            "constraint": {
+              "values": [
+                "ellipsoid",
+                "msl",
+                "terrain",
+                "home",
+                "depth",
+                "seabed"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+          }
+        ]
+      }
+    }
+  },
+  "vehicleCommands": [
+    {
+      "id": "vehicle.goto",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.goto",
+      "title": "Go to position",
+      "group": "Navigation",
+      "description": "Move to a position, then stop or continue to the next instruction.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Go to position",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.goto",
+        "fields": [
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Target position.",
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          },
+          {
+            "name": "speed",
+            "label": "speed",
+            "description": "Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/speed"
+          },
+          {
+            "name": "acceptanceRadius",
+            "label": "acceptanceRadius",
+            "description": "Distance from the target at which the target counts as reached.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/acceptanceRadius"
+          },
+          {
+            "name": "holdTime",
+            "label": "holdTime",
+            "description": "Time to remain at the position after arrival before completing.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/holdTime"
+          },
+          {
+            "name": "heading",
+            "label": "heading",
+            "description": "Heading to hold on arrival.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/heading"
+          },
+          {
+            "name": "passThrough",
+            "label": "passThrough",
+            "description": "If true the vehicle does not stop at the position and may pass within `acceptanceRadius`. (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/passThrough",
+            "value": false
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_WAYPOINT",
+          "id": 16
+        },
+        {
+          "command": "MAV_CMD_DO_REPOSITION",
+          "id": 192
+        }
+      ],
+      "notes": "For Routes waypoints, `location` is a context parameter filled from the waypoint geometry."
+    },
+    {
+      "id": "vehicle.follow-path",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.follow-path",
+      "title": "Follow path",
+      "group": "Navigation",
+      "description": "Follow an ordered list of positions.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "both",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Follow path",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.follow-path",
+        "fields": [
+          {
+            "name": "path",
+            "label": "path",
+            "description": "Ordered positions to visit (at least two).",
+            "type": "DataArray",
+            "definition": "http://www.opengis.net/def/routes/context/segment-geometry",
+            "elementCount": {
+              "type": "Count",
+              "constraint": {
+                "intervals": [
+                  [
+                    2,
+                    "Infinity"
+                  ]
+                ]
+              }
+            },
+            "elementType": {
+              "name": "position",
+              "type": "DataRecord",
+              "label": "Position",
+              "fields": [
+                {
+                  "name": "latitude",
+                  "type": "Quantity",
+                  "label": "Latitude",
+                  "uom": {
+                    "code": "deg"
+                  },
+                  "constraint": {
+                    "intervals": [
+                      [
+                        -90,
+                        90
+                      ]
+                    ]
+                  },
+                  "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+                },
+                {
+                  "name": "longitude",
+                  "type": "Quantity",
+                  "label": "Longitude",
+                  "uom": {
+                    "code": "deg"
+                  },
+                  "constraint": {
+                    "intervals": [
+                      [
+                        -180,
+                        180
+                      ]
+                    ]
+                  },
+                  "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+                },
+                {
+                  "name": "vertical",
+                  "type": "Quantity",
+                  "label": "Vertical position",
+                  "uom": {
+                    "code": "m"
+                  },
+                  "optional": true,
+                  "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+                },
+                {
+                  "name": "verticalReference",
+                  "type": "Category",
+                  "label": "Vertical reference",
+                  "optional": true,
+                  "constraint": {
+                    "values": [
+                      "ellipsoid",
+                      "msl",
+                      "terrain",
+                      "home",
+                      "depth",
+                      "seabed"
+                    ]
+                  },
+                  "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+                }
+              ]
+            }
+          },
+          {
+            "name": "speed",
+            "label": "speed",
+            "description": "Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/speed"
+          },
+          {
+            "name": "acceptanceRadius",
+            "label": "acceptanceRadius",
+            "description": "Distance from the target at which the target counts as reached.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/acceptanceRadius"
+          },
+          {
+            "name": "interpolation",
+            "label": "interpolation",
+            "description": "How to interpolate between positions. (default: linear)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "linear",
+                "spline"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/interpolation",
+            "value": "linear"
+          },
+          {
+            "name": "closed",
+            "label": "closed",
+            "description": "If true, return to the first position at the end. (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/closed",
+            "value": false
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_SPLINE_WAYPOINT",
+          "id": 82
+        },
+        {
+          "command": "MAV_CMD_NAV_WAYPOINT",
+          "id": 16
+        }
+      ],
+      "notes": "For Routes segments, `path` is a context parameter filled from the segment geometry."
+    },
+    {
+      "id": "vehicle.hold-position",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.hold-position",
+      "title": "Hold position",
+      "group": "Navigation",
+      "description": "Hold position: hover (UAV), stand still (UGV), station-keep (USV, UUV).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Hold position",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.hold-position",
+        "fields": [
+          {
+            "name": "duration",
+            "label": "duration",
+            "description": "Time to hold. If absent, hold until another command replaces this one.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/duration"
+          },
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Position to hold. If absent, the current position.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          },
+          {
+            "name": "holdMode",
+            "label": "holdMode",
+            "description": "Holding pattern. `circle` is for platforms that cannot hover. (default: station-keep)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "station-keep",
+                "circle"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/holdMode",
+            "value": "station-keep"
+          },
+          {
+            "name": "radius",
+            "label": "radius",
+            "description": "Circle radius when `holdMode` is `circle`. Sign: positive clockwise, negative counter-clockwise.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/radius"
+          },
+          {
+            "name": "heading",
+            "label": "heading",
+            "description": "Heading to hold.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/heading"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_LOITER_TIME",
+          "id": 19
+        },
+        {
+          "command": "MAV_CMD_NAV_LOITER_UNLIM",
+          "id": 17
+        }
+      ]
+    },
+    {
+      "id": "vehicle.orbit",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.orbit",
+      "title": "Orbit a point",
+      "group": "Navigation",
+      "description": "Circle around a center point.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "limited",
+        "USV": "applicable",
+        "UUV": "limited"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Orbit a point",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.orbit",
+        "fields": [
+          {
+            "name": "center",
+            "label": "center",
+            "description": "Centre of the orbit.",
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          },
+          {
+            "name": "radius",
+            "label": "radius",
+            "description": "Orbit radius.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/radius"
+          },
+          {
+            "name": "direction",
+            "label": "direction",
+            "description": "Direction of travel. (default: clockwise)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "clockwise",
+                "counter-clockwise"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/direction",
+            "value": "clockwise"
+          },
+          {
+            "name": "turns",
+            "label": "turns",
+            "description": "Number of turns. If both `turns` and `duration` are absent, orbit until replaced.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/turns"
+          },
+          {
+            "name": "duration",
+            "label": "duration",
+            "description": "Maximum time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/duration"
+          },
+          {
+            "name": "speed",
+            "label": "speed",
+            "description": "Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/speed"
+          },
+          {
+            "name": "facing",
+            "label": "facing",
+            "description": "Direction the vehicle faces. (default: tangent)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "tangent",
+                "center",
+                "fixed"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/facing",
+            "value": "tangent"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_ORBIT",
+          "id": 34
+        },
+        {
+          "command": "MAV_CMD_NAV_LOITER_TURNS",
+          "id": 18
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-heading",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-heading",
+      "title": "Set heading",
+      "group": "Navigation",
+      "description": "Rotate to a heading (yaw in place, or turn on the spot for a ground vehicle).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "conditional",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set heading",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.set-heading",
+        "fields": [
+          {
+            "name": "heading",
+            "label": "heading",
+            "description": "Target heading.",
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/heading"
+          },
+          {
+            "name": "reference",
+            "label": "reference",
+            "description": "Reference direction for `heading`. (default: true-north)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "true-north",
+                "magnetic-north",
+                "relative"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/reference",
+            "value": "true-north"
+          },
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Maximum turn rate.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          },
+          {
+            "name": "direction",
+            "label": "direction",
+            "description": "Direction of the turn. (default: shortest)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "shortest",
+                "clockwise",
+                "counter-clockwise"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/direction",
+            "value": "shortest"
+          },
+          {
+            "name": "lock",
+            "label": "lock",
+            "description": "If true, keep this heading during later navigation until changed (persistence becomes `latched`). (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/lock",
+            "value": false
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_CONDITION_YAW",
+          "id": 115
+        },
+        {
+          "command": "MAV_CMD_NAV_SET_YAW_SPEED",
+          "id": 213
+        }
+      ]
+    },
+    {
+      "id": "vehicle.move-relative",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.move-relative",
+      "title": "Move relative to current position",
+      "group": "Navigation",
+      "description": "Move a given distance along a bearing (drive forward, back up, sidestep, climb).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Move relative to current position",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.move-relative",
+        "fields": [
+          {
+            "name": "distance",
+            "label": "distance",
+            "description": "Horizontal distance.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/distance"
+          },
+          {
+            "name": "bearing",
+            "label": "bearing",
+            "description": "Direction of travel. (default: 0)",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/bearing",
+            "value": 0
+          },
+          {
+            "name": "bearingReference",
+            "label": "bearingReference",
+            "description": "What `bearing` is measured from. (default: vehicle-heading)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "vehicle-heading",
+                "true-north"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/bearingReference",
+            "value": "vehicle-heading"
+          },
+          {
+            "name": "verticalDistance",
+            "label": "verticalDistance",
+            "description": "Vertical change, positive up. Ignored by ground and surface vehicles.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/verticalDistance"
+          },
+          {
+            "name": "speed",
+            "label": "speed",
+            "description": "Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/speed"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_REPOSITION",
+          "id": 192
+        }
+      ]
+    },
+    {
+      "id": "vehicle.return-to-home",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.return-to-home",
+      "title": "Return to home",
+      "group": "Navigation",
+      "description": "Return to a recovery point and perform a final action.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Return to home",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.return-to-home",
+        "fields": [
+          {
+            "name": "destination",
+            "label": "destination",
+            "description": "Which recovery point to use. (default: home)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "home",
+                "launch-point",
+                "rally-point",
+                "dock"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/destination",
+            "value": "home"
+          },
+          {
+            "name": "finalAction",
+            "label": "finalAction",
+            "description": "What to do on arrival. (default: default)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "hold",
+                "land",
+                "dock",
+                "surface",
+                "default"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/finalAction",
+            "value": "default"
+          },
+          {
+            "name": "vertical",
+            "label": "vertical",
+            "description": "Height, altitude or depth to use for the return leg.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/uxs-command/param/vertical",
+            "fields": [
+              {
+                "name": "value",
+                "type": "Quantity",
+                "label": "Value",
+                "uom": {
+                  "code": "m"
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/value"
+              },
+              {
+                "name": "reference",
+                "type": "Category",
+                "label": "Reference",
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/reference"
+              }
+            ]
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_RETURN_TO_LAUNCH",
+          "id": 20
+        },
+        {
+          "command": "MAV_CMD_NAV_VTOL_LAND",
+          "id": 85
+        }
+      ]
+    },
+    {
+      "id": "vehicle.stop",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.stop",
+      "title": "Stop",
+      "group": "Navigation",
+      "description": "Stop movement and hold the current position.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Stop",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.stop",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "`controlled` decelerates within platform limits, `immediate` stops as fast as safely possible. (default: controlled)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "controlled",
+                "immediate"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode",
+            "value": "controlled"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_PAUSE_CONTINUE",
+          "id": 193
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-vertical-position",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-vertical-position",
+      "title": "Set vertical position",
+      "group": "Vertical",
+      "description": "Change altitude, height or depth, keeping the horizontal position.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "not-applicable",
+        "USV": "limited",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set vertical position",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.set-vertical-position",
+        "fields": [
+          {
+            "name": "target",
+            "label": "target",
+            "description": "Target vertical position.",
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/uxs-command/param/target",
+            "fields": [
+              {
+                "name": "value",
+                "type": "Quantity",
+                "label": "Value",
+                "uom": {
+                  "code": "m"
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/value"
+              },
+              {
+                "name": "reference",
+                "type": "Category",
+                "label": "Reference",
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/reference"
+              }
+            ]
+          },
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Vertical speed limit.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_CHANGE_ALTITUDE",
+          "id": 186
+        }
+      ],
+      "notes": "Later `vehicle.goto` commands without a vertical value use this setting."
+    },
+    {
+      "id": "vehicle.takeoff",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.takeoff",
+      "title": "Take off",
+      "group": "Vertical",
+      "description": "Take off and climb to a height.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "not-applicable",
+        "USV": "not-applicable",
+        "UUV": "not-applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Take off",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.takeoff",
+        "fields": [
+          {
+            "name": "target",
+            "label": "target",
+            "description": "Height or altitude to reach.",
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/uxs-command/param/target",
+            "fields": [
+              {
+                "name": "value",
+                "type": "Quantity",
+                "label": "Value",
+                "uom": {
+                  "code": "m"
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/value"
+              },
+              {
+                "name": "reference",
+                "type": "Category",
+                "label": "Reference",
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/reference"
+              }
+            ]
+          },
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Position to take off from and then hold. If absent, the current position.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          },
+          {
+            "name": "heading",
+            "label": "heading",
+            "description": "Heading during and after the climb.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/heading"
+          },
+          {
+            "name": "climbRate",
+            "label": "climbRate",
+            "description": "Vertical speed limit.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/climbRate"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_TAKEOFF",
+          "id": 22
+        },
+        {
+          "command": "MAV_CMD_NAV_VTOL_TAKEOFF",
+          "id": 84
+        }
+      ]
+    },
+    {
+      "id": "vehicle.land",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.land",
+      "title": "Land",
+      "group": "Vertical",
+      "description": "Descend and land.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "not-applicable",
+        "USV": "not-applicable",
+        "UUV": "not-applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Land",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.land",
+        "fields": [
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Landing position. If absent, the current position.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          },
+          {
+            "name": "descentRate",
+            "label": "descentRate",
+            "description": "Vertical speed limit.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/descentRate"
+          },
+          {
+            "name": "heading",
+            "label": "heading",
+            "description": "Heading during landing.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/heading"
+          },
+          {
+            "name": "precision",
+            "label": "precision",
+            "description": "Precision landing behavior. (default: none)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "none",
+                "opportunistic",
+                "required"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/precision",
+            "value": "none"
+          },
+          {
+            "name": "disarmAfter",
+            "label": "disarmAfter",
+            "description": "If true, disarm after touchdown. (default: true)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/disarmAfter",
+            "value": true
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_LAND",
+          "id": 21
+        },
+        {
+          "command": "MAV_CMD_NAV_VTOL_LAND",
+          "id": 85
+        }
+      ]
+    },
+    {
+      "id": "vehicle.transition",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.transition",
+      "title": "Transition flight mode",
+      "group": "Vertical",
+      "description": "Transition a hybrid aircraft between hover and forward flight.",
+      "applicability": {
+        "UAV": "limited",
+        "UGV": "not-applicable",
+        "USV": "not-applicable",
+        "UUV": "not-applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "mode",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Transition flight mode",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.transition",
+        "fields": [
+          {
+            "name": "state",
+            "label": "state",
+            "description": "Target configuration.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "hover",
+                "forward-flight"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/state"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_VTOL_TRANSITION",
+          "id": 3000
+        }
+      ]
+    },
+    {
+      "id": "vehicle.surface",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.surface",
+      "title": "Surface",
+      "group": "Vertical",
+      "description": "Ascend to the water surface (submerged vehicles).",
+      "applicability": {
+        "UAV": "not-applicable",
+        "UGV": "not-applicable",
+        "USV": "limited",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Surface",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.surface",
+        "fields": [
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Ascent rate limit.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          },
+          {
+            "name": "holdTime",
+            "label": "holdTime",
+            "description": "Time to stay at the surface (for example to acquire a position fix or communicate).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/holdTime"
+          },
+          {
+            "name": "waitForFix",
+            "label": "waitForFix",
+            "description": "If true, stay at the surface until a position fix is obtained or `holdTime` expires. (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/waitForFix",
+            "value": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "vehicle.dock",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.dock",
+      "title": "Dock or undock",
+      "group": "Vertical",
+      "description": "Dock with, or leave, a docking or charging station.",
+      "applicability": {
+        "UAV": "limited",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Dock or undock",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.dock",
+        "fields": [
+          {
+            "name": "action",
+            "label": "action",
+            "description": "Dock or undock.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "dock",
+                "undock"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/action"
+          },
+          {
+            "name": "station",
+            "label": "station",
+            "description": "Identifier of the station (URI or local id). If absent, the nearest known station.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/station"
+          },
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Approach position, if the station does not define one.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          },
+          {
+            "name": "heading",
+            "label": "heading",
+            "description": "Approach heading.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/heading"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vehicle.set-speed",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-speed",
+      "title": "Set speed",
+      "group": "Motion attributes",
+      "description": "Set the speed used by later movement commands.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set speed",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.set-speed",
+        "fields": [
+          {
+            "name": "speed",
+            "label": "speed",
+            "description": "Speed.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/speed"
+          },
+          {
+            "name": "speedType",
+            "label": "speedType",
+            "description": "What the speed is relative to. (default: ground)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "ground",
+                "air",
+                "water"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/speedType",
+            "value": "ground"
+          },
+          {
+            "name": "throttle",
+            "label": "throttle",
+            "description": "Throttle or thrust limit.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/throttle"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_CHANGE_SPEED",
+          "id": 178
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-mode",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-mode",
+      "title": "Set operating mode",
+      "group": "Mode and state",
+      "description": "Change the operating mode.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set operating mode",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.set-mode",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "Generic mode.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "manual",
+                "assisted",
+                "autonomous",
+                "hold",
+                "return",
+                "standby"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode"
+          },
+          {
+            "name": "platformMode",
+            "label": "platformMode",
+            "description": "Platform-specific mode name, used when `mode` does not identify it.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/platformMode"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_MODE",
+          "id": 176
+        },
+        {
+          "command": "MAV_CMD_DO_SET_STANDARD_MODE",
+          "id": 262
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-armed",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-armed",
+      "title": "Arm or disarm",
+      "group": "Mode and state",
+      "description": "Enable or disable actuators (motors, thrusters, drive).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Arm or disarm",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.set-armed",
+        "fields": [
+          {
+            "name": "armed",
+            "label": "armed",
+            "description": "True to arm, false to disarm.",
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/armed"
+          },
+          {
+            "name": "force",
+            "label": "force",
+            "description": "Bypass safety checks. A command with `force=true` SHALL be treated as `destructive`. (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/force",
+            "value": false
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_COMPONENT_ARM_DISARM",
+          "id": 400
+        }
+      ]
+    },
+    {
+      "id": "vehicle.set-home",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-home",
+      "title": "Set home position",
+      "group": "Mode and state",
+      "description": "Set the home (recovery) position.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set home position",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.set-home",
+        "fields": [
+          {
+            "name": "location",
+            "label": "location",
+            "description": "New home position. If absent, the current position.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_HOME",
+          "id": 179
+        }
+      ]
+    },
+    {
+      "id": "vehicle.reboot",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.reboot",
+      "title": "Restart",
+      "group": "Mode and state",
+      "description": "Restart or shut down a vehicle subsystem.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "destructive"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Restart",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.reboot",
+        "fields": [
+          {
+            "name": "target",
+            "label": "target",
+            "description": "What to restart.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "vehicle-controller",
+                "onboard-computer",
+                "payload"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/target"
+          },
+          {
+            "name": "shutdown",
+            "label": "shutdown",
+            "description": "If true, shut down instead of restarting. (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/shutdown",
+            "value": false
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN",
+          "id": 246
+        }
+      ]
+    },
+    {
+      "id": "mission.start",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.start",
+      "title": "Start mission",
+      "group": "Mission control",
+      "description": "Start executing an uploaded or queued mission.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Start mission",
+        "definition": "http://www.opengis.net/def/uxs-command/mission.start",
+        "fields": [
+          {
+            "name": "firstItem",
+            "label": "firstItem",
+            "description": "Index of the first item to execute.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/firstItem"
+          },
+          {
+            "name": "lastItem",
+            "label": "lastItem",
+            "description": "Index of the last item to execute.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/lastItem"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_MISSION_START",
+          "id": 300
+        }
+      ]
+    },
+    {
+      "id": "mission.pause",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.pause",
+      "title": "Pause mission",
+      "group": "Mission control",
+      "description": "Pause mission execution.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Pause mission",
+        "definition": "http://www.opengis.net/def/uxs-command/mission.pause",
+        "fields": [
+          {
+            "name": "behavior",
+            "label": "behavior",
+            "description": "What to do while paused. (default: hold-position)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "hold-position",
+                "continue-to-waypoint"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/behavior",
+            "value": "hold-position"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_PAUSE_CONTINUE",
+          "id": 193
+        }
+      ]
+    },
+    {
+      "id": "mission.resume",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.resume",
+      "title": "Resume mission",
+      "group": "Mission control",
+      "description": "Resume a paused mission.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Resume mission",
+        "definition": "http://www.opengis.net/def/uxs-command/mission.resume",
+        "fields": []
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_PAUSE_CONTINUE",
+          "id": 193
+        }
+      ]
+    },
+    {
+      "id": "mission.abort",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.abort",
+      "title": "Abort mission",
+      "group": "Mission control",
+      "description": "Abandon the mission and perform a fallback action.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Abort mission",
+        "definition": "http://www.opengis.net/def/uxs-command/mission.abort",
+        "fields": [
+          {
+            "name": "action",
+            "label": "action",
+            "description": "Fallback action.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "hold",
+                "return-to-home",
+                "land",
+                "surface",
+                "stop"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/action"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mission.wait",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.wait",
+      "title": "Wait",
+      "group": "Mission control",
+      "description": "Wait for a duration or until a time.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Wait",
+        "definition": "http://www.opengis.net/def/uxs-command/mission.wait",
+        "fields": [
+          {
+            "name": "duration",
+            "label": "duration",
+            "description": "Time to wait.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/duration"
+          },
+          {
+            "name": "until",
+            "label": "until",
+            "description": "Absolute time to wait until. Exactly one of `duration` and `until` is required.",
+            "optional": true,
+            "type": "Time",
+            "uom": {
+              "href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/until"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_NAV_DELAY",
+          "id": 93
+        },
+        {
+          "command": "MAV_CMD_CONDITION_DELAY",
+          "id": 112
+        }
+      ]
+    },
+    {
+      "id": "vehicle.emergency-stop",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.emergency-stop",
+      "title": "Emergency stop",
+      "group": "Safety",
+      "description": "Stop actuators as fast as possible. May cause an uncontrolled descent or drift.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "destructive"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Emergency stop",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.emergency-stop",
+        "fields": [
+          {
+            "name": "reason",
+            "label": "reason",
+            "description": "Reason, for the log.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/reason"
+          }
+        ]
+      }
+    },
+    {
+      "id": "vehicle.terminate",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.terminate",
+      "title": "Terminate",
+      "group": "Safety",
+      "description": "End operation irreversibly (flight termination, scuttling, deploying a recovery device).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "limited",
+        "USV": "limited",
+        "UUV": "limited"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "destructive"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Terminate",
+        "definition": "http://www.opengis.net/def/uxs-command/vehicle.terminate",
+        "fields": [
+          {
+            "name": "method",
+            "label": "method",
+            "description": "How to terminate.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "cut-power",
+                "deploy-parachute",
+                "drop-ballast",
+                "other"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/method"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_FLIGHTTERMINATION",
+          "id": 185
+        },
+        {
+          "command": "MAV_CMD_DO_PARACHUTE",
+          "id": 208
+        }
+      ]
+    }
+  ],
+  "sensorCommands": [
+    {
+      "id": "sensor.set-power",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.set-power",
+      "title": "Set power state",
+      "group": "Lifecycle",
+      "description": "Power a sensor on, off, or to standby.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set power state",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.set-power",
+        "fields": [
+          {
+            "name": "state",
+            "label": "state",
+            "description": "Target power state.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "on",
+                "off",
+                "standby"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/state"
+          }
+        ]
+      },
+      "notes": "A deployment SHALL classify this command `flight-critical` for sensors the vehicle depends on for navigation."
+    },
+    {
+      "id": "sensor.start-acquisition",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.start-acquisition",
+      "title": "Start acquisition",
+      "group": "Lifecycle",
+      "description": "Start producing observations.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Start acquisition",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.start-acquisition",
+        "fields": [
+          {
+            "name": "duration",
+            "label": "duration",
+            "description": "Stop automatically after this time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/duration"
+          },
+          {
+            "name": "sampleCount",
+            "label": "sampleCount",
+            "description": "Stop automatically after this many samples.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/sampleCount"
+          },
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Sampling rate.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "Hz"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_MESSAGE_INTERVAL",
+          "id": 511
+        }
+      ]
+    },
+    {
+      "id": "sensor.stop-acquisition",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.stop-acquisition",
+      "title": "Stop acquisition",
+      "group": "Lifecycle",
+      "description": "Stop producing observations.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Stop acquisition",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.stop-acquisition",
+        "fields": []
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_MESSAGE_INTERVAL",
+          "id": 511
+        }
+      ]
+    },
+    {
+      "id": "sensor.trigger",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.trigger",
+      "title": "Trigger a measurement",
+      "group": "Lifecycle",
+      "description": "Take one measurement or a short series (image, ping, spectrum).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Trigger a measurement",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.trigger",
+        "fields": [
+          {
+            "name": "count",
+            "label": "count",
+            "description": "Number of measurements. (default: 1)",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/count",
+            "value": 1
+          },
+          {
+            "name": "interval",
+            "label": "interval",
+            "description": "Time between measurements when `count` > 1.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/interval"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_IMAGE_START_CAPTURE",
+          "id": 2000
+        },
+        {
+          "command": "MAV_CMD_DO_DIGICAM_CONTROL",
+          "id": 203
+        }
+      ],
+      "notes": "Result: Links to the produced Observation(s)."
+    },
+    {
+      "id": "sensor.set-sampling-rate",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.set-sampling-rate",
+      "title": "Set sampling rate",
+      "group": "Lifecycle",
+      "description": "Set the rate at which observations are produced.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set sampling rate",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.set-sampling-rate",
+        "fields": [
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Sampling rate.",
+            "type": "Quantity",
+            "uom": {
+              "code": "Hz"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_MESSAGE_INTERVAL",
+          "id": 511
+        }
+      ]
+    },
+    {
+      "id": "sensor.apply-configuration",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.apply-configuration",
+      "title": "Apply configuration",
+      "group": "Lifecycle",
+      "description": "Apply a named, previously stored configuration.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Apply configuration",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.apply-configuration",
+        "fields": [
+          {
+            "name": "configuration",
+            "label": "configuration",
+            "description": "Identifier of the configuration.",
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/configuration"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sensor.calibrate",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.calibrate",
+      "title": "Calibrate",
+      "group": "Lifecycle",
+      "description": "Run a calibration.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Calibrate",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.calibrate",
+        "fields": [
+          {
+            "name": "type",
+            "label": "type",
+            "description": "Calibration type.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "zero-offset",
+                "gain",
+                "full",
+                "dark-frame",
+                "reference-target"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/type"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_PREFLIGHT_CALIBRATION",
+          "id": 241
+        }
+      ],
+      "notes": "A deployment SHALL classify this command `flight-critical` for vehicle-state sensors (inertial, heading, depth, GNSS)."
+    },
+    {
+      "id": "sensor.self-test",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.self-test",
+      "title": "Self-test",
+      "group": "Lifecycle",
+      "description": "Run a built-in self-test.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Self-test",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.self-test",
+        "fields": [
+          {
+            "name": "level",
+            "label": "level",
+            "description": "Depth of the test. (default: quick)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "quick",
+                "full"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/level",
+            "value": "quick"
+          }
+        ]
+      },
+      "resultSchema": {
+        "type": "DataRecord",
+        "label": "Result of sensor.self-test",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.self-test/result",
+        "fields": [
+          {
+            "name": "passed",
+            "type": "Boolean",
+            "label": "passed",
+            "definition": "http://www.opengis.net/def/uxs-command/result/passed"
+          },
+          {
+            "name": "message",
+            "type": "Text",
+            "label": "message",
+            "definition": "http://www.opengis.net/def/uxs-command/result/message"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sensor.reset",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.reset",
+      "title": "Reset",
+      "group": "Lifecycle",
+      "description": "Reset the sensor.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Reset",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.reset",
+        "fields": [
+          {
+            "name": "scope",
+            "label": "scope",
+            "description": "What to reset. (default: measurement-state)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "measurement-state",
+                "configuration",
+                "hardware"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/scope",
+            "value": "measurement-state"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN",
+          "id": 246
+        }
+      ]
+    },
+    {
+      "id": "sensor.get-status",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.get-status",
+      "title": "Get status",
+      "group": "Lifecycle",
+      "description": "Return the state and health of the sensor.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": "none",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Get status",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.get-status",
+        "fields": []
+      },
+      "resultSchema": {
+        "type": "DataRecord",
+        "label": "Result of sensor.get-status",
+        "definition": "http://www.opengis.net/def/uxs-command/sensor.get-status/result",
+        "fields": [
+          {
+            "name": "state",
+            "type": "Category",
+            "label": "state",
+            "definition": "http://www.opengis.net/def/uxs-command/result/state"
+          },
+          {
+            "name": "health",
+            "type": "Category",
+            "label": "health",
+            "definition": "http://www.opengis.net/def/uxs-command/result/health",
+            "constraint": {
+              "values": [
+                "ok",
+                "degraded",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "message",
+            "type": "Text",
+            "label": "message",
+            "definition": "http://www.opengis.net/def/uxs-command/result/message"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_REQUEST_MESSAGE",
+          "id": 512
+        }
+      ]
+    },
+    {
+      "id": "data.start-recording",
+      "uri": "http://www.opengis.net/def/uxs-command/data.start-recording",
+      "title": "Start recording",
+      "group": "Recording",
+      "description": "Start recording data to onboard storage.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Start recording",
+        "definition": "http://www.opengis.net/def/uxs-command/data.start-recording",
+        "fields": [
+          {
+            "name": "label",
+            "label": "label",
+            "description": "Name for the recording.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/label"
+          },
+          {
+            "name": "storage",
+            "label": "storage",
+            "description": "Storage identifier.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/storage"
+          },
+          {
+            "name": "maxDuration",
+            "label": "maxDuration",
+            "description": "Stop automatically after this time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/maxDuration"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_LOGGING_START",
+          "id": 2510
+        }
+      ]
+    },
+    {
+      "id": "data.stop-recording",
+      "uri": "http://www.opengis.net/def/uxs-command/data.stop-recording",
+      "title": "Stop recording",
+      "group": "Recording",
+      "description": "Stop recording.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Stop recording",
+        "definition": "http://www.opengis.net/def/uxs-command/data.stop-recording",
+        "fields": []
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_LOGGING_STOP",
+          "id": 2511
+        }
+      ]
+    },
+    {
+      "id": "data.mark-event",
+      "uri": "http://www.opengis.net/def/uxs-command/data.mark-event",
+      "title": "Mark event",
+      "group": "Recording",
+      "description": "Insert a labeled marker into the recorded data.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Mark event",
+        "definition": "http://www.opengis.net/def/uxs-command/data.mark-event",
+        "fields": [
+          {
+            "name": "label",
+            "label": "label",
+            "description": "Marker label.",
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/label"
+          },
+          {
+            "name": "description",
+            "label": "description",
+            "description": "Longer description.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/description"
+          }
+        ]
+      },
+      "resultSchema": {
+        "type": "DataRecord",
+        "label": "Result of data.mark-event",
+        "definition": "http://www.opengis.net/def/uxs-command/data.mark-event/result",
+        "fields": [
+          {
+            "name": "markId",
+            "type": "Text",
+            "label": "markId",
+            "definition": "http://www.opengis.net/def/uxs-command/result/markId"
+          }
+        ]
+      }
+    },
+    {
+      "id": "camera.capture-image",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.capture-image",
+      "title": "Capture image",
+      "group": "Imaging",
+      "description": "Capture still images.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Capture image",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.capture-image",
+        "fields": [
+          {
+            "name": "count",
+            "label": "count",
+            "description": "Number of images. 0 means continue until `camera.stop-image-capture`. (default: 1)",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/count",
+            "value": 1
+          },
+          {
+            "name": "interval",
+            "label": "interval",
+            "description": "Time between images.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/interval"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_IMAGE_START_CAPTURE",
+          "id": 2000
+        },
+        {
+          "command": "MAV_CMD_DO_DIGICAM_CONTROL",
+          "id": 203
+        }
+      ],
+      "notes": "Result: Links to the produced image Observation(s)."
+    },
+    {
+      "id": "camera.stop-image-capture",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.stop-image-capture",
+      "title": "Stop image capture",
+      "group": "Imaging",
+      "description": "Stop an ongoing image sequence.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Stop image capture",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.stop-image-capture",
+        "fields": []
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_IMAGE_STOP_CAPTURE",
+          "id": 2001
+        }
+      ]
+    },
+    {
+      "id": "camera.start-video",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.start-video",
+      "title": "Start video",
+      "group": "Imaging",
+      "description": "Start video recording.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Start video",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.start-video",
+        "fields": [
+          {
+            "name": "maxDuration",
+            "label": "maxDuration",
+            "description": "Stop automatically after this time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/maxDuration"
+          },
+          {
+            "name": "label",
+            "label": "label",
+            "description": "Name for the recording.",
+            "optional": true,
+            "type": "Text",
+            "definition": "http://www.opengis.net/def/uxs-command/param/label"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_VIDEO_START_CAPTURE",
+          "id": 2500
+        }
+      ],
+      "notes": "Result: Link to the video DataStream or Observation."
+    },
+    {
+      "id": "camera.stop-video",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.stop-video",
+      "title": "Stop video",
+      "group": "Imaging",
+      "description": "Stop video recording.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Stop video",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.stop-video",
+        "fields": []
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_VIDEO_STOP_CAPTURE",
+          "id": 2501
+        }
+      ]
+    },
+    {
+      "id": "camera.set-mode",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-mode",
+      "title": "Set camera mode",
+      "group": "Imaging",
+      "description": "Switch between still and video operation.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set camera mode",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.set-mode",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "Camera mode.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "still",
+                "video"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_CAMERA_MODE",
+          "id": 530
+        }
+      ]
+    },
+    {
+      "id": "camera.configure-image",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.configure-image",
+      "title": "Configure image",
+      "group": "Imaging",
+      "description": "Set image size, format and quality.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Configure image",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.configure-image",
+        "fields": [
+          {
+            "name": "width",
+            "label": "width",
+            "description": "Image width.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/width"
+          },
+          {
+            "name": "height",
+            "label": "height",
+            "description": "Image height.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/height"
+          },
+          {
+            "name": "format",
+            "label": "format",
+            "description": "File format.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "jpeg",
+                "png",
+                "tiff",
+                "raw"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/format"
+          },
+          {
+            "name": "quality",
+            "label": "quality",
+            "description": "Compression quality.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/quality"
+          }
+        ]
+      }
+    },
+    {
+      "id": "camera.set-exposure",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-exposure",
+      "title": "Set exposure",
+      "group": "Imaging",
+      "description": "Set exposure control.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set exposure",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.set-exposure",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "Exposure mode.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "auto",
+                "manual",
+                "shutter-priority",
+                "aperture-priority"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode"
+          },
+          {
+            "name": "shutterSpeed",
+            "label": "shutterSpeed",
+            "description": "Exposure time (manual and shutter-priority).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/shutterSpeed"
+          },
+          {
+            "name": "iso",
+            "label": "iso",
+            "description": "Sensitivity.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/iso"
+          },
+          {
+            "name": "aperture",
+            "label": "aperture",
+            "description": "F-number (manual and aperture-priority).",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/aperture"
+          },
+          {
+            "name": "exposureCompensation",
+            "label": "exposureCompensation",
+            "description": "Exposure compensation, in EV.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/exposureCompensation"
+          }
+        ]
+      }
+    },
+    {
+      "id": "camera.set-zoom",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-zoom",
+      "title": "Set zoom",
+      "group": "Imaging",
+      "description": "Set zoom. Exactly one of the three parameters is required.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set zoom",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.set-zoom",
+        "fields": [
+          {
+            "name": "zoomLevel",
+            "label": "zoomLevel",
+            "description": "Magnification factor.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/zoomLevel"
+          },
+          {
+            "name": "horizontalFov",
+            "label": "horizontalFov",
+            "description": "Horizontal field of view.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/horizontalFov"
+          },
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Continuous zoom rate, from -1 (out, fastest) to 1 (in, fastest). 0 stops.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -1,
+                  1
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_CAMERA_ZOOM",
+          "id": 531
+        }
+      ]
+    },
+    {
+      "id": "camera.set-focus",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-focus",
+      "title": "Set focus",
+      "group": "Imaging",
+      "description": "Set focus.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set focus",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.set-focus",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "Focus mode.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "auto",
+                "continuous-auto",
+                "manual",
+                "infinity"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode"
+          },
+          {
+            "name": "distance",
+            "label": "distance",
+            "description": "Focus distance for `manual`.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/distance"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_CAMERA_FOCUS",
+          "id": 532
+        }
+      ]
+    },
+    {
+      "id": "camera.select-source",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.select-source",
+      "title": "Select image source",
+      "group": "Imaging",
+      "description": "Select which imaging sensor of a multi-sensor camera is used.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Select image source",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.select-source",
+        "fields": [
+          {
+            "name": "source",
+            "label": "source",
+            "description": "Source.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "visible",
+                "thermal",
+                "near-infrared",
+                "multispectral",
+                "low-light",
+                "sonar"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/source"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_SET_CAMERA_SOURCE",
+          "id": 534
+        }
+      ]
+    },
+    {
+      "id": "camera.set-trigger-distance",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-trigger-distance",
+      "title": "Set trigger distance",
+      "group": "Imaging",
+      "description": "Capture an image every given distance traveled (survey mode). A value of 0 disables it.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "limited",
+        "UUV": "not-applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "segment",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set trigger distance",
+        "definition": "http://www.opengis.net/def/uxs-command/camera.set-trigger-distance",
+        "fields": [
+          {
+            "name": "distance",
+            "label": "distance",
+            "description": "Distance between images. 0 disables.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/distance"
+          },
+          {
+            "name": "triggerNow",
+            "label": "triggerNow",
+            "description": "Capture an image immediately as well. (default: false)",
+            "optional": true,
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/triggerNow",
+            "value": false
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_CAM_TRIGG_DIST",
+          "id": 206
+        }
+      ],
+      "notes": "Persistent. On a segment, the mapping issues a `distance = 0` revert at the segment end."
+    },
+    {
+      "id": "gimbal.point",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.point",
+      "title": "Point gimbal",
+      "group": "Pointing",
+      "description": "Point a gimbal or pan-tilt unit by angle or rate. At least one angle or one rate is required.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Point gimbal",
+        "definition": "http://www.opengis.net/def/uxs-command/gimbal.point",
+        "fields": [
+          {
+            "name": "pitch",
+            "label": "pitch",
+            "description": "Pitch, positive up.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -180,
+                  180
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/pitch"
+          },
+          {
+            "name": "roll",
+            "label": "roll",
+            "description": "Roll.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -180,
+                  180
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/roll"
+          },
+          {
+            "name": "yaw",
+            "label": "yaw",
+            "description": "Yaw, positive clockwise.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -180,
+                  360
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/yaw"
+          },
+          {
+            "name": "pitchRate",
+            "label": "pitchRate",
+            "description": "Pitch rate.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg/s"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/pitchRate"
+          },
+          {
+            "name": "yawRate",
+            "label": "yawRate",
+            "description": "Yaw rate.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg/s"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/yawRate"
+          },
+          {
+            "name": "frame",
+            "label": "frame",
+            "description": "Angle reference. (default: vehicle)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "vehicle",
+                "earth"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/frame",
+            "value": "vehicle"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW",
+          "id": 1000
+        },
+        {
+          "command": "MAV_CMD_DO_MOUNT_CONTROL",
+          "id": 205
+        }
+      ]
+    },
+    {
+      "id": "gimbal.point-at",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.point-at",
+      "title": "Point at location",
+      "group": "Pointing",
+      "description": "Keep a sensor pointed at a geographic location (region of interest).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "param",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Point at location",
+        "definition": "http://www.opengis.net/def/uxs-command/gimbal.point-at",
+        "fields": [
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Location to point at.",
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_ROI_LOCATION",
+          "id": 195
+        },
+        {
+          "command": "MAV_CMD_DO_SET_ROI",
+          "id": 201
+        }
+      ]
+    },
+    {
+      "id": "gimbal.clear-target",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.clear-target",
+      "title": "Clear pointing target",
+      "group": "Pointing",
+      "description": "Release the region of interest and return to the neutral or previous pointing.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Clear pointing target",
+        "definition": "http://www.opengis.net/def/uxs-command/gimbal.clear-target",
+        "fields": []
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_ROI_NONE",
+          "id": 197
+        }
+      ]
+    },
+    {
+      "id": "gimbal.set-mode",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.set-mode",
+      "title": "Set gimbal mode",
+      "group": "Pointing",
+      "description": "Set the stabilization mode.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set gimbal mode",
+        "definition": "http://www.opengis.net/def/uxs-command/gimbal.set-mode",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "Mode.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "follow",
+                "lock",
+                "stow"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE",
+          "id": 1001
+        }
+      ]
+    },
+    {
+      "id": "gimbal.track-image-point",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.track-image-point",
+      "title": "Track image point",
+      "group": "Pointing",
+      "description": "Track a point in the image. Stopped by `gimbal.clear-target`.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Track image point",
+        "definition": "http://www.opengis.net/def/uxs-command/gimbal.track-image-point",
+        "fields": [
+          {
+            "name": "x",
+            "label": "x",
+            "description": "Horizontal position in the image, from 0 (left) to 1 (right).",
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/x"
+          },
+          {
+            "name": "y",
+            "label": "y",
+            "description": "Vertical position in the image, from 0 (top) to 1 (bottom).",
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  1
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/y"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_CAMERA_TRACK_POINT",
+          "id": 2004
+        },
+        {
+          "command": "MAV_CMD_CAMERA_STOP_TRACKING",
+          "id": 2010
+        }
+      ]
+    },
+    {
+      "id": "ranging.set-range",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-range",
+      "title": "Set range",
+      "group": "Ranging",
+      "description": "Set the range scale of a lidar, radar or sonar.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "core",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set range",
+        "definition": "http://www.opengis.net/def/uxs-command/ranging.set-range",
+        "fields": [
+          {
+            "name": "maxRange",
+            "label": "maxRange",
+            "description": "Maximum range.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/maxRange"
+          },
+          {
+            "name": "minRange",
+            "label": "minRange",
+            "description": "Minimum range.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/minRange"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranging.set-gain",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-gain",
+      "title": "Set gain",
+      "group": "Ranging",
+      "description": "Set receiver gain.",
+      "applicability": {
+        "UAV": "limited",
+        "UGV": "limited",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set gain",
+        "definition": "http://www.opengis.net/def/uxs-command/ranging.set-gain",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "Gain mode.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "auto",
+                "manual"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode"
+          },
+          {
+            "name": "gain",
+            "label": "gain",
+            "description": "Gain for `manual`.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "dB"
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/gain"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranging.set-frequency",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-frequency",
+      "title": "Set operating frequency",
+      "group": "Ranging",
+      "description": "Select the operating frequency of a radar or sonar.",
+      "applicability": {
+        "UAV": "limited",
+        "UGV": "limited",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set operating frequency",
+        "definition": "http://www.opengis.net/def/uxs-command/ranging.set-frequency",
+        "fields": [
+          {
+            "name": "frequency",
+            "label": "frequency",
+            "description": "Frequency.",
+            "type": "Quantity",
+            "uom": {
+              "code": "kHz"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/frequency"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranging.set-scan-sector",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-scan-sector",
+      "title": "Set scan sector",
+      "group": "Ranging",
+      "description": "Limit scanning to a sector.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set scan sector",
+        "definition": "http://www.opengis.net/def/uxs-command/ranging.set-scan-sector",
+        "fields": [
+          {
+            "name": "startAngle",
+            "label": "startAngle",
+            "description": "Sector start, relative to the vehicle heading.",
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -180,
+                  180
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/startAngle"
+          },
+          {
+            "name": "endAngle",
+            "label": "endAngle",
+            "description": "Sector end, relative to the vehicle heading.",
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -180,
+                  180
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/endAngle"
+          },
+          {
+            "name": "angularResolution",
+            "label": "angularResolution",
+            "description": "Angular step.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/angularResolution"
+          }
+        ]
+      }
+    },
+    {
+      "id": "ranging.set-transmit",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-transmit",
+      "title": "Enable or disable transmission",
+      "group": "Ranging",
+      "description": "Switch an active sensor between transmitting and silent.",
+      "applicability": {
+        "UAV": "limited",
+        "UGV": "limited",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Enable or disable transmission",
+        "definition": "http://www.opengis.net/def/uxs-command/ranging.set-transmit",
+        "fields": [
+          {
+            "name": "enabled",
+            "label": "enabled",
+            "description": "True to transmit.",
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/enabled"
+          }
+        ]
+      }
+    },
+    {
+      "id": "sample.collect",
+      "uri": "http://www.opengis.net/def/uxs-command/sample.collect",
+      "title": "Collect sample",
+      "group": "Sampling",
+      "description": "Collect a physical sample (water, soil, air, sediment).",
+      "applicability": {
+        "UAV": "limited",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Collect sample",
+        "definition": "http://www.opengis.net/def/uxs-command/sample.collect",
+        "fields": [
+          {
+            "name": "container",
+            "label": "container",
+            "description": "Container or slot index.",
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/container"
+          },
+          {
+            "name": "kind",
+            "label": "kind",
+            "description": "Sample kind.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "water",
+                "soil",
+                "air",
+                "sediment",
+                "biological"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/kind"
+          },
+          {
+            "name": "volume",
+            "label": "volume",
+            "description": "Volume to collect.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "mL"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/volume"
+          },
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Location to collect at. If absent, the current position.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          }
+        ]
+      },
+      "resultSchema": {
+        "type": "DataRecord",
+        "label": "Result of sample.collect",
+        "definition": "http://www.opengis.net/def/uxs-command/sample.collect/result",
+        "fields": [
+          {
+            "name": "sampleId",
+            "type": "Text",
+            "label": "sampleId",
+            "definition": "http://www.opengis.net/def/uxs-command/result/sampleId"
+          }
+        ]
+      }
+    },
+    {
+      "id": "payload.gripper",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.gripper",
+      "title": "Operate gripper",
+      "group": "Payload actuation",
+      "description": "Open or close a gripper.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Operate gripper",
+        "definition": "http://www.opengis.net/def/uxs-command/payload.gripper",
+        "fields": [
+          {
+            "name": "action",
+            "label": "action",
+            "description": "Action.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "open",
+                "close"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/action"
+          },
+          {
+            "name": "force",
+            "label": "force",
+            "description": "Grip force.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/force"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_GRIPPER",
+          "id": 211
+        }
+      ]
+    },
+    {
+      "id": "payload.release",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.release",
+      "title": "Release payload",
+      "group": "Payload actuation",
+      "description": "Drop or deploy an item.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "param",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Release payload",
+        "definition": "http://www.opengis.net/def/uxs-command/payload.release",
+        "fields": [
+          {
+            "name": "slot",
+            "label": "slot",
+            "description": "Payload slot.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/slot"
+          },
+          {
+            "name": "mode",
+            "label": "mode",
+            "description": "How to release. (default: drop)",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "drop",
+                "deploy"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/mode",
+            "value": "drop"
+          },
+          {
+            "name": "location",
+            "label": "location",
+            "description": "Release position. If absent, the current position.",
+            "optional": true,
+            "type": "DataRecord",
+            "definition": "http://www.opengis.net/def/routes/context/waypoint-location",
+            "fields": [
+              {
+                "name": "latitude",
+                "type": "Quantity",
+                "label": "Latitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -90,
+                      90
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/latitude"
+              },
+              {
+                "name": "longitude",
+                "type": "Quantity",
+                "label": "Longitude",
+                "uom": {
+                  "code": "deg"
+                },
+                "constraint": {
+                  "intervals": [
+                    [
+                      -180,
+                      180
+                    ]
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/longitude"
+              },
+              {
+                "name": "vertical",
+                "type": "Quantity",
+                "label": "Vertical position",
+                "uom": {
+                  "code": "m"
+                },
+                "optional": true,
+                "definition": "http://www.opengis.net/def/uxs-command/param/vertical"
+              },
+              {
+                "name": "verticalReference",
+                "type": "Category",
+                "label": "Vertical reference",
+                "optional": true,
+                "constraint": {
+                  "values": [
+                    "ellipsoid",
+                    "msl",
+                    "terrain",
+                    "home",
+                    "depth",
+                    "seabed"
+                  ]
+                },
+                "definition": "http://www.opengis.net/def/uxs-command/param/verticalReference"
+              }
+            ]
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_GRIPPER",
+          "id": 211
+        },
+        {
+          "command": "MAV_CMD_DO_SET_SERVO",
+          "id": 183
+        }
+      ]
+    },
+    {
+      "id": "payload.winch",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.winch",
+      "title": "Operate winch",
+      "group": "Payload actuation",
+      "description": "Deploy, retract or hold a winch.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": "waypoint",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Operate winch",
+        "definition": "http://www.opengis.net/def/uxs-command/payload.winch",
+        "fields": [
+          {
+            "name": "action",
+            "label": "action",
+            "description": "Action.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "deploy",
+                "retract",
+                "hold",
+                "release-load"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/action"
+          },
+          {
+            "name": "length",
+            "label": "length",
+            "description": "Cable length to pay out or retract.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/length"
+          },
+          {
+            "name": "rate",
+            "label": "rate",
+            "description": "Cable speed.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/rate"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_WINCH",
+          "id": 42600
+        }
+      ]
+    },
+    {
+      "id": "payload.set-lights",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.set-lights",
+      "title": "Set lights",
+      "group": "Payload actuation",
+      "description": "Control lights or illuminators.",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set lights",
+        "definition": "http://www.opengis.net/def/uxs-command/payload.set-lights",
+        "fields": [
+          {
+            "name": "state",
+            "label": "state",
+            "description": "State.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "off",
+                "on",
+                "strobe"
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/state"
+          },
+          {
+            "name": "intensity",
+            "label": "intensity",
+            "description": "Brightness.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/intensity"
+          },
+          {
+            "name": "lightId",
+            "label": "lightId",
+            "description": "Which light. If absent, all.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/lightId"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_ILLUMINATOR_ON_OFF",
+          "id": 405
+        }
+      ]
+    },
+    {
+      "id": "payload.set-switch",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.set-switch",
+      "title": "Set switch",
+      "group": "Payload actuation",
+      "description": "Switch a discrete output (relay).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "mode",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set switch",
+        "definition": "http://www.opengis.net/def/uxs-command/payload.set-switch",
+        "fields": [
+          {
+            "name": "channel",
+            "label": "channel",
+            "description": "Output channel.",
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/channel"
+          },
+          {
+            "name": "on",
+            "label": "on",
+            "description": "True for on.",
+            "type": "Boolean",
+            "definition": "http://www.opengis.net/def/uxs-command/param/on"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_RELAY",
+          "id": 181
+        }
+      ]
+    },
+    {
+      "id": "payload.set-actuator",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.set-actuator",
+      "title": "Set actuator output",
+      "group": "Payload actuation",
+      "description": "Set a continuous output (servo, motor).",
+      "applicability": {
+        "UAV": "applicable",
+        "UGV": "applicable",
+        "USV": "applicable",
+        "UUV": "applicable"
+      },
+      "level": "extended",
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": "both",
+        "positionSource": "none",
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set actuator output",
+        "definition": "http://www.opengis.net/def/uxs-command/payload.set-actuator",
+        "fields": [
+          {
+            "name": "channel",
+            "label": "channel",
+            "description": "Output channel.",
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/channel"
+          },
+          {
+            "name": "value",
+            "label": "value",
+            "description": "Normalized output, from -1 to 1.",
+            "type": "Quantity",
+            "uom": {
+              "code": "1"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  -1,
+                  1
+                ]
+              ]
+            },
+            "definition": "http://www.opengis.net/def/uxs-command/param/value"
+          }
+        ]
+      },
+      "mavlink": [
+        {
+          "command": "MAV_CMD_DO_SET_SERVO",
+          "id": 183
+        },
+        {
+          "command": "MAV_CMD_DO_SET_ACTUATOR",
+          "id": 187
+        }
+      ]
+    }
+  ]
+}

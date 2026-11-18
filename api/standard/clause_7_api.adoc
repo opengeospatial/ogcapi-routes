@@ -127,10 +127,14 @@ Requirements classes can support options and parsing the API definition may be u
   "conformsTo": [
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/spatial-constraints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time",
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time"
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/contingencies",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/attributes",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/job-control"
   ],
   "properties": {
     "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes": {
@@ -238,7 +242,7 @@ NOTE: This requirements class provides no mechanism to change the default, and f
 ^|B |The response SHOULD include a `Content-Language` header with the language used for instructions and names, in particular road/street names, if the language of the text values is known and the same language is used for all text fields in the route.
 |===
 
-This requirements class only specifies requirements for the synchronous execution of a routing request. For asynchronous execution, see <<rc_job_control>>.
+This requirements class only specifies requirements for the synchronous execution of a routing request. For asynchronous execution, see <<rc_job-control>>.
 
 [[req_core_error]]
 [width="90%",cols="2,6a"]
@@ -734,7 +738,7 @@ If the route is still in processing, the routing process is canceled.
 |===
 
 The behavior depends on the state of the route:
-[#tldr,reftext='{table-caption} {counter:table-num}']
+[#tldr-delete,reftext='{table-caption} {counter:table-num}']
 .DELETE Behaviour
 [options="header"]
 |===
@@ -1298,7 +1302,7 @@ items:
 |===
 
 [[action_names_table]]
-[#tldr,reftext='{table-caption} {counter:table-num}']
+[#tldr-common-command,reftext='{table-caption} {counter:table-num}']
 .Recommended action names, definitions and applicability (Common Command Registry)
 [cols="18,18,60,18,18",options="header"]
 !===
@@ -1371,6 +1375,69 @@ items:
 |payload.set-switch |Set switch |Switch a discrete output (relay). |N/A |All
 |payload.set-actuator |Set actuator output |Set a continuous output (servo, motor). |N/A |All
 !===
+A complete definition of each action as well as a machine readable JSON can be found here [XXXXXXXXXXXXXXXXXXxx]
+
+[[tourist_action_names_table]]
+[#tldr-tourist,reftext='{table-caption} {counter:table-num}']
+.Recommended action names, definitions and applicability (Tourist Route Action Registry)
+[cols="18,18,60,18,18",options="header"]
+!===
+|Name |Label |Definition |Duration |Applicability
+|tour.find-vehicle |Find a vehicle |Locate and reserve an available shared vehicle near a position. |Seconds |EBIKE/ESCOOTER
+|tour.unlock-vehicle |Unlock vehicle |Unlock a reserved or found vehicle and start the rental. |N/A |EBIKE/ESCOOTER
+|tour.lock-vehicle |Lock vehicle |Lock the vehicle temporarily (stop at a point of interest) without ending the rental. |N/A |EBIKE/ESCOOTER
+|tour.return-vehicle |Return vehicle |End the rental by parking and locking the vehicle where permitted. |N/A |EBIKE/ESCOOTER
+|tour.switch-vehicle |Switch vehicle |Change from one means of travel to another at a transfer point (includes walking). |Seconds |All
+|tour.charge-vehicle |Charge or swap battery |Charge or swap the battery at a charging point. |N/A |EBIKE/ESCOOTER
+|tour.set-assist-level |Set assist level |Set the motor assistance of an e-bike. |N/A |EBIKE
+|tour.set-speed-limit |Set speed limit |Limit the speed of the vehicle on a segment (for example in pedestrian zones). |N/A |EBIKE/ESCOOTER/WALK
+|tour.dismount |Dismount and walk |Dismount and walk with the vehicle (stairs, pedestrian zone, no-riding zone). |N/A |EBIKE/ESCOOTER
+|tour.remount |Remount |Resume riding after a walking section. |N/A |EBIKE/ESCOOTER
+|tour.avoid-zone |Avoid zone |Advise that a zone is restricted for the vehicle (no parking, no riding, slow zone). |N/A |All
+|tour.visit-poi |Visit point of interest |Stop at a point of interest for a visit. |Seconds |All
+|tour.photo-stop |Photo stop |Short stop at a scenic point. |Seconds |All
+|tour.audio-guide |Play audio guide |Play narration for a place or a stretch of the route. |Seconds |All
+|tour.buy-ticket |Buy or validate ticket |Buy or validate an entry or transit ticket. |N/A |All
+|tour.rest-stop |Rest stop |Take a break (coffee, food, water). |Seconds |All
+|tour.safety-briefing |Safety briefing |Show a safety notice at a point or segment. |N/A |All
+|tour.check-battery |Check range |Check that the remaining range covers the rest of the route. |N/A |EBIKE/ESCOOTER
+|tour.weather-alert |Weather alert |Warn of weather that affects the next part of the route. |N/A |All
+!===
+
+A complete definition of each action as well as a machine readable JSON can be found here [XXXXXXXXXXXXXXXXXXxx]
+
+[[delivery_action_names_table]]
+[#tldr-delivery,reftext='{table-caption} {counter:table-num}']
+.Recommended action names, definitions and applicability (Delivery Vehicle Action Registry)
+[cols="18,18,60,18,18",options="header"]
+!===
+|Name |Label |Definition |Duration |Applicability
+|delivery.arrive-at-stop |Arrive at delivery stop |Reach the delivery point of a stop and become ready to hand over. Marks the start of the stop. |N/A |All
+|delivery.park |Park at stop |Park the vehicle legally and safely at the stop. |Seconds |All
+|delivery.hold-for-recipient |Wait for recipient |Wait at the stop for the recipient to arrive. |Seconds |All
+|delivery.depart-stop |Depart from stop |Close the stop and resume the route. |N/A |All
+|delivery.request-access |Request access to a site |Obtain access through a gate, door, barrier or lift. |Seconds |All
+|delivery.release-access |Release access |Close or release a previously requested access. |N/A |All
+|delivery.notify-recipient |Notify recipient |Send a notification to the recipient. |Seconds |All
+|delivery.verify-recipient |Verify recipient |Check that the person present is the recipient. |N/A |All
+|delivery.contact-recipient |Contact recipient |Open a voice or video session between the recipient and a remote operator. |Seconds |All
+|delivery.handover |Hand over parcel |Deliver the parcel by the chosen method. |N/A |All
+|delivery.pickup |Pick up parcel |Collect a parcel (return or customer shipment). |N/A |All
+|delivery.open-compartment |Open compartment |Open a compartment or hatch (for recipient or loader). |Seconds |All
+|delivery.close-compartment |Close compartment |Close and lock a compartment. |N/A |All
+|delivery.capture-proof |Capture proof of delivery |Capture evidence of the delivery. |N/A |All
+|delivery.drop-package-line |Lower parcel on a line |Lower a parcel on a winch line and release it (drone). |N/A |DRONE
+|delivery.load-at-depot |Load at depot |Wait at the depot while the vehicle is loaded. |Seconds |All
+|delivery.unload-at-depot |Unload at depot |Unload returns or undelivered parcels at the depot. |Seconds |All
+|delivery.charge |Charge or refuel |Recharge or refuel at a station. |Seconds |All
+|delivery.swap-battery |Swap battery |Replace the battery at a swap station. |N/A |DRONE/ROBOT/VAN
+|delivery.reattempt |Schedule reattempt |Schedule another delivery attempt. |N/A |All
+|delivery.return-parcel |Return parcel to depot |Mark a parcel to be returned to the depot instead of delivered. |N/A |All
+|delivery.report-issue |Report issue |Report a problem to the dispatcher. |N/A |All
+!===
+
+
+A complete definition of each action as well as a machine readable JSON can be found here [XXXXXXXXXXXXXXXXXXxx]
 
 The following are some examples of the list of actions of a routing API that implements this Standard.
 
@@ -1558,6 +1625,384 @@ Encoding of a valid loiter action
 ----
 =================
 
+[[rc_attributes]]
+=== Requirements Class "Attributes"
+
+The Attributes requirements class defines a discoverable catalog of attributes that a Routes API may include in the representation of any route component. It separates the definition of an attribute from the values returned for a particular route component.
+
+An attribute is identified by a stable `attributeId`. Attribute definitions
+declare the parts of a route to which they apply, their value type, and, where
+relevant, their unit of measure or permitted categorical values.
+
+[cols="1,4",width="90%"]
+|===
+2+|*Requirements Class*
+2+|[http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/attributes](http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/attributes)
+|Target type |Web API
+|Dependency |<<rc_core>>
+|===
+
+[[req_attributes_catalog]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/attributes/catalog*
+^|A |The server SHALL support the HTTP GET operation at the path `/attributes`.
+^|B |A successful execution of the operation SHALL be reported with HTTP status code `200`.
+^|C |The content of that response SHALL be a JSON array of attribute definitions.
+^|D |Each attribute definition SHALL include the members `id`, `name`, `definition`, `scope`, and `schema`.
+^|E |The value of `scope` SHALL be a non-empty array whose members are selected from `route` and `segment`.
+^|F |The value `route` SHALL indicate that the attribute may be included in a route overview representation.
+^|G |The value `segment` SHALL indicate that the attribute may be included in a route segment representation.
+|===
+
+[[req_attributes_item]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/attributes/item*
+^|A |The server SHALL support the HTTP GET operation at the path `/attributes/{attributeId}`.
+^|B |A successful execution of the operation SHALL be reported with HTTP status code `200`.
+^|C |The content of that response SHALL be an attribute definition from the attribute catalog.
+^|D |If `attributeId` does not identify an attribute in the catalog, the server SHALL respond with HTTP status code `404`.
+|===
+
+[[req_attributes_values]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/attributes/values*
+^|A |An attribute value included in a route overview or route segment representation SHALL use the `id` of the corresponding attribute definition as its property name.
+^|B |The value SHALL conform to the `type`, `format`, `unit`, and `enum` constraints declared for that attribute, where those constraints are present.
+^|C |A server SHALL NOT include an attribute value in a route overview representation unless `route` is a member of the attribute's `scope`.
+^|D |A server SHALL NOT include an attribute value in a route segment representation unless `segment` is a member of the attribute's `scope`.
+|===
+
+[[req_attributes_modes]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/attributes/modes*
+^|A |If a mode-specific attribute is supported, the attribute definition SHOULD include a `modes` member identifying the modes for which the attribute is populated.
+^|B |If the `modes` member is omitted, clients MAY assume that the attribute is mode-independent.
+^|C |A mode SHALL NOT redefine the schema or semantics of an attribute that is already identified in the attribute catalog.
+|===
+
+[[attributes]]
+==== Attributes
+
+[[get_attribute_catalog]]
+===== Fetch the attribute catalog
+
+This operation fetches the catalog of attributes that the server supports.
+The catalog enables clients to interpret route components properties
+without relying on implementation-specific documentation.
+
+[source,YAML]
+----
+GET /attributes
+----
+
+[[example_attribute_catalog]]
+.Example attribute catalog
+=================
+[source,JSON]
+----
+[
+  {
+    "id": "length",
+    "name": "Total length"
+  },
+  {
+    "id": "segLength",
+    "name": "Segment length"
+  },
+  {
+    "id": "surface",
+    "name": "Surface type"
+  }
+]
+----
+=================
+
+
+[[get_attribute]]
+===== Fetch an attribute definition
+
+This operation fetches a single attribute definition by its identifier.
+
+[source,YAML]
+----
+GET /attributes/{attributeId}
+----
+
+[[example_attribute]]
+.Example attribute definitions
+=================
+[source,JSON]
+----
+{
+  "id": "segLength",
+  "name": "Segment length",
+  "definition": "2D length of the segment geometry.",
+  "scope": ["segment"],
+  "schema": {
+    "type": "number",
+    "minimum": 0
+  },
+  "unit": "m"
+}
+----
+
+[source,JSON]
+----
+{
+  "id": "surface",
+  "name": "Surface type",
+  "definition": "Dominant surface type along the segment.",
+  "scope": ["segment"],
+  "schema": {
+    "type": "string",
+    "enum": [
+      "paved",
+      "dirt",
+      "gravel",
+      "rockySeabed",
+      "other"
+    ]
+  }
+}
+----
+
+[source,JSON]
+----
+{
+  "id": "segType",
+  "name": "Segment type",
+  "definition": "Role of the segment within the route.",
+  "scope": ["segment"],
+  "schema": {
+    "type": "string",
+    "enum": [
+      "straight",
+      "turn",
+      "loiter",
+      "ascent",
+      "descent"
+    ]
+  }
+}
+----
+
+[source,JSON]
+----
+{
+  "id": "segDur",
+  "name": "Segment duration",
+  "definition": "Planned duration required to traverse the segment.",
+  "scope": ["segment"],
+  "schema": {
+    "type": "number",
+    "minimum": 0
+  },
+  "unit": "s"
+}
+----
+
+[source,JSON]
+----
+{
+  "id": "risk",
+  "name": "Risk level",
+  "definition": "Qualitative or numeric risk level associated with the segment.",
+  "scope": ["segment"],
+  "schema": {
+    "oneOf": [
+      {
+        "type": "string",
+        "enum": ["low", "medium", "high"]
+      },
+      {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    ]
+  }
+}
+----
+
+[source,JSON]
+----
+{
+  "id": "segEnergy",
+  "name": "Segment energy",
+  "definition": "Estimated energy consumed while traversing the segment.",
+  "scope": ["segment"],
+  "schema": {
+    "type": "object",
+    "properties": {
+      "amount": {
+        "type": "number",
+        "minimum": 0
+      },
+      "unit": {
+        "type": "string",
+        "enum": ["J", "Wh", "percent"]
+      }
+    },
+    "required": ["amount", "unit"]
+  }
+}
+----
+=================
+
+[[attributes_in_routes]]
+==== Use in route representations
+
+Attribute values are returned as entries in the `attributes` array of the applicable route component. Each entry references an attribute defined in the global catalog through its `attributeId` and supplies the value for that particular route component.
+
+For example, if `segLength`, `surface`, `segType`, `segDur`, `risk`, and `segEnergy` are declared in the attribute catalog, a route segment may include:
+
+[source,JSON]
+----
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "LineString",
+    "coordinates": []
+  },
+  "properties": {
+    "segId": "d4f6b2e0-83a5-4f81-9d37-4d7f5f5a9c21",
+    "attributes": [
+      {
+        "attributeId": "segLength",
+        "value": 1240.5
+      },
+      {
+        "attributeId": "surface",
+        "value": "paved"
+      },
+      {
+        "attributeId": "segType",
+        "value": "turn"
+      },
+      {
+        "attributeId": "segDur",
+        "value": 312
+      },
+      {
+        "attributeId": "risk",
+        "value": "medium"
+      },
+      {
+        "attributeId": "segEnergy",
+        "value": {
+          "amount": 185.4,
+          "unit": "Wh"
+        }
+      }
+    ]
+  }
+}
+----
+
+The `attributeId` values reference definitions published at `/attributes`; the route segment representation does not redefine their schemas. An empty `attributes` array indicates that no attributes are populated for that route component.
+
+Attribute definitions are published through a global catalog at `/attributes` and can be retrieved individually at `/attributes/{attributeId}``. Each definition declares the route components to which it may apply. Modes may reference supported attribute identifiers, but do not redefine their schemas. An empty attributes array indicates that no attributes are populated for that mode.
+
+
+[[recommended_attributes]]
+=== Recommended attributes
+
+The following table defines a recommended set of attributes for route and
+route segment representations. These attributes are intended to promote
+interoperability across Routes APIs while allowing implementations to define
+additional attributes where needed.
+
+Attributes are discoverable through the global attribute catalog at
+`/attributes` and can be retrieved individually at `/attributes/{attributeId}`.
+Each attribute definition specifies the route components to which it applies
+and defines the schema and unit of measure for its values.
+
+Implementations SHOULD support the applicable attributes listed below, but MAY
+omit attributes that are not relevant to their domain, operating environment,
+or route component type. The presence of an attribute in a route
+representation does not imply that it is mandatory for all implementations.
+
+.Recommended route component attributes
+[cols="1,2,4,2",options="header"]
+!===
+|Short identifier | Attribute name|Definition|Unit of measure
+|`routeId`|Route ID|Unique identifier of the route within the API.|String / UUID
+|`segId`|Segment ID|Unique identifier of the segment within a route.|String / UUID
+|`routeName`|Route name|Human-readable name for the route.|String
+|`segName`|Segment name|Human-readable name for the segment.|String
+|`routeDesc`|Route description|Text describing purpose or characteristics of the route.|String
+|`segDesc`|Segment description|Text describing characteristics of the segment.|String
+|`created`|Creation time|Timestamp when the route was created.|ISO 8601 datetime
+|`updated`|Last update time|Timestamp when the route was last modified.|ISO 8601 datetime
+|`validFrom`|Validity period start|Start of time window for which the route is valid.|ISO 8601 datetime
+|`validTo`|Validity period end|End of time window for which the route is valid.|ISO 8601 datetime
+|`version`|Version|Version tag of the route definition.|String or integer
+|`source`|Source system|Identifier of the planning system or algorithm that generated the route.|String
+|`mission`|Mission ID|External mission identifier the route belongs to.|String
+|`length`|Total length|Full 2D length of the route geometry.|Meters
+|`segLength`|Segment length|2D length of the segment geometry.|Meters
+|`segCumLen`|Cumulative length at segment start|Distance from origin to start of this segment.|Meters
+|`minAlt`|Minimum altitude/depth|Lowest altitude or greatest depth along segment.|Meters (reference defined)
+|`maxAlt`|Maximum altitude/depth|Highest altitude or shallowest depth along segment.|Meters
+|`avgAlt`|Average altitude/depth|Mean altitude or depth over the segment.|Meters
+|`curve`|Horizontal curvature index|Measure of curvature of the segment.|1/m or dimensionless
+|`vProfile`|Vertical profile type|Classification of vertical profile (level, climb, descent).|Categorical string
+|`segType`|Segment type|Role of segment (straight, turn, loiter, ascent, descent, etc.).|Categorical string
+|`startTime`|Planned start time|Planned time when route execution starts.|ISO 8601 datetime
+|`arriveTime`|Planned arrival time|Planned time at final destination.|ISO 8601 datetime
+|`segEntry`|Segment entry time|Planned time when vehicle enters the segment.|ISO 8601 datetime
+|`segExit`|Segment exit time|Planned time when vehicle leaves the segment.|ISO 8601 datetime
+|`segDur`|Segment duration|Planned duration to traverse the segment.|Seconds
+|`totalDur`|Total duration|Planned overall travel time including holds.|Seconds
+|`avgSpeed`|Average speed|Planned mean speed over segment length.|m/s 
+|`maxSpeed`|Maximum speed|Maximum allowed or expected speed on segment.|m/s
+|`minSpeed`|Minimum speed|Minimum allowed speed for safe operation.|m/s
+|`accel`|Acceleration limit|Maximum allowed linear acceleration magnitude.|m/s²
+|`turnRate`|Turn rate limit|Maximum allowed yaw rate when changing heading.|Degrees/s
+|`loiter`|Hover/loiter duration|Planned duration for hover or loiter.|Seconds
+|`mode`|Transport mode|High-level mode (road, rail, air, surface, underwater, off-road, indoor).|Categorical string
+|`vehicle`|Vehicle class|Platform category (UAV, UUV, USV, UGV, manned ground, etc.).|Categorical string
+|`vType`|Vehicle type|Specific platform type (quadcopter, AUV, tracked UGV, etc.).|Categorical string
+|`vSize`|Vehicle dimensions|Physical envelope for clearance checks (L, W, H, draft).|Meters
+|`vMass`|Vehicle mass|Total mass at planning time.|Kilograms
+|`hRestrict`|Height restriction|Allowed altitude range over entire route.|Meters
+|`dRestrict`|Depth restriction|Allowed depth band for underwater segments.|Meters below surface
+|`speedMax`|Speed restriction|Route-level maximum allowed speed.|m/s
+|`segLimit`|Segment speed restriction|Segment-level maximum permitted speed.|m/s 
+|`maneuver`|Maneuverability requirement|Required maneuvering capability level for the segment.|Categorical string
+|`gnssReq`|GNSS dependency|Indicates if segment assumes GNSS availability.|Boolean
+|`commReq`|Communication requirement|Required communications level for the segment.|Categorical string
+|`obstClr`|Obstacle clearance|Minimum distance from known obstacles along segment.|Meters
+|`terrClr`|Terrain clearance|Minimum vertical distance between vehicle and terrain.|Meters
+|`buffer`|Safety buffer radius|Radial buffer around planned path intended obstacle-free.|Meters
+|`risk`|Risk level|Qualitative or numeric risk level for segment.|Dimensionless or categorical
+|`nogoDist`|No-go proximity|Minimum distance to nearest no-go zone.|Meters
+|`collProb`|Collision likelihood|Probability of collision for the segment under assumptions.|Dimensionless (0-1)
+|`backup`|Redundancy requirement|Indicates if redundant routing is required.|Boolean
+|`exitOpt`|Emergency exit availability|Indicates if safe diversion options exist from segment.|Boolean
+|`safAlt`|Minimum safety altitude/depth|Safety-driven minimum altitude or maximum depth along segment.|Meters
+|`env`|Environment domain|Primary environment (urban, rural, coastal, open sea, underwater, etc.).|Categorical string
+|`surface`|Surface type|Dominant surface type (paved, dirt, rocky seabed, etc.).|Categorical string
+|`seaState`|Sea state|Sea state classification affecting marine operations.|Categorical (e.g., Douglas)
+|`windBand`|Wind/current band|Range classification of wind or current intensity.|Categorical or numeric band
+|`vis`|Visibility condition|Assumed visibility (good, moderate, poor, night, fog).|Categorical string
+|`gnssQual`|GNSS quality|Expected GNSS robustness (good, degraded, denied).|Categorical string
+|`commCov`|Communication coverage|Expected communications quality (continuous, intermittent, none).|Categorical string
+|`energy0`|Initial energy|Energy/fuel level at route start.|Percentage or energy unit
+|`segEnergy`|Segment energy|Estimated energy consumed along segment.|Joules / Wh / percentage
+|`cumEnergy`|Cumulative energy|Total energy consumed up to end of segment.|Joules / Wh / percentage
+|`minEnergy`|Minimum required energy|Minimum energy needed at segment start for safe completion.|Same as energy unit
+|`energyEnd`|Remaining energy|Predicted energy level at route completion.|Percentage or energy unit
+|`payloadMass`|Payload mass|Mass of payload carried.|Kilograms
+|`payloadType`|Payload type|Type of payload (sensor, cargo, survey, etc.).|Categorical string
+!===
+
+A machine readable attribute registry can be found here [XXXXXXXXXXXXXXXXXXxx]
+
 [[rc_contingencies]]
 === Requirements Class "Contingencies"
 
@@ -1654,7 +2099,7 @@ Response of HTTP GET operation at the path `/actions/reroute`.
 ----
 =================
 
-[[rc_spatial_constraints]]
+[[rc_spatial-constraints]]
 === Requirements Class "Spatial Constraints"
 
 This requirement enables the API request to specify one or more polygons describing areas the route should avoid.
@@ -1662,15 +2107,15 @@ This requirement enables the API request to specify one or more polygons describ
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/spatial_constraints
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/spatial-constraints
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
 
-[[req_spatial_constraints_input]]
+[[req_spatial-constraints_input]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/spatial_constraints/input*
+^|*Requirement {counter:req-id}* |*/req/spatial-constraints/input*
 ^|A |The server SHALL support a member at the JSON Pointer `/inputs/spatial_constraints` in the route definition in a HTTP POST request to the path `/routes` based on the following schema (a GeoJSON MultiPolygon, wrapped into a "value" member):
 
 [source,YAML]
@@ -1766,10 +2211,10 @@ in Washington, D.C, that avoids an rectangular area that includes parts of Georg
 ----
 =================
 
-[[req_spatial_constraints_success]]
+[[req_spatial-constraints_success]]
 [width="90%",cols="2,6a"]
 |===
-^|*Requirement {counter:req-id}* |*/req/spatial_constraints/success*
+^|*Requirement {counter:req-id}* |*/req/spatial-constraints/success*
 ^|A |The computed route SHALL not pass through the polygons identified as spatial constraints.
 |===
 
@@ -1796,38 +2241,42 @@ This requirement enable the API request to specify the time of departure or arri
 ----
 type: object
 required:
-  - id
-  - title
-  - timePoint
-  - type
+  - value
 properties:
-  id:
-    type: string
-    description: constraint identifier
-  title:
-    type: string
-    description: human-readable title
-  description:
-    type: string
-    description: detailed description
-  timePoint:
-    type: string
-    format: date-time
-    description: the time point (RFC 3339 date-time)
-  delta:
-    type: number
-    default: 0
-    description: time deviation in seconds
-  type:
-    type: string
-    description: constraint type
+  value:
+    type: object
+    required:
+      - id
+      - title
+      - timePoint
+      - type
+    properties:
+      id:
+        type: string
+        description: constraint identifier
+      title:
+        type: string
+        description: human-readable title
+      description:
+        type: string
+        description: detailed description
+      timePoint:
+        type: string
+        format: date-time
+        description: the time point (RFC 3339 date-time)
+      delta:
+        type: number
+        default: 0
+        description: time deviation in seconds
+      type:
+        type: string
+        description: constraint type
         enum:
           - noEarlierThan
           - noLaterThan
           - interval
-          
 ----
-^|B |The `timestamp` value SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z").
+^|B |The `timePoint` value SHALL be a `date-time` string value according to link:https://tools.ietf.org/html/rfc3339#section-5.6[RFC 3339, 5.6] in UTC (time zone "Z").
 |===
 
 [[example_route_definition_temporal_constraint]]
@@ -1857,10 +2306,12 @@ in Washington, D.C, that arrives at 6pm local time on February 24th, 2022.
       }
     },
     "temporal_constraint": {
-        "id": "TC-001"
+      "value": {
+        "id": "TC-001",
         "title": "Earliest departure",
         "type": "noEarlierThan",
         "timePoint": "2022-02-24T13:00:00Z"
+      }
     }
   }
 }
@@ -1876,7 +2327,7 @@ in Washington, D.C, that arrives at 6pm local time on February 24th, 2022.
 ^|C |The route overview and the segments SHALL include the `duration_s` properties.
 |===
 
-[[rc_job_control]]
+[[rc_job-control]]
 === Requirements Class "Job Control"
 
 This requirement class enables the API to support asynchronous execution of route computation requests using the same execution model as OGC API - Processes.
@@ -1890,28 +2341,26 @@ This requirement class enables the API to support asynchronous execution of rout
 |Dependency |<<OGCAPIProcesses,OGC API - Processes - Part 1: Core>>
 |===
 
-[[req_job_control_async]]
+[[req_job-control_async]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/job-control/async*
+^|A |A client MAY request asynchronous execution of a route computation by sending a HTTP POST request to `/routes` with the header `Prefer: respond-async` (RFC 7240).
+^|B |If the server supports asynchronous execution for the requested mode:
 
-A client MAY request asynchronous execution of a route computation by sending a HTTP POST request to `/routes` with the header `Prefer: respond-async` (RFC 7240).
+** The server SHALL respond with status code `201 Created`.
+** The response SHALL include a `Location` header with the URI of the new route computation, which is a direct sub-resource of `/routes`.
+** The response SHALL include a `Preference-Applied: respond-async` header.
+** The response body SHALL be a status document with at least the following properties:
 
-The server response depends on whether the server supports asynchronous execution for the requested mode:
+*** `routeId`: a unique identifier for the route computation
+*** `type`: SHALL be "route"
+*** `status`: the current status of the computation (one of: "accepted", "running", "successful", "failed", "dismissed")
 
-* If the server supports asynchronous execution for the mode:
-  - The server SHALL respond with status code `201 Created`
-  - The response SHALL include a `Location` header with the route ID
-  - The response SHALL include a `Preference-Applied: respond-async` header
-  - The response body SHALL be a status document with at least the following properties:
-    - `routeId`: a unique identifier for the route computation
-    - `type`: SHALL be "route"
-    - `status`: the current status of the computation (one of: "accepted", "running", "successful", "failed", "dismissed")
+^|C |If the server does not support asynchronous execution for the requested mode:
 
-* If the server does not support asynchronous execution for the mode:
-  - The server SHALL respond with status code `400 Bad Request`
-  - The response body SHALL be a problem details document (RFC 9457) explaining that asynchronous execution is not supported
-
+** The server SHALL respond with status code `400 Bad Request`.
+** The response body SHALL be a problem details document (RFC 9457) explaining that asynchronous execution is not supported.
 |===
 
 [[example_route_async_request]]
@@ -1926,10 +2375,17 @@ Prefer: respond-async
 Content-Type: application/json
 
 {
-  "mode": "drone",
-  "waypoints": {
-    "type": "MultiPoint",
-    "coordinates": [[-122.42, 37.77], [-122.27, 37.80]]
+  "inputs": {
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [-122.42, 37.77],
+          [-122.27, 37.80]
+        ]
+      }
+    },
+    "mode": "drone"
   }
 }
 ----
@@ -1937,7 +2393,7 @@ Content-Type: application/json
 [source,HTTP]
 ----
 HTTP/1.1 201 Created
-Location: /routes/6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10
+Location: https://example.org/api/routing/v1/routes/6d2f0a1e-9b7c-4c1a-8f43-2a5e7b1c9d10
 Preference-Applied: respond-async
 Content-Type: application/json
 
@@ -1949,21 +2405,18 @@ Content-Type: application/json
 ----
 ==================
 
-[[req_job_control_status]]
+[[req_job-control_status]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/job-control/status*
+^|A |The server SHALL support the HTTP GET operation at the path `/routes/{routeId}` to retrieve the status of a route computation.
+^|B |The response to the request SHALL depend on the status of the computation:
 
-The server SHALL support the HTTP GET operation at the path `/routes/{routeId}` to retrieve the status of a route computation.
-
-The response depends on the status of the computation:
-
-|Situation |Response
-|Calculation in progress (status is "accepted" or "running") |200 OK with status document (application/json)
-|Calculation complete (status is "successful") |200 OK with the route (application/geo+json)
-|Route does not exist |404 Not Found with problem details (RFC 9457)
-|Valid request, but no route can be computed |422 Unprocessable Entity with problem details (RFC 9457)
-|Unexpected server failure |500 Internal Server Error with problem details (RFC 9457)
+** Calculation in progress (status is "accepted" or "running"): 200 OK with a status document (`application/json`).
+** Calculation complete (status is "successful"): 200 OK with the route (`application/geo+json`).
+** Route does not exist: 404 Not Found with problem details (RFC 9457).
+** Valid request, but no route can be computed: 422 Unprocessable Entity with problem details (RFC 9457).
+** Unexpected server failure: 500 Internal Server Error with problem details (RFC 9457).
 |===
 
 [[example_route_status_accepted]]
@@ -2005,7 +2458,7 @@ The response depends on the status of the computation:
 ----
 ==================
 
-[[req_job_control_modes]]
+[[req_job-control_modes]]
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/job-control/modes*
@@ -2018,7 +2471,7 @@ The `jobControlOptions` property is an array of strings that indicates which exe
 
 |===
 
-[[example_modes_with_job_control]]
+[[example_modes_with_job-control]]
 .Mode response with job control options
 ==================
 [source,JSON]

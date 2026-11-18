@@ -1,0 +1,1453 @@
+{
+  "registry": "Delivery Vehicle Action Registry",
+  "version": "0.1.0-draft",
+  "baseUri": "http://www.opengis.net/def/uxs-delivery/",
+  "vehicleClasses": [
+    "DRONE",
+    "ROBOT",
+    "VAN",
+    "BIKE"
+  ],
+  "commonRegistry": "http://www.opengis.net/def/uxs-command/",
+  "actions": [
+    {
+      "id": "delivery.arrive-at-stop",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.arrive-at-stop",
+      "title": "Arrive at delivery stop",
+      "group": "Stop",
+      "description": "Reach the delivery point of a stop and become ready to hand over. Marks the start of the stop.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Arrive at delivery stop",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.arrive-at-stop",
+        "fields": [
+          {
+            "name": "stopId",
+            "label": "stopId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/stopId",
+            "description": "Identifier of the stop within the route.",
+            "type": "Text"
+          },
+          {
+            "name": "approachMode",
+            "label": "approachMode",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/approachMode",
+            "description": "How to reach the delivery point.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "curb",
+                "door",
+                "drop-point",
+                "hover"
+              ]
+            },
+            "value": "curb"
+          },
+          {
+            "name": "toleranceRadius",
+            "label": "toleranceRadius",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/toleranceRadius",
+            "description": "Distance from the delivery point accepted as arrived.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 10
+          }
+        ]
+      },
+      "composedOf": [
+        "vehicle.goto"
+      ]
+    },
+    {
+      "id": "delivery.park",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.park",
+      "title": "Park at stop",
+      "group": "Stop",
+      "description": "Park the vehicle legally and safely at the stop.",
+      "applicability": {
+        "DRONE": "limited",
+        "ROBOT": "limited",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Park at stop",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.park",
+        "fields": [
+          {
+            "name": "location",
+            "label": "location",
+            "definition": "http://www.opengis.net/def/uxs-command/type/Position",
+            "description": "Parking position. If absent, the vehicle chooses near the delivery point. (type defined in the Common Command Registry)",
+            "optional": true,
+            "type": "DataRecord"
+          },
+          {
+            "name": "parkingType",
+            "label": "parkingType",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/parkingType",
+            "description": "Kind of parking.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "curb",
+                "loading-bay",
+                "bike-rack",
+                "stand-off"
+              ]
+            },
+            "value": "curb"
+          },
+          {
+            "name": "maxDuration",
+            "label": "maxDuration",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/maxDuration",
+            "description": "Maximum parking time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "composedOf": [
+        "vehicle.stop"
+      ]
+    },
+    {
+      "id": "delivery.hold-for-recipient",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.hold-for-recipient",
+      "title": "Wait for recipient",
+      "group": "Stop",
+      "description": "Wait at the stop for the recipient to arrive.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Wait for recipient",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.hold-for-recipient",
+        "fields": [
+          {
+            "name": "maxWait",
+            "label": "maxWait",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/maxWait",
+            "description": "Longest wait.",
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          },
+          {
+            "name": "onTimeout",
+            "label": "onTimeout",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/onTimeout",
+            "description": "What to do when the wait expires.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "fail-stop",
+                "safe-place",
+                "return-to-depot",
+                "next-stop"
+              ]
+            },
+            "value": "fail-stop"
+          }
+        ]
+      },
+      "composedOf": [
+        "mission.wait",
+        "vehicle.hold-position"
+      ]
+    },
+    {
+      "id": "delivery.depart-stop",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.depart-stop",
+      "title": "Depart from stop",
+      "group": "Stop",
+      "description": "Close the stop and resume the route.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Depart from stop",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.depart-stop",
+        "fields": [
+          {
+            "name": "stopId",
+            "label": "stopId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/stopId",
+            "description": "Identifier of the stop.",
+            "type": "Text"
+          },
+          {
+            "name": "outcome",
+            "label": "outcome",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/outcome",
+            "description": "Result of the stop.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "delivered",
+                "failed",
+                "skipped",
+                "returned"
+              ]
+            }
+          }
+        ]
+      },
+      "composedOf": [
+        "vehicle.undock"
+      ]
+    },
+    {
+      "id": "delivery.request-access",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.request-access",
+      "title": "Request access to a site",
+      "group": "Access",
+      "description": "Obtain access through a gate, door, barrier or lift.",
+      "applicability": {
+        "DRONE": "limited",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "limited"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "mode",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Request access to a site",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.request-access",
+        "fields": [
+          {
+            "name": "accessType",
+            "label": "accessType",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/accessType",
+            "description": "Kind of access point.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "gate",
+                "door",
+                "elevator",
+                "barrier",
+                "parcel-room"
+              ]
+            }
+          },
+          {
+            "name": "credential",
+            "label": "credential",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/credential",
+            "description": "Reference of an access code or token (never the secret itself).",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "timeout",
+            "label": "timeout",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/timeout",
+            "description": "Longest time to wait for access.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 120
+          }
+        ]
+      },
+      "result": "Record {granted: Boolean, message: Text}."
+    },
+    {
+      "id": "delivery.release-access",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.release-access",
+      "title": "Release access",
+      "group": "Access",
+      "description": "Close or release a previously requested access.",
+      "applicability": {
+        "DRONE": "limited",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "limited"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Release access",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.release-access",
+        "fields": [
+          {
+            "name": "accessType",
+            "label": "accessType",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/accessType",
+            "description": "Kind of access point.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "gate",
+                "door",
+                "elevator",
+                "barrier",
+                "parcel-room"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.notify-recipient",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.notify-recipient",
+      "title": "Notify recipient",
+      "group": "Recipient",
+      "description": "Send a notification to the recipient.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint",
+          "segment"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Notify recipient",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.notify-recipient",
+        "fields": [
+          {
+            "name": "event",
+            "label": "event",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/event",
+            "description": "Reason for the notification.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "approaching",
+                "arrived",
+                "handover-ready",
+                "delivered",
+                "failed",
+                "rescheduled"
+              ]
+            }
+          },
+          {
+            "name": "leadTime",
+            "label": "leadTime",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/leadTime",
+            "description": "For `approaching`: expected time to arrival.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          },
+          {
+            "name": "channel",
+            "label": "channel",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/channel",
+            "description": "Channel to use.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "app",
+                "sms",
+                "call",
+                "email"
+              ]
+            },
+            "value": "app"
+          },
+          {
+            "name": "message",
+            "label": "message",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/message",
+            "description": "Free text to add.",
+            "optional": true,
+            "type": "Text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.verify-recipient",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.verify-recipient",
+      "title": "Verify recipient",
+      "group": "Recipient",
+      "description": "Check that the person present is the recipient.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Verify recipient",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.verify-recipient",
+        "fields": [
+          {
+            "name": "method",
+            "label": "method",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/method",
+            "description": "Verification method.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "pin",
+                "qr-code",
+                "app-confirmation",
+                "id-check",
+                "face-match"
+              ]
+            }
+          },
+          {
+            "name": "ageCheck",
+            "label": "ageCheck",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/ageCheck",
+            "description": "Minimum age to be confirmed.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  120
+                ]
+              ]
+            }
+          },
+          {
+            "name": "maxAttempts",
+            "label": "maxAttempts",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/maxAttempts",
+            "description": "Attempts allowed.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  10
+                ]
+              ]
+            },
+            "value": 3
+          }
+        ]
+      },
+      "result": "Record {verified: Boolean, attempts: Count}."
+    },
+    {
+      "id": "delivery.contact-recipient",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.contact-recipient",
+      "title": "Contact recipient",
+      "group": "Recipient",
+      "description": "Open a voice or video session between the recipient and a remote operator.",
+      "applicability": {
+        "DRONE": "limited",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Contact recipient",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.contact-recipient",
+        "fields": [
+          {
+            "name": "mode",
+            "label": "mode",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/mode",
+            "description": "Session type.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "voice",
+                "video",
+                "text"
+              ]
+            },
+            "value": "voice"
+          },
+          {
+            "name": "maxDuration",
+            "label": "maxDuration",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/maxDuration",
+            "description": "Longest session.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.handover",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.handover",
+      "title": "Hand over parcel",
+      "group": "Handover",
+      "description": "Deliver the parcel by the chosen method.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Hand over parcel",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.handover",
+        "fields": [
+          {
+            "name": "parcelId",
+            "label": "parcelId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/parcelId",
+            "description": "Identifier of the parcel (barcode or order line).",
+            "type": "Text"
+          },
+          {
+            "name": "method",
+            "label": "method",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/method",
+            "description": "Where and how the parcel is left.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "hand-to-recipient",
+                "doorstep",
+                "safe-place",
+                "locker",
+                "neighbour",
+                "mailbox",
+                "drop-zone",
+                "winch-drop"
+              ]
+            }
+          },
+          {
+            "name": "proof",
+            "label": "proof",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/proof",
+            "description": "Proof of delivery to capture.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "photo",
+                "signature",
+                "pin",
+                "qr-code",
+                "none"
+              ]
+            },
+            "value": "photo"
+          },
+          {
+            "name": "contactless",
+            "label": "contactless",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/contactless",
+            "description": "If true, no person-to-vehicle contact.",
+            "optional": true,
+            "type": "Boolean",
+            "value": true
+          },
+          {
+            "name": "compartment",
+            "label": "compartment",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/compartment",
+            "description": "Compartment or slot to open, for vehicles with several.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "result": "Record {outcome: Category(delivered, refused, not-possible), proofRef: Text}.",
+      "composedOf": [
+        "payload.release",
+        "payload.winch",
+        "payload.gripper"
+      ],
+      "notes": "For winch-drop the vehicle lowers the parcel on a line (registry payload.winch, payload.release)."
+    },
+    {
+      "id": "delivery.pickup",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.pickup",
+      "title": "Pick up parcel",
+      "group": "Handover",
+      "description": "Collect a parcel (return or customer shipment).",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Pick up parcel",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.pickup",
+        "fields": [
+          {
+            "name": "parcelId",
+            "label": "parcelId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/parcelId",
+            "description": "Identifier of the parcel.",
+            "type": "Text"
+          },
+          {
+            "name": "method",
+            "label": "method",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/method",
+            "description": "How the parcel is handed to the vehicle.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "hand-to-vehicle",
+                "locker",
+                "drop-zone"
+              ]
+            },
+            "value": "hand-to-vehicle"
+          },
+          {
+            "name": "compartment",
+            "label": "compartment",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/compartment",
+            "description": "Compartment or slot.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "result": "Record {collected: Boolean}."
+    },
+    {
+      "id": "delivery.open-compartment",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.open-compartment",
+      "title": "Open compartment",
+      "group": "Handover",
+      "description": "Open a compartment or hatch (for recipient or loader).",
+      "applicability": {
+        "DRONE": "limited",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Open compartment",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.open-compartment",
+        "fields": [
+          {
+            "name": "compartment",
+            "label": "compartment",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/compartment",
+            "description": "Compartment index.",
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          },
+          {
+            "name": "autoCloseAfter",
+            "label": "autoCloseAfter",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/autoCloseAfter",
+            "description": "Close again after this time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 60
+          }
+        ]
+      },
+      "composedOf": [
+        "payload.set-actuator"
+      ]
+    },
+    {
+      "id": "delivery.close-compartment",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.close-compartment",
+      "title": "Close compartment",
+      "group": "Handover",
+      "description": "Close and lock a compartment.",
+      "applicability": {
+        "DRONE": "limited",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Close compartment",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.close-compartment",
+        "fields": [
+          {
+            "name": "compartment",
+            "label": "compartment",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/compartment",
+            "description": "Compartment index.",
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "composedOf": [
+        "payload.set-actuator"
+      ]
+    },
+    {
+      "id": "delivery.capture-proof",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.capture-proof",
+      "title": "Capture proof of delivery",
+      "group": "Handover",
+      "description": "Capture evidence of the delivery.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Capture proof of delivery",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.capture-proof",
+        "fields": [
+          {
+            "name": "type",
+            "label": "type",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/type",
+            "description": "Kind of evidence.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "photo",
+                "signature",
+                "video",
+                "location-stamp"
+              ]
+            }
+          },
+          {
+            "name": "parcelId",
+            "label": "parcelId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/parcelId",
+            "description": "Parcel the evidence relates to.",
+            "optional": true,
+            "type": "Text"
+          }
+        ]
+      },
+      "result": "Link to the produced Observation.",
+      "composedOf": [
+        "camera.capture-image"
+      ]
+    },
+    {
+      "id": "delivery.drop-package-line",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.drop-package-line",
+      "title": "Lower parcel on a line",
+      "group": "Handover",
+      "description": "Lower a parcel on a winch line and release it (drone).",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "not-applicable",
+        "VAN": "not-applicable",
+        "BIKE": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "flight-critical"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Lower parcel on a line",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.drop-package-line",
+        "fields": [
+          {
+            "name": "lineLength",
+            "label": "lineLength",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/lineLength",
+            "description": "Cable length to pay out.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  50
+                ]
+              ]
+            }
+          },
+          {
+            "name": "hoverHeight",
+            "label": "hoverHeight",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/hoverHeight",
+            "description": "Hover height above ground.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  2,
+                  "Infinity"
+                ]
+              ]
+            }
+          },
+          {
+            "name": "rate",
+            "label": "rate",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/rate",
+            "description": "Lowering rate.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m/s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  3
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "composedOf": [
+        "payload.winch",
+        "payload.release",
+        "vehicle.hold-position"
+      ]
+    },
+    {
+      "id": "delivery.load-at-depot",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.load-at-depot",
+      "title": "Load at depot",
+      "group": "Depot",
+      "description": "Wait at the depot while the vehicle is loaded.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Load at depot",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.load-at-depot",
+        "fields": [
+          {
+            "name": "depotId",
+            "label": "depotId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/depotId",
+            "description": "Identifier of the depot or hub.",
+            "type": "Text"
+          },
+          {
+            "name": "maxDuration",
+            "label": "maxDuration",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/maxDuration",
+            "description": "Longest loading time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.unload-at-depot",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.unload-at-depot",
+      "title": "Unload at depot",
+      "group": "Depot",
+      "description": "Unload returns or undelivered parcels at the depot.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Unload at depot",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.unload-at-depot",
+        "fields": [
+          {
+            "name": "depotId",
+            "label": "depotId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/depotId",
+            "description": "Identifier of the depot.",
+            "type": "Text"
+          },
+          {
+            "name": "reason",
+            "label": "reason",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/reason",
+            "description": "Why parcels are unloaded.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "returns",
+                "failed-deliveries",
+                "end-of-shift"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.charge",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.charge",
+      "title": "Charge or refuel",
+      "group": "Depot",
+      "description": "Recharge or refuel at a station.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Charge or refuel",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.charge",
+        "fields": [
+          {
+            "name": "stationId",
+            "label": "stationId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/stationId",
+            "description": "Identifier of the station.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "targetLevel",
+            "label": "targetLevel",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/targetLevel",
+            "description": "State of charge to reach.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "value": 80
+          },
+          {
+            "name": "maxDuration",
+            "label": "maxDuration",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/maxDuration",
+            "description": "Longest charging time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "composedOf": [
+        "vehicle.dock"
+      ]
+    },
+    {
+      "id": "delivery.swap-battery",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.swap-battery",
+      "title": "Swap battery",
+      "group": "Depot",
+      "description": "Replace the battery at a swap station.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "limited",
+        "BIKE": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Swap battery",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.swap-battery",
+        "fields": [
+          {
+            "name": "stationId",
+            "label": "stationId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/stationId",
+            "description": "Identifier of the swap station.",
+            "optional": true,
+            "type": "Text"
+          }
+        ]
+      },
+      "composedOf": [
+        "vehicle.dock"
+      ]
+    },
+    {
+      "id": "delivery.reattempt",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.reattempt",
+      "title": "Schedule reattempt",
+      "group": "Exceptions",
+      "description": "Schedule another delivery attempt.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Schedule reattempt",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.reattempt",
+        "fields": [
+          {
+            "name": "parcelId",
+            "label": "parcelId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/parcelId",
+            "description": "Identifier of the parcel.",
+            "type": "Text"
+          },
+          {
+            "name": "earliest",
+            "label": "earliest",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/earliest",
+            "description": "Earliest time for the next attempt.",
+            "optional": true,
+            "type": "Time",
+            "uom": {
+              "href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"
+            }
+          },
+          {
+            "name": "latest",
+            "label": "latest",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/latest",
+            "description": "Latest time for the next attempt.",
+            "optional": true,
+            "type": "Time",
+            "uom": {
+              "href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.return-parcel",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.return-parcel",
+      "title": "Return parcel to depot",
+      "group": "Exceptions",
+      "description": "Mark a parcel to be returned to the depot instead of delivered.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Return parcel to depot",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.return-parcel",
+        "fields": [
+          {
+            "name": "parcelId",
+            "label": "parcelId",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/parcelId",
+            "description": "Identifier of the parcel.",
+            "type": "Text"
+          },
+          {
+            "name": "reason",
+            "label": "reason",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/reason",
+            "description": "Reason.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "recipient-absent",
+                "refused",
+                "access-denied",
+                "address-not-found",
+                "unsafe",
+                "damaged"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "delivery.report-issue",
+      "uri": "http://www.opengis.net/def/uxs-delivery/delivery.report-issue",
+      "title": "Report issue",
+      "group": "Exceptions",
+      "description": "Report a problem to the dispatcher.",
+      "applicability": {
+        "DRONE": "applicable",
+        "ROBOT": "applicable",
+        "VAN": "applicable",
+        "BIKE": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint",
+          "segment"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Report issue",
+        "definition": "http://www.opengis.net/def/uxs-delivery/delivery.report-issue",
+        "fields": [
+          {
+            "name": "category",
+            "label": "category",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/category",
+            "description": "Kind of problem.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "blocked-path",
+                "unsafe-area",
+                "vehicle-fault",
+                "access",
+                "customer",
+                "other"
+              ]
+            }
+          },
+          {
+            "name": "description",
+            "label": "description",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/description",
+            "description": "Details.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "needsHelp",
+            "label": "needsHelp",
+            "definition": "http://www.opengis.net/def/uxs-delivery/param/needsHelp",
+            "description": "True if a human must intervene.",
+            "optional": true,
+            "type": "Boolean",
+            "value": false
+          }
+        ]
+      }
+    }
+  ]
+}

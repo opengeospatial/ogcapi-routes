@@ -1,0 +1,970 @@
+[appendix]
+:appendix-caption: Annex
+
+== Tourist Route Action Registry (e-bikes, e-scooters and walking)
+
+_Draft 0.1. Companion file: `tourist-action-registry.json` (SWE Common JSON definitions of all 19 actions)._
+
+=== Purpose
+
+A tourist route planner combines shared e-bikes, e-scooters, walking and sometimes a ferry or tram, and adds visits, tickets, rest stops and safety advice. This registry defines a common set of *tourist actions* that an OGC API -- Routes route can attach to waypoints and segments: finding, unlocking, locking and returning a vehicle, changing means of travel, riding rules (assist level, speed limits, dismount zones), points of interest, audio guides, tickets, rest stops, and safety and weather advice.
+
+The actor is a *traveller*, not an uncrewed system. Actions are therefore instructions and transactions handled by the traveller's app and the mobility operators, and the route is advice that the app presents and acts on. *Who creates the actions.* The actions are created by the *route server*, not supplied by the client. The route definition (the input) has only the places to visit (waypoints, with opening times as constraints), a mode, and spatial and temporal constraints; the server chooses the means of travel per segment, inserts transfer points, and derives the actions from its knowledge of places, operators, rules and weather.
+
+The registry has *19 actions* with 48 parameters (all with hazard `none`).
+
+=== 1.1 Non-goals
+
+* Does not define payments, pricing, accounts, identity checks or insurance. Actions carry intent and results (ticket id, cost) but no payment instruments.
+* Does not define the operators' data. Informal correspondence with GBFS data is shown in Clause 5 for orientation only.
+* Does not plan routes or choose points of interest. Those are the planner's job.
+* Does not define vehicle control. E-bike and e-scooter hardware is controlled by the operator through its own interfaces.
+
+'''
+
+=== Concepts and conventions
+
+==== Structure of an entry
+
+The entry members are the same as in the Delivery Vehicle Action Registry: `id` (`tour.*`), `uri` (`+http://www.opengis.net/def/uxs-tour/{id}+`, placeholder), `applicability`, `completion`, `persistence`, `scope` (levels, 2.5), `hazard`, `parametersSchema` and optional `result`.
+
+==== Means of travel
+
+|===
+| Class | Means | Notes
+
+| EBIKE
+| Shared or rented e-bike
+| Pedal assistance, speed-limited by regulation
+
+| ESCOOTER
+| Shared e-scooter
+| Often limited to designated zones
+
+| WALK
+| On foot, including walking a vehicle
+| A segment `mode` of `walk`
+
+| TRANSIT
+| Ferry, tram, bus, funicular
+| A segment `mode` such as `ferry`; ticket needed
+|===
+
+A segment's means of travel is carried in its `travelMode` property (an extension: the route model has one `Mode` per route definition).
+
+==== Vehicle in use
+
+A shared vehicle moves through these states, driven by actions:
+
+|===
+| State | Entered by | Left by
+
+| None
+| start, or `tour.return-vehicle`
+| `tour.find-vehicle`
+
+| Reserved
+| `tour.find-vehicle`
+| `tour.unlock-vehicle` or timeout (`reserveFor`)
+
+| In use (unlocked)
+| `tour.unlock-vehicle`, or `tour.remount`
+| `tour.lock-vehicle`, `tour.return-vehicle`, `tour.dismount`
+
+| Parked (locked)
+| `tour.lock-vehicle`
+| `tour.unlock-vehicle`
+
+| Walked
+| `tour.dismount`
+| `tour.remount`
+|===
+
+`tour.switch-vehicle` is a composite: return the current vehicle, find the next, and unlock it.
+
+==== Zones and rules
+
+Operators and cities restrict riding, parking and speed in zones. `tour.avoid-zone` marks a segment or area as `no-parking`, `no-riding`, `slow` or `no-entry`, and `tour.set-speed-limit` and `tour.dismount` express the consequence for the rider.
+
+==== Where tourist actions appear in a route
+
+Actions can appear at the *route* (`Route.actions`), *waypoint* (`RouteWaypoint.actions`) and *segment* (`RouteSegment.segment_actions`) levels, with the execution order and the automatic revert of the Common Command Registry (2.9). For tourist routes:
+
+|===
+| Level | Typical tourist actions
+
+| Route
+| Advice and settings for the whole trip: `tour.safety-briefing` (for example helmet), `tour.weather-alert`, `tour.set-assist-level` (default), `tour.set-speed-limit` (default)
+
+| Waypoint
+| Vehicle handling, visits, tickets, rest stops, photo stops, range checks
+
+| Segment
+| Rules and advice along a stretch: `tour.set-speed-limit`, `tour.avoid-zone`, `tour.dismount`, `tour.audio-guide`, `tour.safety-briefing`, `tour.weather-alert`, `tour.set-assist-level`
+|===
+
+A route-level setting such as the assist level is the default for all segments; a segment-level setting overrides it along that segment and is reverted at the segment's end, which restores the route-level value.
+
+'''
+
+=== Requirements
+
+*REQ T1* -- Identifiers are lower-case `+tour.{name}+` with hyphens, and are unique and immutable.
+
+*REQ T2* -- Target. Tourist actions target the traveller (a pseudonymous URI such as `+.../travellers/tr-4821+`). Operator-specific vehicles are referred to by `vehicleId` and `stationId` parameters.
+
+*REQ T3* -- State rules. Actions SHALL respect the vehicle states of Clause 2.3: for example `tour.unlock-vehicle` needs a preceding `tour.find-vehicle` or an explicit `vehicleId`, and `tour.return-vehicle` needs a vehicle in use. Where `vehicleId` is absent, the vehicle in use or the one found by the preceding `tour.find-vehicle` is meant.
+
+*REQ T4* -- Means of travel. Each segment SHALL carry a `travelMode`. A change of `travelMode` between consecutive segments SHALL be accompanied by the action that makes it possible (`tour.switch-vehicle`, `tour.return-vehicle`, `tour.find-vehicle`, `tour.dismount`, `tour.remount`, or a ticket purchase for transit).
+
+*REQ T5* -- Zones. Segment actions `tour.avoid-zone`, `tour.set-speed-limit` and `tour.dismount` describe rules that apply along the segment. A client SHALL show them, and a planner SHALL NOT route an e-scooter through a `no-riding` zone without a `tour.dismount`.
+
+*REQ T6* -- Range. Before a segment that is long for the vehicle, the planner SHOULD place `tour.check-battery`, and SHALL provide a contingency (`tour.charge-vehicle` or `tour.find-vehicle`) when the check fails.
+
+*REQ T7* -- Safety. Safety advice (`tour.safety-briefing`, `tour.weather-alert`) SHALL be shown to the traveller before the relevant segment. Helmet and age rules depend on the jurisdiction and are not defined by this registry.
+
+*REQ T8* -- Privacy. Routes SHALL NOT contain names, payment details or document numbers. The traveller is a pseudonymous target. Location and trip history are subject to the operator's and the app's privacy policy.
+
+*REQ T9* -- Tickets and payments. `tour.buy-ticket` expresses an intent and returns a ticket reference and a price. Payment instruments are handled outside the route.
+
+*REQ T11* -- Levels. A tourist action SHALL appear only at the levels listed in its `scope` (2.5). Route-level and segment-level settings are reverted when their level ends (Common Registry 2.9).
+
+*REQ T10* -- Accessibility. A route request SHOULD be able to carry accessibility constraints (for example step-free), and actions such as `tour.dismount` for `stairs` SHALL be avoided when the constraint is set.
+
+==== Conformance classes
+
+|===
+| Class | Scope
+
+| Registry Definitions
+| The registry and its JSON are valid
+
+| Vehicle Handling
+| Implementations follow REQ T3, T4
+
+| Rules and Safety
+| Implementations follow REQ T5--T7
+
+| Visits and Tickets
+| Implementations of the point-of-interest actions follow REQ T8, T9
+|===
+
+'''
+
+=== Actions
+
+The registry has 19 actions in 4 groups. Applicability is shown per means of travel (EBIKE, ESCOOTER, WALK, TRANSIT); the numbers of applicable or limited actions are EBIKE 19, ESCOOTER 18, WALK 10, TRANSIT 9.
+
+==== Index
+
+|===
+| ID | Title | EBIKE | ESCOOTER | WALK | TRANSIT | Completion | Persistence | Scope | Hazard
+
+| `tour.find-vehicle`
+| Find a vehicle
+| ●
+| ●
+| --
+| --
+| until-goal
+| none
+| waypoint
+| none
+
+| `tour.unlock-vehicle`
+| Unlock vehicle
+| ●
+| ●
+| --
+| --
+| until-goal
+| mode
+| waypoint
+| none
+
+| `tour.lock-vehicle`
+| Lock vehicle
+| ●
+| ●
+| --
+| --
+| until-goal
+| mode
+| waypoint
+| none
+
+| `tour.return-vehicle`
+| Return vehicle
+| ●
+| ●
+| --
+| --
+| until-goal
+| none
+| waypoint
+| none
+
+| `tour.switch-vehicle`
+| Switch vehicle
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `tour.charge-vehicle`
+| Charge or swap battery
+| ●
+| ●
+| --
+| --
+| until-goal
+| none
+| waypoint
+| none
+
+| `tour.set-assist-level`
+| Set assist level
+| ●
+| --
+| --
+| --
+| immediate
+| latched
+| waypoint, segment, route
+| none
+
+| `tour.set-speed-limit`
+| Set speed limit
+| ●
+| ●
+| ●
+| --
+| immediate
+| latched
+| waypoint, segment, route
+| none
+
+| `tour.dismount`
+| Dismount and walk
+| ●
+| ●
+| --
+| --
+| until-goal
+| latched
+| waypoint, segment
+| none
+
+| `tour.remount`
+| Remount
+| ●
+| ●
+| --
+| --
+| immediate
+| none
+| waypoint
+| none
+
+| `tour.avoid-zone`
+| Avoid zone
+| ●
+| ●
+| ●
+| ●
+| immediate
+| latched
+| segment, route
+| none
+
+| `tour.visit-poi`
+| Visit point of interest
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint
+| none
+
+| `tour.photo-stop`
+| Photo stop
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint
+| none
+
+| `tour.audio-guide`
+| Play audio guide
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint, segment, route
+| none
+
+| `tour.buy-ticket`
+| Buy or validate ticket
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `tour.rest-stop`
+| Rest stop
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint
+| none
+
+| `tour.safety-briefing`
+| Safety briefing
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint, segment, route
+| none
+
+| `tour.check-battery`
+| Check range
+| ●
+| ●
+| --
+| --
+| immediate
+| none
+| waypoint
+| none
+
+| `tour.weather-alert`
+| Weather alert
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint, segment, route
+| none
+|===
+
+==== Vehicles
+
+===== `tour.find-vehicle`: Find a vehicle
+
+Locate and reserve an available shared vehicle near a position.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `vehicleType`
+| Category
+| --
+| R
+| `ebike` · `escooter` · `cargo-ebike` · `any`
+| Type of vehicle.
+
+| `searchRadius`
+| Quantity
+| m
+| O
+| ≥ 0; default `300`
+| Maximum walking distance to the vehicle.
+
+| `minBattery`
+| Quantity
+| %
+| O
+| 0..100; default `40`
+| Minimum state of charge.
+
+| `reserveFor`
+| Quantity
+| s
+| O
+| 0..1800; default `600`
+| Reservation time.
+
+| `operator`
+| Text
+| --
+| O
+| --
+| Operator or system id (for example a bike-share system id).
+|===
+
+*Result:* Record `{vehicleId: Text, location: Position, battery: Quantity %}`.
+
+===== `tour.unlock-vehicle`: Unlock vehicle
+
+Unlock a reserved or found vehicle and start the rental.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* until-goal · *Persistence:* mode · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `vehicleId`
+| Text
+| --
+| O
+| --
+| Identifier of the vehicle. If absent, the vehicle returned by the preceding `tour.find-vehicle`.
+
+| `method`
+| Category
+| --
+| O
+| `app` · `qr-code` · `nfc` · `pin`; default `app`
+| How to unlock.
+|===
+
+*Result:* Record `{unlocked: Boolean, startTime: Time}`.
+
+===== `tour.lock-vehicle`: Lock vehicle
+
+Lock the vehicle temporarily (stop at a point of interest) without ending the rental.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* until-goal · *Persistence:* mode · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `vehicleId`
+| Text
+| --
+| O
+| --
+| Identifier of the vehicle. If absent, the vehicle in use.
+
+| `lockType`
+| Category
+| --
+| O
+| `cable` · `frame` · `wheel` · `virtual`; default `frame`
+| Lock type.
+|===
+
+===== `tour.return-vehicle`: Return vehicle
+
+End the rental by parking and locking the vehicle where permitted.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `vehicleId`
+| Text
+| --
+| O
+| --
+| Identifier of the vehicle. If absent, the vehicle in use.
+
+| `stationId`
+| Text
+| --
+| O
+| --
+| Docking station, for station-based systems.
+
+| `parkingZone`
+| Category
+| --
+| O
+| `station` · `designated-zone` · `free-floating`; default `station`
+| Where the vehicle is left.
+
+| `photoProof`
+| Boolean
+| --
+| O
+| default `false`
+| Capture a photo of the parked vehicle.
+|===
+
+*Result:* Record `{returned: Boolean, cost: Quantity, currency: Text}`.
+
+===== `tour.switch-vehicle`: Switch vehicle
+
+Change from one means of travel to another at a transfer point (includes walking).
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `from`
+| Category
+| --
+| R
+| `ebike` · `escooter` · `walk` · `transit`
+| Means of travel used so far.
+
+| `to`
+| Category
+| --
+| R
+| `ebike` · `escooter` · `walk` · `transit`
+| Means of travel to use next.
+
+| `transferTime`
+| Quantity
+| s
+| O
+| ≥ 0
+| Estimated transfer time.
+|===
+
+NOTE: Composite of `tour.return-vehicle`, `tour.find-vehicle` and `tour.unlock-vehicle`.
+
+===== `tour.charge-vehicle`: Charge or swap battery
+
+Charge or swap the battery at a charging point.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `stationId`
+| Text
+| --
+| O
+| --
+| Charging point or swap station.
+
+| `targetLevel`
+| Quantity
+| %
+| O
+| 0..100; default `80`
+| State of charge to reach.
+|===
+
+==== Riding
+
+===== `tour.set-assist-level`: Set assist level
+
+Set the motor assistance of an e-bike.
+
+*Applies to:* EBIKE ● ESCOOTER -- WALK -- TRANSIT -- · *Completion:* immediate · *Persistence:* latched · *Scope:* waypoint, segment, route · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `level`
+| Category
+| --
+| R
+| `off` · `eco` · `tour` · `sport` · `turbo`
+| Assistance level.
+
+| `maxSpeed`
+| Quantity
+| km/h
+| O
+| 0..45; default `25`
+| Speed limit for assistance.
+|===
+
+*Revert at the end of a route or segment:* restore previous assist level.
+
+===== `tour.set-speed-limit`: Set speed limit
+
+Limit the speed of the vehicle on a segment (for example in pedestrian zones).
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT -- · *Completion:* immediate · *Persistence:* latched · *Scope:* waypoint, segment, route · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `maxSpeed`
+| Quantity
+| km/h
+| R
+| 0..45
+| Maximum speed.
+
+| `reason`
+| Category
+| --
+| O
+| `pedestrian-zone` · `school` · `park` · `shared-path` · `operator-zone` · `safety`
+| Why the limit applies.
+|===
+
+*Revert at the end of a route or segment:* restore previous limit.
+
+===== `tour.dismount`: Dismount and walk
+
+Dismount and walk with the vehicle (stairs, pedestrian zone, no-riding zone).
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* until-goal · *Persistence:* latched · *Scope:* waypoint, segment · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `reason`
+| Category
+| --
+| R
+| `pedestrian-zone` · `stairs` · `crowd` · `no-riding-zone` · `ferry` · `indoor`
+| Why dismounting is required.
+
+| `distance`
+| Quantity
+| m
+| O
+| ≥ 0
+| Length of the walking section.
+|===
+
+*Revert at the end of a route or segment:* `tour.remount`.
+
+===== `tour.remount`: Remount
+
+Resume riding after a walking section.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+_No parameters._
+
+===== `tour.avoid-zone`: Avoid zone
+
+Advise that a zone is restricted for the vehicle (no parking, no riding, slow zone).
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* immediate · *Persistence:* latched · *Scope:* segment, route · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `zoneType`
+| Category
+| --
+| R
+| `no-parking` · `no-riding` · `slow` · `no-entry`
+| Restriction.
+
+| `zoneId`
+| Text
+| --
+| O
+| --
+| Identifier of the zone.
+|===
+
+*Revert at the end of a route or segment:* advice ends with the segment.
+
+==== Points of interest
+
+===== `tour.visit-poi`: Visit point of interest
+
+Stop at a point of interest for a visit.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `poiId`
+| Text
+| --
+| R
+| --
+| Identifier of the point of interest.
+
+| `kind`
+| Category
+| --
+| O
+| `viewpoint` · `monument` · `museum` · `park` · `food` · `rest` · `shop` · `trailhead` · `other`
+| Kind of place.
+
+| `dwell`
+| Quantity
+| s
+| O
+| ≥ 0; default `900`
+| Planned time at the place.
+
+| `lockVehicle`
+| Boolean
+| --
+| O
+| default `true`
+| If true, lock the vehicle during the visit.
+|===
+
+===== `tour.photo-stop`: Photo stop
+
+Short stop at a scenic point.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `viewDirection`
+| Quantity
+| deg
+| O
+| 0..360
+| Best view direction, from true north.
+
+| `dwell`
+| Quantity
+| s
+| O
+| ≥ 0; default `300`
+| Planned time.
+|===
+
+===== `tour.audio-guide`: Play audio guide
+
+Play narration for a place or a stretch of the route.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint, segment, route · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `contentId`
+| Text
+| --
+| R
+| --
+| Identifier of the audio content.
+
+| `language`
+| Text
+| --
+| O
+| default `en`
+| IETF language tag.
+
+| `trigger`
+| Category
+| --
+| O
+| `on-arrival` · `on-approach` · `on-demand`; default `on-approach`
+| When to play.
+|===
+
+===== `tour.buy-ticket`: Buy or validate ticket
+
+Buy or validate an entry or transit ticket.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `ticketType`
+| Category
+| --
+| R
+| `entry` · `transit` · `bundle`
+| Kind of ticket.
+
+| `poiId`
+| Text
+| --
+| O
+| --
+| Place the ticket is for.
+
+| `validFrom`
+| Time
+| --
+| O
+| --
+| Start of validity.
+
+| `quantity`
+| Count
+| --
+| O
+| 1..20; default `1`
+| Number of tickets.
+|===
+
+*Result:* Record `{ticketId: Text, price: Quantity, currency: Text}`.
+
+===== `tour.rest-stop`: Rest stop
+
+Take a break (coffee, food, water).
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `placeId`
+| Text
+| --
+| O
+| --
+| Identifier of the place.
+
+| `kind`
+| Category
+| --
+| O
+| `coffee` · `meal` · `water` · `toilet` · `shade`
+| Break type.
+
+| `dwell`
+| Quantity
+| s
+| O
+| ≥ 0; default `1200`
+| Planned time.
+|===
+
+==== Safety
+
+===== `tour.safety-briefing`: Safety briefing
+
+Show a safety notice at a point or segment.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint, segment, route · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `topic`
+| Category
+| --
+| R
+| `helmet` · `steep-descent` · `tram-tracks` · `traffic` · `shared-path` · `weather` · `night`
+| Subject.
+
+| `severity`
+| Category
+| --
+| O
+| `info` · `warning` · `critical`; default `info`
+| Importance.
+|===
+
+===== `tour.check-battery`: Check range
+
+Check that the remaining range covers the rest of the route.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK -- TRANSIT -- · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `requiredRange`
+| Quantity
+| m
+| R
+| ≥ 0
+| Distance still to ride.
+
+| `reserve`
+| Quantity
+| %
+| O
+| 0..100; default `15`
+| Reserve to keep.
+|===
+
+*Result:* Record `{sufficient: Boolean, remainingRange: Quantity m}`.
+
+===== `tour.weather-alert`: Weather alert
+
+Warn of weather that affects the next part of the route.
+
+*Applies to:* EBIKE ● ESCOOTER ● WALK ● TRANSIT ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint, segment, route · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `condition`
+| Category
+| --
+| R
+| `rain` · `storm` · `heat` · `ice` · `wind` · `poor-visibility`
+| Condition.
+
+| `advice`
+| Category
+| --
+| O
+| `continue` · `slow-down` · `shelter` · `reroute`; default `continue`
+| Suggested response.
+|===
+
+'''
+
+=== Informative: correspondence with GBFS data
+
+GBFS (General Bikeshare Feed Specification) publishes open data about shared micromobility systems. In its reference version the feeds include `gbfs`, `gbfs_versions`, `system_information`, `vehicle_types`, `station_information`, `station_status`, `vehicle_status` (formerly `free_bike_status`), `system_pricing_plans`, `system_regions` and `geofencing_zones`. A planner or app that implements the actions below typically reads the following data; the field-level mapping is not defined here and the feed versions in use should be checked.
+
+|===
+| Action | GBFS feeds | Data needed
+
+| `tour.find-vehicle`
+| `vehicle_status` (vehicles not in rental), `vehicle_types`
+| Availability, battery and type of vehicles
+
+| `tour.unlock-vehicle`
+| `vehicle_status`, `system_pricing_plans`
+| The vehicle to unlock and the plan that applies
+
+| `tour.return-vehicle`
+| `station_information`, `station_status`, `geofencing_zones`
+| Stations with free docks, and zones where parking is allowed
+
+| `tour.charge-vehicle`
+| `station_information`
+| Charging or swap locations
+
+| `tour.avoid-zone`
+| `geofencing_zones`
+| Zones with riding, parking or speed rules
+
+| `tour.set-speed-limit`
+| `geofencing_zones`
+| Speed limits of operator zones
+
+| `tour.check-battery`
+| `vehicle_status`, `vehicle_types`
+| Current range and vehicle type range
+|===
+
+Actions for points of interest, tickets and safety have no GBFS counterpart; they use the data of the planner, a tourism information system or a ticketing system.
+
+
+=== References
+
+* OGC API -- Routes, Route Exchange Model
+* GBFS specification (`gbfs.org`, `github.com/MobilityData/gbfs`)
+* Common Command Registry for Uncrewed Systems and Delivery Vehicle Action Registry, this series
