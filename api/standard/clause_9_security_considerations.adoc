@@ -5,6 +5,6 @@ The general Security Considerations for Web APIs are also applicable to the Rout
 The following is a list of topics to be considered by implementers of the OGC Routing API:
 
 * Fetching the list of routes (GET `/routes`) returns information about all routes on the server. In any operational, public deployment every user should probably only see their routes plus routes that others have shared with the user.
-* The same applies to access to each route (GET `/route/{routeId}`) and their definition (GET `/route/{routeId}/definition`) as well as to the capability to cancel or delete a route (DELETE `/route/{routeId}`).
+* The same applies to access to each route (GET `/routes/{routeId}`) and their definition (GET `/routes/{routeId}/definition`) as well as to the capability to cancel or delete a route (DELETE `/routes/{routeId}`). For deployments that support the "Job Control" requirements class, this also includes the status document returned for route computations in progress.
 
 That is, any deployment that is not restricted to a closed group of users will typically require user accounts, access control to the API operations and a capability for sharing routes with the public or other users.

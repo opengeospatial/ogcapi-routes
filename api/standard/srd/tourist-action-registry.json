@@ -1,0 +1,1278 @@
+{
+  "registry": "Tourist Route Action Registry",
+  "version": "0.1.0-draft",
+  "baseUri": "http://www.opengis.net/def/uxs-tour/",
+  "vehicleClasses": [
+    "EBIKE",
+    "ESCOOTER",
+    "WALK",
+    "TRANSIT"
+  ],
+  "commonRegistry": "http://www.opengis.net/def/uxs-command/",
+  "actions": [
+    {
+      "id": "tour.find-vehicle",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.find-vehicle",
+      "title": "Find a vehicle",
+      "group": "Vehicles",
+      "description": "Locate and reserve an available shared vehicle near a position.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Find a vehicle",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.find-vehicle",
+        "fields": [
+          {
+            "name": "vehicleType",
+            "label": "vehicleType",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/vehicleType",
+            "description": "Type of vehicle.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "ebike",
+                "escooter",
+                "cargo-ebike",
+                "any"
+              ]
+            }
+          },
+          {
+            "name": "searchRadius",
+            "label": "searchRadius",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/searchRadius",
+            "description": "Maximum walking distance to the vehicle.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 300
+          },
+          {
+            "name": "minBattery",
+            "label": "minBattery",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/minBattery",
+            "description": "Minimum state of charge.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "value": 40
+          },
+          {
+            "name": "reserveFor",
+            "label": "reserveFor",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/reserveFor",
+            "description": "Reservation time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  1800
+                ]
+              ]
+            },
+            "value": 600
+          },
+          {
+            "name": "operator",
+            "label": "operator",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/operator",
+            "description": "Operator or system id (for example a bike-share system id).",
+            "optional": true,
+            "type": "Text"
+          }
+        ]
+      },
+      "result": "Record {vehicleId: Text, location: Position, battery: Quantity %}."
+    },
+    {
+      "id": "tour.unlock-vehicle",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.unlock-vehicle",
+      "title": "Unlock vehicle",
+      "group": "Vehicles",
+      "description": "Unlock a reserved or found vehicle and start the rental.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "mode",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Unlock vehicle",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.unlock-vehicle",
+        "fields": [
+          {
+            "name": "vehicleId",
+            "label": "vehicleId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/vehicleId",
+            "description": "Identifier of the vehicle. If absent, the vehicle returned by the preceding `tour.find-vehicle`.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "method",
+            "label": "method",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/method",
+            "description": "How to unlock.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "app",
+                "qr-code",
+                "nfc",
+                "pin"
+              ]
+            },
+            "value": "app"
+          }
+        ]
+      },
+      "result": "Record {unlocked: Boolean, startTime: Time}."
+    },
+    {
+      "id": "tour.lock-vehicle",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.lock-vehicle",
+      "title": "Lock vehicle",
+      "group": "Vehicles",
+      "description": "Lock the vehicle temporarily (stop at a point of interest) without ending the rental.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "mode",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Lock vehicle",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.lock-vehicle",
+        "fields": [
+          {
+            "name": "vehicleId",
+            "label": "vehicleId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/vehicleId",
+            "description": "Identifier of the vehicle. If absent, the vehicle in use.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "lockType",
+            "label": "lockType",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/lockType",
+            "description": "Lock type.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "cable",
+                "frame",
+                "wheel",
+                "virtual"
+              ]
+            },
+            "value": "frame"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.return-vehicle",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.return-vehicle",
+      "title": "Return vehicle",
+      "group": "Vehicles",
+      "description": "End the rental by parking and locking the vehicle where permitted.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Return vehicle",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.return-vehicle",
+        "fields": [
+          {
+            "name": "vehicleId",
+            "label": "vehicleId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/vehicleId",
+            "description": "Identifier of the vehicle. If absent, the vehicle in use.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "stationId",
+            "label": "stationId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/stationId",
+            "description": "Docking station, for station-based systems.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "parkingZone",
+            "label": "parkingZone",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/parkingZone",
+            "description": "Where the vehicle is left.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "station",
+                "designated-zone",
+                "free-floating"
+              ]
+            },
+            "value": "station"
+          },
+          {
+            "name": "photoProof",
+            "label": "photoProof",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/photoProof",
+            "description": "Capture a photo of the parked vehicle.",
+            "optional": true,
+            "type": "Boolean",
+            "value": false
+          }
+        ]
+      },
+      "result": "Record {returned: Boolean, cost: Quantity, currency: Text}."
+    },
+    {
+      "id": "tour.switch-vehicle",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.switch-vehicle",
+      "title": "Switch vehicle",
+      "group": "Vehicles",
+      "description": "Change from one means of travel to another at a transfer point (includes walking).",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Switch vehicle",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.switch-vehicle",
+        "fields": [
+          {
+            "name": "from",
+            "label": "from",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/from",
+            "description": "Means of travel used so far.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "ebike",
+                "escooter",
+                "walk",
+                "transit"
+              ]
+            }
+          },
+          {
+            "name": "to",
+            "label": "to",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/to",
+            "description": "Means of travel to use next.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "ebike",
+                "escooter",
+                "walk",
+                "transit"
+              ]
+            }
+          },
+          {
+            "name": "transferTime",
+            "label": "transferTime",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/transferTime",
+            "description": "Estimated transfer time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "notes": "Composite of tour.return-vehicle, tour.find-vehicle and tour.unlock-vehicle."
+    },
+    {
+      "id": "tour.charge-vehicle",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.charge-vehicle",
+      "title": "Charge or swap battery",
+      "group": "Vehicles",
+      "description": "Charge or swap the battery at a charging point.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Charge or swap battery",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.charge-vehicle",
+        "fields": [
+          {
+            "name": "stationId",
+            "label": "stationId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/stationId",
+            "description": "Charging point or swap station.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "targetLevel",
+            "label": "targetLevel",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/targetLevel",
+            "description": "State of charge to reach.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "value": 80
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.set-assist-level",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.set-assist-level",
+      "title": "Set assist level",
+      "group": "Riding",
+      "description": "Set the motor assistance of an e-bike.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "not-applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": [
+          "waypoint",
+          "segment",
+          "route"
+        ],
+        "hazard": "none",
+        "revert": "restore previous assist level"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set assist level",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.set-assist-level",
+        "fields": [
+          {
+            "name": "level",
+            "label": "level",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/level",
+            "description": "Assistance level.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "off",
+                "eco",
+                "tour",
+                "sport",
+                "turbo"
+              ]
+            }
+          },
+          {
+            "name": "maxSpeed",
+            "label": "maxSpeed",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/maxSpeed",
+            "description": "Speed limit for assistance.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "km/h"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  45
+                ]
+              ]
+            },
+            "value": 25
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.set-speed-limit",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.set-speed-limit",
+      "title": "Set speed limit",
+      "group": "Riding",
+      "description": "Limit the speed of the vehicle on a segment (for example in pedestrian zones).",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": [
+          "waypoint",
+          "segment",
+          "route"
+        ],
+        "hazard": "none",
+        "revert": "restore previous limit"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Set speed limit",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.set-speed-limit",
+        "fields": [
+          {
+            "name": "maxSpeed",
+            "label": "maxSpeed",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/maxSpeed",
+            "description": "Maximum speed.",
+            "type": "Quantity",
+            "uom": {
+              "code": "km/h"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  45
+                ]
+              ]
+            }
+          },
+          {
+            "name": "reason",
+            "label": "reason",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/reason",
+            "description": "Why the limit applies.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "pedestrian-zone",
+                "school",
+                "park",
+                "shared-path",
+                "operator-zone",
+                "safety"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.dismount",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.dismount",
+      "title": "Dismount and walk",
+      "group": "Riding",
+      "description": "Dismount and walk with the vehicle (stairs, pedestrian zone, no-riding zone).",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "latched",
+        "scope": [
+          "waypoint",
+          "segment"
+        ],
+        "hazard": "none",
+        "revert": "tour.remount"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Dismount and walk",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.dismount",
+        "fields": [
+          {
+            "name": "reason",
+            "label": "reason",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/reason",
+            "description": "Why dismounting is required.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "pedestrian-zone",
+                "stairs",
+                "crowd",
+                "no-riding-zone",
+                "ferry",
+                "indoor"
+              ]
+            }
+          },
+          {
+            "name": "distance",
+            "label": "distance",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/distance",
+            "description": "Length of the walking section.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.remount",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.remount",
+      "title": "Remount",
+      "group": "Riding",
+      "description": "Resume riding after a walking section.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Remount",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.remount",
+        "fields": []
+      }
+    },
+    {
+      "id": "tour.avoid-zone",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.avoid-zone",
+      "title": "Avoid zone",
+      "group": "Riding",
+      "description": "Advise that a zone is restricted for the vehicle (no parking, no riding, slow zone).",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "latched",
+        "scope": [
+          "segment",
+          "route"
+        ],
+        "hazard": "none",
+        "revert": "advice ends with the segment"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Avoid zone",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.avoid-zone",
+        "fields": [
+          {
+            "name": "zoneType",
+            "label": "zoneType",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/zoneType",
+            "description": "Restriction.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "no-parking",
+                "no-riding",
+                "slow",
+                "no-entry"
+              ]
+            }
+          },
+          {
+            "name": "zoneId",
+            "label": "zoneId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/zoneId",
+            "description": "Identifier of the zone.",
+            "optional": true,
+            "type": "Text"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.visit-poi",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.visit-poi",
+      "title": "Visit point of interest",
+      "group": "Points of interest",
+      "description": "Stop at a point of interest for a visit.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Visit point of interest",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.visit-poi",
+        "fields": [
+          {
+            "name": "poiId",
+            "label": "poiId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/poiId",
+            "description": "Identifier of the point of interest.",
+            "type": "Text"
+          },
+          {
+            "name": "kind",
+            "label": "kind",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/kind",
+            "description": "Kind of place.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "viewpoint",
+                "monument",
+                "museum",
+                "park",
+                "food",
+                "rest",
+                "shop",
+                "trailhead",
+                "other"
+              ]
+            }
+          },
+          {
+            "name": "dwell",
+            "label": "dwell",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/dwell",
+            "description": "Planned time at the place.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 900
+          },
+          {
+            "name": "lockVehicle",
+            "label": "lockVehicle",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/lockVehicle",
+            "description": "If true, lock the vehicle during the visit.",
+            "optional": true,
+            "type": "Boolean",
+            "value": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.photo-stop",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.photo-stop",
+      "title": "Photo stop",
+      "group": "Points of interest",
+      "description": "Short stop at a scenic point.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Photo stop",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.photo-stop",
+        "fields": [
+          {
+            "name": "viewDirection",
+            "label": "viewDirection",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/viewDirection",
+            "description": "Best view direction, from true north.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "deg"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  360
+                ]
+              ]
+            }
+          },
+          {
+            "name": "dwell",
+            "label": "dwell",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/dwell",
+            "description": "Planned time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 300
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.audio-guide",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.audio-guide",
+      "title": "Play audio guide",
+      "group": "Points of interest",
+      "description": "Play narration for a place or a stretch of the route.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint",
+          "segment",
+          "route"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Play audio guide",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.audio-guide",
+        "fields": [
+          {
+            "name": "contentId",
+            "label": "contentId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/contentId",
+            "description": "Identifier of the audio content.",
+            "type": "Text"
+          },
+          {
+            "name": "language",
+            "label": "language",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/language",
+            "description": "IETF language tag.",
+            "optional": true,
+            "type": "Text",
+            "value": "en"
+          },
+          {
+            "name": "trigger",
+            "label": "trigger",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/trigger",
+            "description": "When to play.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "on-arrival",
+                "on-approach",
+                "on-demand"
+              ]
+            },
+            "value": "on-approach"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.buy-ticket",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.buy-ticket",
+      "title": "Buy or validate ticket",
+      "group": "Points of interest",
+      "description": "Buy or validate an entry or transit ticket.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "until-goal",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Buy or validate ticket",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.buy-ticket",
+        "fields": [
+          {
+            "name": "ticketType",
+            "label": "ticketType",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/ticketType",
+            "description": "Kind of ticket.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "entry",
+                "transit",
+                "bundle"
+              ]
+            }
+          },
+          {
+            "name": "poiId",
+            "label": "poiId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/poiId",
+            "description": "Place the ticket is for.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "validFrom",
+            "label": "validFrom",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/validFrom",
+            "description": "Start of validity.",
+            "optional": true,
+            "type": "Time",
+            "uom": {
+              "href": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"
+            }
+          },
+          {
+            "name": "quantity",
+            "label": "quantity",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/quantity",
+            "description": "Number of tickets.",
+            "optional": true,
+            "type": "Count",
+            "constraint": {
+              "intervals": [
+                [
+                  1,
+                  20
+                ]
+              ]
+            },
+            "value": 1
+          }
+        ]
+      },
+      "result": "Record {ticketId: Text, price: Quantity, currency: Text}."
+    },
+    {
+      "id": "tour.rest-stop",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.rest-stop",
+      "title": "Rest stop",
+      "group": "Points of interest",
+      "description": "Take a break (coffee, food, water).",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "until-duration",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Rest stop",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.rest-stop",
+        "fields": [
+          {
+            "name": "placeId",
+            "label": "placeId",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/placeId",
+            "description": "Identifier of the place.",
+            "optional": true,
+            "type": "Text"
+          },
+          {
+            "name": "kind",
+            "label": "kind",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/kind",
+            "description": "Break type.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "coffee",
+                "meal",
+                "water",
+                "toilet",
+                "shade"
+              ]
+            }
+          },
+          {
+            "name": "dwell",
+            "label": "dwell",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/dwell",
+            "description": "Planned time.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "s"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            },
+            "value": 1200
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.safety-briefing",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.safety-briefing",
+      "title": "Safety briefing",
+      "group": "Safety",
+      "description": "Show a safety notice at a point or segment.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint",
+          "segment",
+          "route"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Safety briefing",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.safety-briefing",
+        "fields": [
+          {
+            "name": "topic",
+            "label": "topic",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/topic",
+            "description": "Subject.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "helmet",
+                "steep-descent",
+                "tram-tracks",
+                "traffic",
+                "shared-path",
+                "weather",
+                "night"
+              ]
+            }
+          },
+          {
+            "name": "severity",
+            "label": "severity",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/severity",
+            "description": "Importance.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "info",
+                "warning",
+                "critical"
+              ]
+            },
+            "value": "info"
+          }
+        ]
+      }
+    },
+    {
+      "id": "tour.check-battery",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.check-battery",
+      "title": "Check range",
+      "group": "Safety",
+      "description": "Check that the remaining range covers the rest of the route.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "not-applicable",
+        "TRANSIT": "not-applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Check range",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.check-battery",
+        "fields": [
+          {
+            "name": "requiredRange",
+            "label": "requiredRange",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/requiredRange",
+            "description": "Distance still to ride.",
+            "type": "Quantity",
+            "uom": {
+              "code": "m"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  "Infinity"
+                ]
+              ]
+            }
+          },
+          {
+            "name": "reserve",
+            "label": "reserve",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/reserve",
+            "description": "Reserve to keep.",
+            "optional": true,
+            "type": "Quantity",
+            "uom": {
+              "code": "%"
+            },
+            "constraint": {
+              "intervals": [
+                [
+                  0,
+                  100
+                ]
+              ]
+            },
+            "value": 15
+          }
+        ]
+      },
+      "result": "Record {sufficient: Boolean, remainingRange: Quantity m}."
+    },
+    {
+      "id": "tour.weather-alert",
+      "uri": "http://www.opengis.net/def/uxs-tour/tour.weather-alert",
+      "title": "Weather alert",
+      "group": "Safety",
+      "description": "Warn of weather that affects the next part of the route.",
+      "applicability": {
+        "EBIKE": "applicable",
+        "ESCOOTER": "applicable",
+        "WALK": "applicable",
+        "TRANSIT": "applicable"
+      },
+      "semantics": {
+        "completion": "immediate",
+        "persistence": "none",
+        "scope": [
+          "waypoint",
+          "segment",
+          "route"
+        ],
+        "hazard": "none"
+      },
+      "parametersSchema": {
+        "type": "DataRecord",
+        "label": "Weather alert",
+        "definition": "http://www.opengis.net/def/uxs-tour/tour.weather-alert",
+        "fields": [
+          {
+            "name": "condition",
+            "label": "condition",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/condition",
+            "description": "Condition.",
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "rain",
+                "storm",
+                "heat",
+                "ice",
+                "wind",
+                "poor-visibility"
+              ]
+            }
+          },
+          {
+            "name": "advice",
+            "label": "advice",
+            "definition": "http://www.opengis.net/def/uxs-tour/param/advice",
+            "description": "Suggested response.",
+            "optional": true,
+            "type": "Category",
+            "constraint": {
+              "values": [
+                "continue",
+                "slow-down",
+                "shelter",
+                "reroute"
+              ]
+            },
+            "value": "continue"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1211 @@
+[appendix]
+:appendix-caption: Annex
+
+== Delivery Vehicle Action Registry (last-mile delivery)
+
+Companion file: `delivery-action-registry.json` (SWE Common JSON definitions of all 22 actions).
+
+=== Purpose
+
+Last-mile delivery uses drones, sidewalk robots, vans and cargo bikes, and every operator defines its own stop and handover steps. This registry defines a common set of *delivery actions* that an OGC API -- Routes route can attach to waypoints and segments, so that a route written for one fleet can be understood by another. It covers what happens *at and around a delivery stop*: arriving, parking, getting access, notifying and verifying the recipient, handing over or collecting a parcel, capturing proof, handling failures, and visiting the depot to load, unload or charge.
+
+Vehicle motion (take off, land, hold position, set speed, dock) is not repeated here. It is taken from the *Common Command Registry for Uncrewed Systems*, and Clause 5 shows which delivery actions are built on which Common Registry commands.
+
+*Who creates the actions.* The actions of this registry are created by the *route server*, not supplied by the client. The route definition (the input) has only waypoints (the stops, with their time windows as constraints), a mode, and spatial and temporal constraints; the server knows the orders, the sites, the allocated vehicle and the operating rules, and derives the stop sequence, the handover method and the proof from them.
+
+The registry has *22 actions* with 55 parameters: 19 with hazard `none` and 3 `flight-critical`.
+
+=== Non-goals
+
+* Does not model what is inside the vehicle: how parcels are loaded, stacked, labelled or assigned to compartments, beyond a compartment index.
+* Does not plan the order of stops, time windows or fleet allocation. Those are inputs to the route server (waypoints with temporal constraints) or its own business.
+* Does not define payments, pricing, customer accounts or order management.
+* Does not define regulations (airspace, sidewalk permits, parking rules). Those constrain the route and the platform.
+
+'''
+
+=== Concepts and conventions
+
+==== Structure of an entry
+
+|===
+| Member | Meaning
+
+| `id`
+| Identifier `delivery.*`
+
+| `uri`
+| `+http://www.opengis.net/def/uxs-delivery/{id}+` (placeholder base URI)
+
+| `applicability`
+| For each vehicle class: ● applicable, ○ applicable with limits, -- not applicable
+
+| `completion`
+| `immediate`, `until-goal` or `until-duration`, as in the Common Registry
+
+| `persistence`
+| `none` or `mode` (for example access that stays open until released)
+
+| `scope`
+| Levels where the action can appear: `waypoint`, `segment`, `route` (Clause 2.5)
+
+| `hazard`
+| `none`, `flight-critical` or `destructive` (default minimum class)
+
+| `parametersSchema`
+| SWE Common `DataRecord`; Required (R) or Optional (O) fields
+
+| `result`
+| Optional inline result
+
+| `composedOf`
+| Common Registry commands the action builds on
+|===
+
+==== Vehicle classes
+
+|===
+| Class | Typical vehicle | Common Registry domain
+
+| DRONE
+| Multirotor or hybrid delivery aircraft
+| UAV
+
+| ROBOT
+| Sidewalk or campus delivery robot
+| UGV
+
+| VAN
+| Electric or combustion delivery van (human or automated)
+| UGV
+
+| BIKE
+| Cargo bike or e-trike
+| no uncrewed commands; rider-operated
+|===
+
+==== The stop lifecycle
+
+A delivery stop is a short sequence of actions at one waypoint, framed by `delivery.arrive-at-stop` and `delivery.depart-stop`:
+
+|===
+| State | Entered by | Typical actions
+
+| Approaching
+| Segment actions before the stop
+| `delivery.notify-recipient` (`approaching`)
+
+| Arrived
+| `delivery.arrive-at-stop`
+| `delivery.park`, `delivery.request-access`, `delivery.notify-recipient` (`arrived`)
+
+| Waiting
+| `delivery.hold-for-recipient`
+| `delivery.contact-recipient`
+
+| Verifying
+| `delivery.verify-recipient`
+|
+
+| Handover
+| `delivery.handover`, `delivery.pickup`, `delivery.drop-package-line`
+| `delivery.open-compartment`, `delivery.close-compartment`, `delivery.capture-proof`
+
+| Departed
+| `delivery.depart-stop` with an outcome
+| `delivered`, `failed`, `skipped`, `returned`
+|===
+
+==== Handover methods and proof
+
+|===
+| `method` | Meaning | Vehicle classes
+
+| `hand-to-recipient`
+| Recipient takes the parcel from the vehicle or courier
+| ROBOT, VAN, BIKE, DRONE (landed)
+
+| `doorstep`
+| Parcel is left at the door
+| ROBOT, VAN, BIKE
+
+| `safe-place`
+| Parcel is left in a place agreed with the recipient
+| all
+
+| `locker`
+| Parcel is placed in a parcel locker
+| ROBOT, VAN, BIKE
+
+| `neighbour`
+| Handed to a named neighbour
+| VAN, BIKE
+
+| `mailbox`
+| Put in the mailbox
+| VAN, BIKE
+
+| `drop-zone`
+| Parcel is released in a marked zone
+| DRONE, ROBOT
+
+| `winch-drop`
+| Lowered on a line (use `delivery.drop-package-line`)
+| DRONE
+|===
+
+`proof` is `photo`, `signature`, `pin`, `qr-code` or `none`. Evidence is returned as a CS API command result (link to an observation) and not in the route.
+
+==== Where delivery actions appear in a route
+
+Actions can appear at three levels of the Routes model: *route* (`Route.actions`), *waypoint* (`RouteWaypoint.actions`, inherited by the `start` feature, by `segment` features at their end point, and by the `end` feature) and *segment* (`RouteSegment.segment_actions`). There are no separate waypoint features: an intermediate waypoint is the end point of a segment. The meaning of each level, the order of execution and the automatic revert are defined in the Common Command Registry (2.9). For delivery:
+
+|===
+| Level | Typical delivery actions
+
+| Route
+| None of the `delivery.*` actions; route-wide settings come from the Common Registry (for example `vehicle.set-speed`, `data.start-recording`)
+
+| Waypoint
+| The whole stop: `delivery.arrive-at-stop` ... `delivery.depart-stop`, and the depot actions at `start` and `end`
+
+| Segment
+| Notifications before arrival (`delivery.notify-recipient`, `delivery.report-issue`)
+|===
+
+'''
+
+=== Requirements
+
+*REQ D1* -- Identifiers are lower-case `+delivery.{name}+` with hyphens, and are unique and immutable. A withdrawn action is marked deprecated, never reused.
+
+*REQ D2* -- Stop framing. A stop SHALL start with `delivery.arrive-at-stop` and end with `delivery.depart-stop` carrying the same `stopId`. Actions between them belong to the stop. Stop identifiers SHALL be unique within a route.
+
+*REQ D3* -- Targets. Delivery actions target the delivering vehicle System, or its cargo subsystem. Motion and sensing actions use the targets of the Common Registry.
+
+*REQ D4* -- Parcels. A `parcelId` SHALL be unique within a route. A parcel SHALL have at most one `delivery.handover`, one `delivery.drop-package-line` or one `delivery.pickup` in the route. `delivery.depart-stop` SHALL carry an `outcome` that is consistent with those actions (`delivered` needs a handover or a drop).
+
+*REQ D5* -- Method limits. `winch-drop` and `delivery.drop-package-line` apply only to DRONE. `hand-to-recipient` by a DRONE requires a preceding `vehicle.land`. A handover to a recipient SHOULD be preceded by `delivery.verify-recipient` where the order requires age or identity checks.
+
+*REQ D6* -- Credentials. A `credential` parameter is a *reference* to an access code or token held by the operator. Route documents SHALL NOT contain gate codes, PINs or other secrets.
+
+*REQ D7* -- Proof and privacy. Photo proof SHOULD avoid capturing people and SHALL be retained only as long as the operator's policy allows. Evidence SHALL be linked from command results, not embedded in routes.
+
+*REQ D8* -- Time windows and failure. A stop's `timeWindow` (waypoint property) is informational for execution. A failed stop is reported by `delivery.depart-stop` with `outcome` `failed`, and the fallback is expressed as route contingencies (`delivery.return-parcel`, `delivery.reattempt`, `delivery.report-issue`).
+
+*REQ D9* -- Composition. A delivery action MAY be realised as a sequence of Common Registry commands and vehicle-specific steps (Clause 5). The expansion is defined by the binding of the action, not by the route.
+
+*REQ D10* -- Hazard. `delivery.handover`, `delivery.park` and `delivery.drop-package-line` are `flight-critical` by default because they change motion or release a load. A deployment MAY raise but SHALL NOT lower a class. A DRONE SHALL NOT release a load unless the platform confirms a clear drop zone.
+
+*REQ D11* -- Vehicle applicability. A system SHALL NOT declare an action for a vehicle class marked -- in its entry without documenting its interpretation.
+
+*REQ D12* -- Levels. A delivery action SHALL appear only at the levels listed in its `scope` (2.5). The stop actions of REQ D2 are waypoint actions: a stop is the end point of a `segment`, and its framing actions are the `actions` of that segment (the arrival actions of the last leg are on the `end` feature). Segment actions (`segment_actions`) are issued when the vehicle leaves the previous point.
+
+==== Conformance classes
+
+|===
+| Class | Scope
+
+| Registry Definitions
+| The registry and its JSON are valid (REQ D1, D4)
+
+| Stop Lifecycle
+| Routes follow REQ D2, D4, D5
+
+| Handover and Proof
+| Implementations of `delivery.handover`, `delivery.pickup`, `delivery.capture-proof`, `delivery.verify-recipient` follow REQ D5--D7
+
+| Depot Operations
+| Implementations of the depot actions
+|===
+
+'''
+
+=== Actions
+
+The registry has 22 actions in 6 groups. Applicability is shown per vehicle class (DRONE, ROBOT, VAN, BIKE); the numbers of applicable or limited actions are DRONE 22, ROBOT 21, VAN 21, BIKE 20.
+
+==== Index
+
+|===
+| ID | Title | DRONE | ROBOT | VAN | BIKE | Completion | Persistence | Scope | Hazard
+
+| `delivery.arrive-at-stop`
+| Arrive at delivery stop
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.park`
+| Park at stop
+| ○
+| ○
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `delivery.hold-for-recipient`
+| Wait for recipient
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint
+| none
+
+| `delivery.depart-stop`
+| Depart from stop
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint
+| none
+
+| `delivery.request-access`
+| Request access to a site
+| ○
+| ●
+| ●
+| ○
+| until-goal
+| mode
+| waypoint
+| none
+
+| `delivery.release-access`
+| Release access
+| ○
+| ●
+| ●
+| ○
+| immediate
+| none
+| waypoint
+| none
+
+| `delivery.notify-recipient`
+| Notify recipient
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint, segment
+| none
+
+| `delivery.verify-recipient`
+| Verify recipient
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.contact-recipient`
+| Contact recipient
+| ○
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.handover`
+| Hand over parcel
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `delivery.pickup`
+| Pick up parcel
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.open-compartment`
+| Open compartment
+| ○
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint
+| none
+
+| `delivery.close-compartment`
+| Close compartment
+| ○
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.capture-proof`
+| Capture proof of delivery
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.drop-package-line`
+| Lower parcel on a line
+| ●
+| --
+| --
+| --
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `delivery.load-at-depot`
+| Load at depot
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint
+| none
+
+| `delivery.unload-at-depot`
+| Unload at depot
+| ●
+| ●
+| ●
+| ●
+| until-duration
+| none
+| waypoint
+| none
+
+| `delivery.charge`
+| Charge or refuel
+| ●
+| ●
+| ●
+| ●
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.swap-battery`
+| Swap battery
+| ●
+| ●
+| ○
+| --
+| until-goal
+| none
+| waypoint
+| none
+
+| `delivery.reattempt`
+| Schedule reattempt
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint
+| none
+
+| `delivery.return-parcel`
+| Return parcel to depot
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint
+| none
+
+| `delivery.report-issue`
+| Report issue
+| ●
+| ●
+| ●
+| ●
+| immediate
+| none
+| waypoint, segment
+| none
+|===
+
+==== Stop
+
+===== `delivery.arrive-at-stop`: Arrive at delivery stop
+
+Reach the delivery point of a stop and become ready to hand over. Marks the start of the stop.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `stopId`
+| Text
+| --
+| R
+| --
+| Identifier of the stop within the route.
+
+| `approachMode`
+| Category
+| --
+| O
+| `curb` · `door` · `drop-point` · `hover`; default `curb`
+| How to reach the delivery point.
+
+| `toleranceRadius`
+| Quantity
+| m
+| O
+| ≥ 0; default `10`
+| Distance from the delivery point accepted as arrived.
+|===
+
+*Composes Common Registry commands:* `vehicle.goto`
+
+===== `delivery.park`: Park at stop
+
+Park the vehicle legally and safely at the stop.
+
+*Applies to:* DRONE ○ ROBOT ○ VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `location`
+| Position
+| --
+| O
+| --
+| Parking position. If absent, the vehicle chooses near the delivery point.
+
+| `parkingType`
+| Category
+| --
+| O
+| `curb` · `loading-bay` · `bike-rack` · `stand-off`; default `curb`
+| Kind of parking.
+
+| `maxDuration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Maximum parking time.
+|===
+
+*Composes Common Registry commands:* `vehicle.stop`
+
+===== `delivery.hold-for-recipient`: Wait for recipient
+
+Wait at the stop for the recipient to arrive.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `maxWait`
+| Quantity
+| s
+| R
+| ≥ 0
+| Longest wait.
+
+| `onTimeout`
+| Category
+| --
+| O
+| `fail-stop` · `safe-place` · `return-to-depot` · `next-stop`; default `fail-stop`
+| What to do when the wait expires.
+|===
+
+*Composes Common Registry commands:* `mission.wait`, `vehicle.hold-position`
+
+===== `delivery.depart-stop`: Depart from stop
+
+Close the stop and resume the route.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `stopId`
+| Text
+| --
+| R
+| --
+| Identifier of the stop.
+
+| `outcome`
+| Category
+| --
+| R
+| `delivered` · `failed` · `skipped` · `returned`
+| Result of the stop.
+|===
+
+*Composes Common Registry commands:* `vehicle.undock`
+
+==== Access
+
+===== `delivery.request-access`: Request access to a site
+
+Obtain access through a gate, door, barrier or lift.
+
+*Applies to:* DRONE ○ ROBOT ● VAN ● BIKE ○ · *Completion:* until-goal · *Persistence:* mode · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `accessType`
+| Category
+| --
+| R
+| `gate` · `door` · `elevator` · `barrier` · `parcel-room`
+| Kind of access point.
+
+| `credential`
+| Text
+| --
+| O
+| --
+| Reference of an access code or token (never the secret itself).
+
+| `timeout`
+| Quantity
+| s
+| O
+| ≥ 0; default `120`
+| Longest time to wait for access.
+|===
+
+*Result:* Record `{granted: Boolean, message: Text}`.
+
+===== `delivery.release-access`: Release access
+
+Close or release a previously requested access.
+
+*Applies to:* DRONE ○ ROBOT ● VAN ● BIKE ○ · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `accessType`
+| Category
+| --
+| R
+| `gate` · `door` · `elevator` · `barrier` · `parcel-room`
+| Kind of access point.
+|===
+
+==== Recipient
+
+===== `delivery.notify-recipient`: Notify recipient
+
+Send a notification to the recipient.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint, segment · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `event`
+| Category
+| --
+| R
+| `approaching` · `arrived` · `handover-ready` · `delivered` · `failed` · `rescheduled`
+| Reason for the notification.
+
+| `leadTime`
+| Quantity
+| s
+| O
+| ≥ 0
+| For `approaching`: expected time to arrival.
+
+| `channel`
+| Category
+| --
+| O
+| `app` · `sms` · `call` · `email`; default `app`
+| Channel to use.
+
+| `message`
+| Text
+| --
+| O
+| --
+| Free text to add.
+|===
+
+===== `delivery.verify-recipient`: Verify recipient
+
+Check that the person present is the recipient.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `method`
+| Category
+| --
+| R
+| `pin` · `qr-code` · `app-confirmation` · `id-check` · `face-match`
+| Verification method.
+
+| `ageCheck`
+| Count
+| a
+| O
+| 0..120
+| Minimum age to be confirmed.
+
+| `maxAttempts`
+| Count
+| --
+| O
+| 1..10; default `3`
+| Attempts allowed.
+|===
+
+*Result:* Record `{verified: Boolean, attempts: Count}`.
+
+===== `delivery.contact-recipient`: Contact recipient
+
+Open a voice or video session between the recipient and a remote operator.
+
+*Applies to:* DRONE ○ ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| O
+| `voice` · `video` · `text`; default `voice`
+| Session type.
+
+| `maxDuration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Longest session.
+|===
+
+==== Handover
+
+===== `delivery.handover`: Hand over parcel
+
+Deliver the parcel by the chosen method.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `parcelId`
+| Text
+| --
+| R
+| --
+| Identifier of the parcel (barcode or order line).
+
+| `method`
+| Category
+| --
+| R
+| `hand-to-recipient` · `doorstep` · `safe-place` · `locker` · `neighbour` · `mailbox` · `drop-zone` · `winch-drop`
+| Where and how the parcel is left.
+
+| `proof`
+| Category
+| --
+| O
+| `photo` · `signature` · `pin` · `qr-code` · `none`; default `photo`
+| Proof of delivery to capture.
+
+| `contactless`
+| Boolean
+| --
+| O
+| default `true`
+| If true, no person-to-vehicle contact.
+
+| `compartment`
+| Count
+| --
+| O
+| ≥ 0
+| Compartment or slot to open, for vehicles with several.
+|===
+
+*Result:* Record `{outcome: Category(delivered, refused, not-possible), proofRef: Text}`.
+
+*Composes Common Registry commands:* `payload.release`, `payload.winch`, `payload.gripper`
+
+NOTE: For `winch-drop` the vehicle lowers the parcel on a line (registry `payload.winch`, `payload.release`).
+
+===== `delivery.pickup`: Pick up parcel
+
+Collect a parcel (return or customer shipment).
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `parcelId`
+| Text
+| --
+| R
+| --
+| Identifier of the parcel.
+
+| `method`
+| Category
+| --
+| O
+| `hand-to-vehicle` · `locker` · `drop-zone`; default `hand-to-vehicle`
+| How the parcel is handed to the vehicle.
+
+| `compartment`
+| Count
+| --
+| O
+| ≥ 0
+| Compartment or slot.
+|===
+
+*Result:* Record `{collected: Boolean}`.
+
+===== `delivery.open-compartment`: Open compartment
+
+Open a compartment or hatch (for recipient or loader).
+
+*Applies to:* DRONE ○ ROBOT ● VAN ● BIKE ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `compartment`
+| Count
+| --
+| R
+| ≥ 0
+| Compartment index.
+
+| `autoCloseAfter`
+| Quantity
+| s
+| O
+| ≥ 0; default `60`
+| Close again after this time.
+|===
+
+*Composes Common Registry commands:* `payload.set-actuator`
+
+===== `delivery.close-compartment`: Close compartment
+
+Close and lock a compartment.
+
+*Applies to:* DRONE ○ ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `compartment`
+| Count
+| --
+| R
+| ≥ 0
+| Compartment index.
+|===
+
+*Composes Common Registry commands:* `payload.set-actuator`
+
+===== `delivery.capture-proof`: Capture proof of delivery
+
+Capture evidence of the delivery.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `type`
+| Category
+| --
+| R
+| `photo` · `signature` · `video` · `location-stamp`
+| Kind of evidence.
+
+| `parcelId`
+| Text
+| --
+| O
+| --
+| Parcel the evidence relates to.
+|===
+
+*Result:* Link to the produced Observation.
+
+*Composes Common Registry commands:* `camera.capture-image`
+
+===== `delivery.drop-package-line`: Lower parcel on a line
+
+Lower a parcel on a winch line and release it (drone).
+
+*Applies to:* DRONE ● ROBOT -- VAN -- BIKE -- · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `lineLength`
+| Quantity
+| m
+| R
+| 1..50
+| Cable length to pay out.
+
+| `hoverHeight`
+| Quantity
+| m
+| O
+| ≥ 2
+| Hover height above ground.
+
+| `rate`
+| Quantity
+| m/s
+| O
+| 0..3
+| Lowering rate.
+|===
+
+*Composes Common Registry commands:* `payload.winch`, `payload.release`, `vehicle.hold-position`
+
+==== Depot
+
+===== `delivery.load-at-depot`: Load at depot
+
+Wait at the depot while the vehicle is loaded.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `depotId`
+| Text
+| --
+| R
+| --
+| Identifier of the depot or hub.
+
+| `maxDuration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Longest loading time.
+|===
+
+===== `delivery.unload-at-depot`: Unload at depot
+
+Unload returns or undelivered parcels at the depot.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `depotId`
+| Text
+| --
+| R
+| --
+| Identifier of the depot.
+
+| `reason`
+| Category
+| --
+| O
+| `returns` · `failed-deliveries` · `end-of-shift`
+| Why parcels are unloaded.
+|===
+
+===== `delivery.charge`: Charge or refuel
+
+Recharge or refuel at a station.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `stationId`
+| Text
+| --
+| O
+| --
+| Identifier of the station.
+
+| `targetLevel`
+| Quantity
+| %
+| O
+| 0..100; default `80`
+| State of charge to reach.
+
+| `maxDuration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Longest charging time.
+|===
+
+*Composes Common Registry commands:* `vehicle.dock`
+
+===== `delivery.swap-battery`: Swap battery
+
+Replace the battery at a swap station.
+
+*Applies to:* DRONE ● ROBOT ● VAN ○ BIKE -- · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `stationId`
+| Text
+| --
+| O
+| --
+| Identifier of the swap station.
+|===
+
+*Composes Common Registry commands:* `vehicle.dock`
+
+==== Exceptions
+
+===== `delivery.reattempt`: Schedule reattempt
+
+Schedule another delivery attempt.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `parcelId`
+| Text
+| --
+| R
+| --
+| Identifier of the parcel.
+
+| `earliest`
+| Time
+| --
+| O
+| --
+| Earliest time for the next attempt.
+
+| `latest`
+| Time
+| --
+| O
+| --
+| Latest time for the next attempt.
+|===
+
+===== `delivery.return-parcel`: Return parcel to depot
+
+Mark a parcel to be returned to the depot instead of delivered.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `parcelId`
+| Text
+| --
+| R
+| --
+| Identifier of the parcel.
+
+| `reason`
+| Category
+| --
+| R
+| `recipient-absent` · `refused` · `access-denied` · `address-not-found` · `unsafe` · `damaged`
+| Reason.
+|===
+
+===== `delivery.report-issue`: Report issue
+
+Report a problem to the dispatcher.
+
+*Applies to:* DRONE ● ROBOT ● VAN ● BIKE ● · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint, segment · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `category`
+| Category
+| --
+| R
+| `blocked-path` · `unsafe-area` · `vehicle-fault` · `access` · `customer` · `other`
+| Kind of problem.
+
+| `description`
+| Text
+| --
+| O
+| --
+| Details.
+
+| `needsHelp`
+| Boolean
+| --
+| O
+| default `false`
+| True if a human must intervene.
+|===
+
+'''
+
+=== Composition with the Common Command Registry
+
+|===
+| Delivery action | Builds on (Common Registry) | Role
+
+| `delivery.arrive-at-stop`
+| `vehicle.goto`
+| The approach itself is the route geometry (`vehicle.goto`); this action marks the stop
+
+| `delivery.park`
+| `vehicle.stop`
+| Stop and hold at the kerb (`vehicle.stop`)
+
+| `delivery.hold-for-recipient`
+| `mission.wait`, `vehicle.hold-position`
+| Wait (`mission.wait`) or hold position
+
+| `delivery.depart-stop`
+| `vehicle.undock`
+| Undock or resume motion
+
+| `delivery.handover`
+| `payload.release`, `payload.winch`, `payload.gripper`
+| Compartment or release mechanism (`payload.*`)
+
+| `delivery.open-compartment`
+| `payload.set-actuator`
+| Actuator output for the hatch
+
+| `delivery.close-compartment`
+| `payload.set-actuator`
+| Actuator output for the hatch
+
+| `delivery.capture-proof`
+| `camera.capture-image`
+| Photo capture (`camera.capture-image`)
+
+| `delivery.drop-package-line`
+| `payload.winch`, `payload.release`, `vehicle.hold-position`
+| Hover, lower and release (`vehicle.hold-position`, `payload.winch`, `payload.release`)
+
+| `delivery.charge`
+| `vehicle.dock`
+| Dock at a charger (`vehicle.dock`)
+
+| `delivery.swap-battery`
+| `vehicle.dock`
+| Dock at a swap station (`vehicle.dock`)
+|===
+
+Actions with no Common Registry counterpart (`delivery.request-access`, `delivery.notify-recipient`, `delivery.verify-recipient`, `delivery.contact-recipient`, `delivery.pickup`, `delivery.load-at-depot`, `delivery.unload-at-depot`, `delivery.reattempt`, `delivery.return-parcel`, `delivery.report-issue`, `delivery.release-access`) are interactions with people, sites and back-office systems, and are carried by the fleet's own interfaces.
+
+=== Typical stop sequences
+
+|===
+| Case | Sequence
+
+| Drone, winch drop
+| `delivery.arrive-at-stop` (hover) → `delivery.notify-recipient` (arrived) → `delivery.drop-package-line` → `delivery.capture-proof` → `delivery.notify-recipient` (delivered) → `delivery.depart-stop`
+
+| Drone, landing handover
+| `delivery.arrive-at-stop` (drop-point) → `vehicle.land` → `delivery.verify-recipient` → `delivery.handover` (drop-zone) → `delivery.depart-stop` → `vehicle.takeoff`
+
+| Robot, door with gate
+| `delivery.request-access` → `delivery.arrive-at-stop` → `delivery.notify-recipient` → `delivery.verify-recipient` → `delivery.open-compartment` → `delivery.handover` → `delivery.close-compartment` → `delivery.release-access` → `delivery.depart-stop`
+
+| Van, kerb
+| `delivery.arrive-at-stop` → `delivery.park` → `delivery.handover` (doorstep) → `delivery.depart-stop`
+
+| Pickup
+| `delivery.arrive-at-stop` → `delivery.park` → `delivery.pickup` → `delivery.depart-stop`
+
+| Recipient absent
+| `delivery.arrive-at-stop` → `delivery.hold-for-recipient` (times out) → contingency `delivery.return-parcel` or `delivery.handover` (safe-place) → `delivery.depart-stop` (failed) → `delivery.reattempt`
+|===
+
+'''
+
+=== References
+
+* Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV), this series
+* OGC API -- Routes, Route Exchange Model (`featureType`, `waypoint`, `segment`, `timestamp`)
+* OGC API -- Connected Systems, Part 2 (control streams, commands, status, results)

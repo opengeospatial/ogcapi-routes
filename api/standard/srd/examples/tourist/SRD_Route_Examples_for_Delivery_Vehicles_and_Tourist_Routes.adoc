@@ -1,0 +1,1170 @@
+[appendix]
+:appendix-caption: Annex
+
+== Route Examples Tourist Routes
+
+_Companion files: `tourist-route-examples.json` (2 routes). Each entry has a `routeDefinition` and a `route`._
+
+=== Purpose
+
+Two complete examples show how the *Tourist Route Action Registry* are used in route exchange. They use the Route model of the GML Route class diagram, with actions at *route*, *waypoint* and *segment* level.
+
+|===
+| Example | Registry | Vehicle | Features | Actions route / waypoint / segment | Total
+
+| Turin highlights (e-scooter, walk, e-bike)
+| Tourist
+| traveller
+| 10
+| 3 / 15 / 10
+| 28
+
+| Lake Como e-bike with ferry
+| Tourist
+| traveller
+| 8
+| 3 / 10 / 6
+| 19
+|===
+
+=== Turin highlights (e-scooter, walk, e-bike)
+
+A multimodal city tour: e-scooter to the centre, a walk with two visits, then an e-bike ride along the river and up to a viewpoint.
+
+*Vehicle class:* traveller (mixed means of travel) · *Mode:* `micromobility-multimodal` · *Length:* 5433 m · *Travel time:* 35 min 30 s (total 3 h 5 min) · *Features:* 10 · *Actions:* 28 (route 3, waypoint 15, segment 10) · *Contingencies:* 3
+
+*Input (route definition):* mode `micromobility-multimodal` (domain ground), start `Porta Nuova station`, 4 intermediate waypoints (`palazzo-reale`, `mole-antonelliana`, `valentino-park`, `monte-cappuccini`), end `Gran Madre bike station`, 1 spatial and 0 temporal constraints, 1 waypoint constraints. *Added by the server:* 2 points (Piazza San Carlo, Piazza Vittorio bike station), the vehicle allocation, 28 actions and 3 contingencies.
+
+*What the server knew:* the points of interest (tickets, visit times, opening time), the shared-vehicle systems (stations, battery levels), zone rules and speed limits, the weather forecast and the traveller profile.
+
+==== Input: route definition
+
+[,json]
+----
+{
+  "start": {
+    "id": "start",
+    "title": "Porta Nuova station",
+    "location": {
+      "type": "Point",
+      "coordinates": [7.6784, 45.0624]
+    }
+  },
+  "intermediateWaypoints": [
+    {
+      "id": "palazzo-reale",
+      "title": "Palazzo Reale",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.6866, 45.0711]
+      },
+      "constraint": {
+        "id": "tc-reale",
+        "title": "Opening time",
+        "type": "noEarlierThan",
+        "timePoint": "2026-10-17T07:00:00Z",
+        "delta": 0
+      }
+    },
+    {
+      "id": "mole-antonelliana",
+      "title": "Mole Antonelliana",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.6933, 45.0689]
+      }
+    },
+    {
+      "id": "valentino-park",
+      "title": "Parco del Valentino",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.687, 45.053]
+      }
+    },
+    {
+      "id": "monte-cappuccini",
+      "title": "Monte dei Cappuccini",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.6993, 45.0626]
+      }
+    }
+  ],
+  "end": {
+    "id": "end",
+    "title": "Gran Madre bike station",
+    "location": {
+      "type": "Point",
+      "coordinates": [7.6975, 45.064]
+    }
+  },
+  "mode": {
+    "id": "micromobility-multimodal",
+    "title": "Micromobility and walking",
+    "domain": [
+      "ground"
+    ],
+    "supportedRegions": [
+      {
+        "id": "reg-turin",
+        "title": "Turin centre",
+        "bbox": [7.64, 45.03, 7.72, 45.09]
+      }
+    ]
+  },
+  "spatialConstraints": [
+    {
+      "id": "sc-area",
+      "title": "Tour area",
+      "type": "doNotLeave",
+      "area": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [7.64, 45.04],
+            [7.72, 45.04],
+            [7.72, 45.09],
+            [7.64, 45.09],
+            [7.64, 45.04]
+          ]
+        ]
+      }
+    }
+  ]
+}
+----
+
+==== Output
+
+The route embeds this definition as `describedBy`. Its features and actions were created by the server.
+
+==== Features
+
+|===
+| id | featureType | Title | Position (lon, lat[, z MSL]) | Time (UTC) | Length / duration | `segment_actions` (along the stretch) | `actions` (at the point)
+
+| overview
+| overview
+| --
+| 26 points
+|
+| 5433 m / 2130 s
+| --
+| --
+
+| start
+| start
+| Porta Nuova station
+| 7.6784, 45.0624, 240
+| 07:30
+| --
+| --
+| `tour.find-vehicle`, `tour.unlock-vehicle`
+
+| seg1
+| segment
+| Piazza San Carlo (`escooter`)
+| 7.6828, 45.068, 239
+| 07:36
+| 714 m / 159 s
+| `tour.set-speed-limit`, `tour.avoid-zone`, `tour.safety-briefing`
+| `tour.switch-vehicle`
+
+| seg2
+| segment
+| Palazzo Reale (`walk`)
+| 7.6866, 45.0711, 240
+| 07:44
+| 456 m / 351 s
+| `tour.audio-guide`
+| `tour.buy-ticket`, `tour.visit-poi`
+
+| seg3
+| segment
+| Mole Antonelliana (`walk`)
+| 7.6933, 45.0689, 243
+| 08:51
+| 581 m / 447 s
+| --
+| `tour.buy-ticket`, `tour.visit-poi`
+
+| seg4
+| segment
+| Piazza Vittorio bike station (`walk`)
+| 7.6962, 45.0645, 240
+| 09:43
+| 540 m / 415 s
+| --
+| `tour.find-vehicle`, `tour.unlock-vehicle`, `tour.set-assist-level`
+
+| seg5
+| segment
+| Parco del Valentino (`ebike`)
+| 7.687, 45.053, 233
+| 09:52
+| 1472 m / 294 s
+| `tour.set-speed-limit`, `tour.safety-briefing`, `tour.audio-guide`
+| `tour.lock-vehicle`, `tour.rest-stop`, `tour.check-battery`
+
+| seg6
+| segment
+| Monte dei Cappuccini (`ebike`)
+| 7.6993, 45.0626, 285
+| 10:24
+| 1459 m / 417 s
+| `tour.set-assist-level`
+| `tour.photo-stop`
+
+| seg7
+| segment
+| Gran Madre bike station (`ebike`)
+| 7.6975, 45.064, 240
+| 10:35
+| 211 m / 47 s
+| `tour.set-assist-level`, `tour.safety-briefing`
+| --
+
+| end
+| end
+| Gran Madre bike station
+| 7.6975, 45.064, 240
+| 10:35
+| --
+| --
+| `tour.return-vehicle`
+|===
+
+==== Actions
+
+|===
+| Level | Feature | Seq | Target | Action | Parameters | Completion | Hazard
+
+| route
+| --
+| 1
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=helmet, severity=info
+| immediate
+| none
+
+| route
+| --
+| 2
+| `tr-4821`
+| `tour.weather-alert`
+| condition=heat, advice=slow-down
+| immediate
+| none
+
+| route
+| --
+| 3
+| `tr-4821`
+| `tour.set-speed-limit`
+| maxSpeed=25, reason=safety
+| immediate
+| none
+
+| waypoint
+| start
+| 4
+| `tr-4821`
+| `tour.find-vehicle`
+| vehicleType=escooter, searchRadius=200, minBattery=50, reserveFor=600
+| until-goal
+| none
+
+| waypoint
+| start
+| 5
+| `tr-4821`
+| `tour.unlock-vehicle`
+| method=app
+| until-goal
+| none
+
+| segment
+| seg1
+| 6
+| `tr-4821`
+| `tour.set-speed-limit`
+| maxSpeed=20, reason=operator-zone
+| immediate
+| none
+
+| segment
+| seg1
+| 7
+| `tr-4821`
+| `tour.avoid-zone`
+| zoneType=no-parking, zoneId=ZTL-A
+| immediate
+| none
+
+| segment
+| seg1
+| 8
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=traffic, severity=info
+| immediate
+| none
+
+| waypoint
+| seg1
+| 9
+| `tr-4821`
+| `tour.switch-vehicle`
+| from=escooter, to=walk, transferTime=90
+| until-goal
+| none
+
+| segment
+| seg2
+| 10
+| `tr-4821`
+| `tour.audio-guide`
+| contentId=turin-baroque-walk-en, language=en, trigger=on-approach
+| until-duration
+| none
+
+| waypoint
+| seg2
+| 11
+| `tr-4821`
+| `tour.buy-ticket`
+| ticketType=entry, poiId=palazzo-reale, quantity=2
+| until-goal
+| none
+
+| waypoint
+| seg2
+| 12
+| `tr-4821`
+| `tour.visit-poi`
+| poiId=palazzo-reale, kind=monument, dwell=3600, lockVehicle=false
+| until-duration
+| none
+
+| waypoint
+| seg3
+| 13
+| `tr-4821`
+| `tour.buy-ticket`
+| ticketType=entry, poiId=mole-antonelliana, quantity=2
+| until-goal
+| none
+
+| waypoint
+| seg3
+| 14
+| `tr-4821`
+| `tour.visit-poi`
+| poiId=mole-antonelliana, kind=museum, dwell=2700, lockVehicle=false
+| until-duration
+| none
+
+| waypoint
+| seg4
+| 15
+| `tr-4821`
+| `tour.find-vehicle`
+| vehicleType=ebike, minBattery=70
+| until-goal
+| none
+
+| waypoint
+| seg4
+| 16
+| `tr-4821`
+| `tour.unlock-vehicle`
+| --
+| until-goal
+| none
+
+| waypoint
+| seg4
+| 17
+| `tr-4821`
+| `tour.set-assist-level`
+| level=tour, maxSpeed=25
+| immediate
+| none
+
+| segment
+| seg5
+| 18
+| `tr-4821`
+| `tour.set-speed-limit`
+| maxSpeed=15, reason=shared-path
+| immediate
+| none
+
+| segment
+| seg5
+| 19
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=shared-path
+| immediate
+| none
+
+| segment
+| seg5
+| 20
+| `tr-4821`
+| `tour.audio-guide`
+| contentId=po-river-walk-en, trigger=on-approach
+| until-duration
+| none
+
+| waypoint
+| seg5
+| 21
+| `tr-4821`
+| `tour.lock-vehicle`
+| lockType=cable
+| until-goal
+| none
+
+| waypoint
+| seg5
+| 22
+| `tr-4821`
+| `tour.rest-stop`
+| placeId=cafe-valentino, kind=coffee, dwell=1200
+| until-duration
+| none
+
+| waypoint
+| seg5
+| 23
+| `tr-4821`
+| `tour.check-battery`
+| requiredRange=6000, reserve=15
+| immediate
+| none
+
+| segment
+| seg6
+| 24
+| `tr-4821`
+| `tour.set-assist-level`
+| level=sport
+| immediate
+| none
+
+| waypoint
+| seg6
+| 25
+| `tr-4821`
+| `tour.photo-stop`
+| viewDirection=270, dwell=600
+| until-duration
+| none
+
+| segment
+| seg7
+| 26
+| `tr-4821`
+| `tour.set-assist-level`
+| level=eco
+| immediate
+| none
+
+| segment
+| seg7
+| 27
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=steep-descent, severity=warning
+| immediate
+| none
+
+| waypoint
+| end
+| 28
+| `tr-4821`
+| `tour.return-vehicle`
+| stationId=ST-GM-02, parkingZone=station, photoProof=false
+| until-goal
+| none
+|===
+
+==== Command streams
+
+|===
+| Target | Actions in sequence order | Count
+
+| `tr-4821`
+| `tour.safety-briefing` → `tour.weather-alert` → `tour.set-speed-limit` → `tour.find-vehicle` → `tour.unlock-vehicle` → `tour.set-speed-limit` → `tour.avoid-zone` → `tour.safety-briefing` → `tour.switch-vehicle` → `tour.audio-guide` → `tour.buy-ticket` → `tour.visit-poi` → `tour.buy-ticket` → `tour.visit-poi` → `tour.find-vehicle` → `tour.unlock-vehicle` → `tour.set-assist-level` → `tour.set-speed-limit` → `tour.safety-briefing` → `tour.audio-guide` → `tour.lock-vehicle` → `tour.rest-stop` → `tour.check-battery` → `tour.set-assist-level` → `tour.photo-stop` → `tour.set-assist-level` → `tour.safety-briefing` → `tour.return-vehicle`
+| 28
+|===
+
+==== Automatic reverts
+
+|===
+| Level | Feature | Action | Reverted at the end of the level by
+
+| route
+| --
+| `tour.set-speed-limit` (maxSpeed=25, reason=safety)
+| restore previous limit
+
+| segment
+| seg1
+| `tour.set-speed-limit` (maxSpeed=20, reason=operator-zone)
+| restore previous limit
+
+| segment
+| seg1
+| `tour.avoid-zone` (zoneType=no-parking, zoneId=ZTL-A)
+| advice ends with the segment
+
+| segment
+| seg5
+| `tour.set-speed-limit` (maxSpeed=15, reason=shared-path)
+| restore previous limit
+
+| segment
+| seg6
+| `tour.set-assist-level` (level=sport)
+| restore previous assist level
+
+| segment
+| seg7
+| `tour.set-assist-level` (level=eco)
+| restore previous assist level
+|===
+
+==== Contingencies
+
+|===
+| Condition | Details | Action
+
+| `no-vehicle-available`
+| --
+| `tour.find-vehicle` (vehicleType=any, searchRadius=500) on `tr-4821`
+
+| `battery-low`
+| --
+| `tour.charge-vehicle` (targetLevel=60) on `tr-4821`
+
+| `rain`
+| --
+| `tour.weather-alert` (condition=rain, advice=shelter) on `tr-4821`
+|===
+
+==== What to notice
+
+* Route-level actions set the whole trip: a helmet briefing, a heat warning and a default speed limit of 25 km/h. Segments override the speed limit (20 km/h in the operator zone, 15 km/h on the shared path); each is reverted to 25 km/h at the segment end.
+* The input has four places to visit. The server chose the means of travel per segment (`travelMode`: `escooter`, `walk`, `ebike`) and *inserted two transfer points* (Piazza San Carlo, Piazza Vittorio bike station). `tour.switch-vehicle` (composite) ends the scooter trip; the e-bike section uses the explicit sequence `tour.find-vehicle`, `tour.unlock-vehicle`, `tour.set-assist-level`.
+* `tour.set-assist-level` on the climb and descent are segment actions, so the e-bike returns to the previous level after each.
+* Palazzo Reale has a `noEarlierThan` constraint (opening time). The definition has a `doNotLeave` tour area.
+* The only target is the traveller (pseudonymous URI).
+
+==== Excerpt: route-level `actions`
+
+[,json]
+----
+[
+  {
+    "actionType": "tour.safety-briefing",
+    "target": "https://example.org/api/travellers/tr-4821",
+    "sequence": 1,
+    "params": {
+      "topic": "helmet",
+      "severity": "info"
+    }
+  },
+  {
+    "actionType": "tour.weather-alert",
+    "target": "https://example.org/api/travellers/tr-4821",
+    "sequence": 2,
+    "params": {
+      "condition": "heat",
+      "advice": "slow-down"
+    }
+  },
+  {
+    "actionType": "tour.set-speed-limit",
+    "target": "https://example.org/api/travellers/tr-4821",
+    "sequence": 3,
+    "params": {
+      "maxSpeed": 25,
+      "reason": "safety"
+    }
+  }
+]
+----
+
+==== Excerpt: feature `seg1`
+
+[,json]
+----
+{
+  "id": "seg1",
+  "type": "Feature",
+  "properties": {
+    "featureType": "segment",
+    "title": "Piazza San Carlo",
+    "previousEnd": "start",
+    "length": 714,
+    "duration_s": 159,
+    "travelMode": "escooter",
+    "timestamp": "2026-10-17T07:36:39Z",
+    "segment_actions": [
+      {
+        "actionType": "tour.set-speed-limit",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 6,
+        "params": {
+          "maxSpeed": 20,
+          "reason": "operator-zone"
+        }
+      },
+      {
+        "actionType": "tour.avoid-zone",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 7,
+        "params": {
+          "zoneType": "no-parking",
+          "zoneId": "ZTL-A"
+        }
+      },
+      {
+        "actionType": "tour.safety-briefing",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 8,
+        "params": {
+          "topic": "traffic",
+          "severity": "info"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "actionType": "tour.switch-vehicle",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 9,
+        "params": {
+          "from": "escooter",
+          "to": "walk",
+          "transferTime": 90
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [7.6828, 45.068, 239]
+  }
+}
+----
+
+=== 3.2 Lake Como e-bike with ferry
+
+An e-bike ride with a ferry crossing, a visit with a locked bike, a viewpoint and a range check.
+
+*Vehicle class:* traveller (mixed means of travel) · *Mode:* `micromobility-ferry` · *Length:* 27240 m · *Travel time:* 1 h 21 min (total 3 h 2 min) · *Features:* 8 · *Actions:* 19 (route 3, waypoint 10, segment 6) · *Contingencies:* 1
+
+*Input (route definition):* mode `micromobility-ferry` (domain ground, maritime), start `Como lakefront`, 2 intermediate waypoints (`villa-melzi`, `punta-spartivento`), end `Bellagio e-bike station`, 1 spatial and 0 temporal constraints, 0 waypoint constraints. *Added by the server:* 2 points (Cernobbio ferry pier, Bellagio pier), the vehicle allocation, 19 actions and 1 contingencies.
+
+*What the server knew:* the points of interest, the ferry timetable and ticketing, the bike-share stations, zone rules and the weather forecast.
+
+==== Input: route definition
+
+[,json]
+----
+{
+  "start": {
+    "id": "start",
+    "title": "Como lakefront",
+    "location": {
+      "type": "Point",
+      "coordinates": [9.0852, 45.8081]
+    }
+  },
+  "intermediateWaypoints": [
+    {
+      "id": "villa-melzi",
+      "title": "Villa Melzi Gardens",
+      "location": {
+        "type": "Point",
+        "coordinates": [9.2606, 45.9835]
+      }
+    },
+    {
+      "id": "punta-spartivento",
+      "title": "Punta Spartivento",
+      "location": {
+        "type": "Point",
+        "coordinates": [9.2608, 45.9915]
+      }
+    }
+  ],
+  "end": {
+    "id": "end",
+    "title": "Bellagio e-bike station",
+    "location": {
+      "type": "Point",
+      "coordinates": [9.2623, 45.9857]
+    }
+  },
+  "mode": {
+    "id": "micromobility-ferry",
+    "title": "Micromobility with ferry",
+    "domain": [
+      "ground",
+      "maritime"
+    ],
+    "supportedRegions": [
+      {
+        "id": "reg-como",
+        "title": "Lake Como",
+        "bbox": [9.05, 45.78, 9.3, 46.02]
+      }
+    ]
+  },
+  "spatialConstraints": [
+    {
+      "id": "sc-lake",
+      "title": "Tour area",
+      "type": "doNotLeave",
+      "area": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [9.05, 45.78],
+            [9.3, 45.78],
+            [9.3, 46.02],
+            [9.05, 46.02],
+            [9.05, 45.78]
+          ]
+        ]
+      }
+    }
+  ]
+}
+----
+
+==== Output: the route (feature collection)
+
+The route embeds this definition as `describedBy`. Its features and actions were created by the server.
+
+==== Features
+
+|===
+| id | featureType | Title | Position (lon, lat[, z MSL]) | Time (UTC) | Length / duration | `segment_actions` (along the stretch) | `actions` (at the point)
+
+| overview
+| overview
+| --
+| 20 points
+|
+| 27240 m / 4906 s
+| --
+| --
+
+| start
+| start
+| Como lakefront
+| 9.0852, 45.8081, 201
+| 08:00
+| --
+| --
+| `tour.find-vehicle`, `tour.unlock-vehicle`
+
+| seg1
+| segment
+| Cernobbio ferry pier (`ebike`)
+| 9.0768, 45.8421, 200
+| 08:18
+| 3843 m / 854 s
+| `tour.set-speed-limit`, `tour.avoid-zone`
+| `tour.dismount`, `tour.buy-ticket`
+
+| seg2
+| segment
+| Bellagio pier (`ferry`)
+| 9.2614, 45.9866, 200
+| 09:32
+| 21499 m / 3583 s
+| `tour.safety-briefing`
+| `tour.remount`
+
+| seg3
+| segment
+| Villa Melzi Gardens (`ebike`)
+| 9.2606, 45.9835, 202
+| 09:36
+| 351 m / 100 s
+| `tour.set-speed-limit`
+| `tour.audio-guide`, `tour.visit-poi`
+
+| seg4
+| segment
+| Punta Spartivento (`ebike`)
+| 9.2608, 45.9915, 215
+| 10:45
+| 891 m / 223 s
+| `tour.set-assist-level`
+| `tour.photo-stop`, `tour.check-battery`
+
+| seg5
+| segment
+| Bellagio e-bike station (`ebike`)
+| 9.2623, 45.9857, 200
+| 11:02
+| 656 m / 146 s
+| `tour.safety-briefing`
+| --
+
+| end
+| end
+| Bellagio e-bike station
+| 9.2623, 45.9857, 200
+| 11:02
+| --
+| --
+| `tour.return-vehicle`
+|===
+
+==== Actions
+
+|===
+| Level | Feature | Seq | Target | Action | Parameters | Completion | Hazard
+
+| route
+| --
+| 1
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=helmet, severity=info
+| immediate
+| none
+
+| route
+| --
+| 2
+| `tr-4821`
+| `tour.weather-alert`
+| condition=wind, advice=slow-down
+| immediate
+| none
+
+| route
+| --
+| 3
+| `tr-4821`
+| `tour.set-assist-level`
+| level=eco
+| immediate
+| none
+
+| waypoint
+| start
+| 4
+| `tr-4821`
+| `tour.find-vehicle`
+| vehicleType=ebike, minBattery=80
+| until-goal
+| none
+
+| waypoint
+| start
+| 5
+| `tr-4821`
+| `tour.unlock-vehicle`
+| --
+| until-goal
+| none
+
+| segment
+| seg1
+| 6
+| `tr-4821`
+| `tour.set-speed-limit`
+| maxSpeed=15, reason=shared-path
+| immediate
+| none
+
+| segment
+| seg1
+| 7
+| `tr-4821`
+| `tour.avoid-zone`
+| zoneType=no-riding, zoneId=promenade-como
+| immediate
+| none
+
+| waypoint
+| seg1
+| 8
+| `tr-4821`
+| `tour.dismount`
+| reason=ferry
+| until-goal
+| none
+
+| waypoint
+| seg1
+| 9
+| `tr-4821`
+| `tour.buy-ticket`
+| ticketType=transit, quantity=2
+| until-goal
+| none
+
+| segment
+| seg2
+| 10
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=weather, severity=info
+| immediate
+| none
+
+| waypoint
+| seg2
+| 11
+| `tr-4821`
+| `tour.remount`
+| --
+| immediate
+| none
+
+| segment
+| seg3
+| 12
+| `tr-4821`
+| `tour.set-speed-limit`
+| maxSpeed=10, reason=pedestrian-zone
+| immediate
+| none
+
+| waypoint
+| seg3
+| 13
+| `tr-4821`
+| `tour.audio-guide`
+| contentId=bellagio-old-town-en, trigger=on-arrival
+| until-duration
+| none
+
+| waypoint
+| seg3
+| 14
+| `tr-4821`
+| `tour.visit-poi`
+| poiId=villa-melzi-gardens, kind=park, dwell=3600, lockVehicle=true
+| until-duration
+| none
+
+| segment
+| seg4
+| 15
+| `tr-4821`
+| `tour.set-assist-level`
+| level=sport
+| immediate
+| none
+
+| waypoint
+| seg4
+| 16
+| `tr-4821`
+| `tour.photo-stop`
+| viewDirection=0, dwell=600
+| until-duration
+| none
+
+| waypoint
+| seg4
+| 17
+| `tr-4821`
+| `tour.check-battery`
+| requiredRange=1200, reserve=20
+| immediate
+| none
+
+| segment
+| seg5
+| 18
+| `tr-4821`
+| `tour.safety-briefing`
+| topic=shared-path
+| immediate
+| none
+
+| waypoint
+| end
+| 19
+| `tr-4821`
+| `tour.return-vehicle`
+| stationId=ST-BEL-01, parkingZone=station
+| until-goal
+| none
+|===
+
+==== Command streams
+
+|===
+| Target | Actions in sequence order | Count
+
+| `tr-4821`
+| `tour.safety-briefing` → `tour.weather-alert` → `tour.set-assist-level` → `tour.find-vehicle` → `tour.unlock-vehicle` → `tour.set-speed-limit` → `tour.avoid-zone` → `tour.dismount` → `tour.buy-ticket` → `tour.safety-briefing` → `tour.remount` → `tour.set-speed-limit` → `tour.audio-guide` → `tour.visit-poi` → `tour.set-assist-level` → `tour.photo-stop` → `tour.check-battery` → `tour.safety-briefing` → `tour.return-vehicle`
+| 19
+|===
+
+==== Automatic reverts
+
+|===
+| Level | Feature | Action | Reverted at the end of the level by
+
+| route
+| --
+| `tour.set-assist-level` (level=eco)
+| restore previous assist level
+
+| segment
+| seg1
+| `tour.set-speed-limit` (maxSpeed=15, reason=shared-path)
+| restore previous limit
+
+| segment
+| seg1
+| `tour.avoid-zone` (zoneType=no-riding, zoneId=promenade-como)
+| advice ends with the segment
+
+| segment
+| seg3
+| `tour.set-speed-limit` (maxSpeed=10, reason=pedestrian-zone)
+| restore previous limit
+
+| segment
+| seg4
+| `tour.set-assist-level` (level=sport)
+| restore previous assist level
+|===
+
+==== Contingencies
+
+|===
+| Condition | Details | Action
+
+| `ferry-cancelled`
+| --
+| `tour.weather-alert` (condition=storm, advice=reroute) on `tr-4821`
+|===
+
+==== What to notice
+
+* Route-level: a helmet briefing, a wind warning and a default `eco` assist level, which the climb to the viewpoint overrides at segment level.
+* The input has two places (Villa Melzi Gardens, Punta Spartivento). The server *inserted the two ferry piers* and the ferry crossing: `tour.dismount` (reason `ferry`) and a transit `tour.buy-ticket` at the first pier, a segment with `travelMode: ferry`, and `tour.remount` on arrival.
+* The mode is `micromobility-ferry` with domains `ground` and `maritime`.
+* `tour.visit-poi` with `lockVehicle: true` locks the e-bike during the garden visit; `tour.check-battery` precedes the last stretch.
+
+==== Excerpt: route-level `actions`
+
+[,json]
+----
+[
+  {
+    "actionType": "tour.safety-briefing",
+    "target": "https://example.org/api/travellers/tr-4821",
+    "sequence": 1,
+    "params": {
+      "topic": "helmet",
+      "severity": "info"
+    }
+  },
+  {
+    "actionType": "tour.weather-alert",
+    "target": "https://example.org/api/travellers/tr-4821",
+    "sequence": 2,
+    "params": {
+      "condition": "wind",
+      "advice": "slow-down"
+    }
+  },
+  {
+    "actionType": "tour.set-assist-level",
+    "target": "https://example.org/api/travellers/tr-4821",
+    "sequence": 3,
+    "params": {
+      "level": "eco"
+    }
+  }
+]
+----
+
+==== Excerpt: feature `seg1`
+
+[,json]
+----
+{
+  "id": "seg1",
+  "type": "Feature",
+  "properties": {
+    "featureType": "segment",
+    "title": "Cernobbio ferry pier",
+    "previousEnd": "start",
+    "length": 3843,
+    "duration_s": 854,
+    "travelMode": "ebike",
+    "timestamp": "2026-10-18T08:18:14Z",
+    "segment_actions": [
+      {
+        "actionType": "tour.set-speed-limit",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 6,
+        "params": {
+          "maxSpeed": 15,
+          "reason": "shared-path"
+        }
+      },
+      {
+        "actionType": "tour.avoid-zone",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 7,
+        "params": {
+          "zoneType": "no-riding",
+          "zoneId": "promenade-como"
+        }
+      }
+    ],
+    "actions": [
+      {
+        "actionType": "tour.dismount",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 8,
+        "params": {
+          "reason": "ferry"
+        }
+      },
+      {
+        "actionType": "tour.buy-ticket",
+        "target": "https://example.org/api/travellers/tr-4821",
+        "sequence": 9,
+        "params": {
+          "ticketType": "transit",
+          "quantity": 2
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [9.0768, 45.8421, 200]
+  }
+}
+----
+
+=== References
+
+* GML Route class diagram
+* OGC API -- Routes, Route Exchange Model
+* Delivery Vehicle Action Registry; Tourist Route Action Registry; Common Command Registry for Uncrewed Systems

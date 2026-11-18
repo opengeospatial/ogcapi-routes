@@ -1,0 +1,4408 @@
+{
+  "binding": "ros2",
+  "title": "ROS 2 binding for the Common Command Registry",
+  "registry": "Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)",
+  "registryVersion": "0.1.0",
+  "baseUri": "http://www.opengis.net/def/uxs-command/",
+  "source": {
+    "document": "SRD__ROS_2_Binding_for_the_Common_Command_Registry.md",
+    "annexes": [
+      "A",
+      "B",
+      "C"
+    ],
+    "fetched": "2026-09-30"
+  },
+  "note": "Generated from Annexes A, B and C of the ROS 2 binding. Tier 1 is standard ROS 2 and Nav2, Tier 2 the autopilot bridges, Tier 3 the proposed uxs_interfaces package.",
+  "surveyedPackages": [
+    {
+      "package": "nav2_msgs",
+      "repository": "ros-navigation/navigation2",
+      "branch": "main",
+      "counts": {
+        "msg": 22,
+        "srv": 20,
+        "action": 19
+      },
+      "relevance": "Nav2 actions (navigation, behaviors, docking, waypoints) and services"
+    },
+    {
+      "package": "std_srvs",
+      "repository": "ros2/common_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 0,
+        "srv": 3,
+        "action": 0
+      },
+      "relevance": "Generic `Trigger`, `SetBool`, `Empty`"
+    },
+    {
+      "package": "sensor_msgs",
+      "repository": "ros2/common_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 27,
+        "srv": 1,
+        "action": 0
+      },
+      "relevance": "Sensor data types; only `SetCameraInfo` is a service"
+    },
+    {
+      "package": "diagnostic_msgs",
+      "repository": "ros2/common_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 3,
+        "srv": 2,
+        "action": 0
+      },
+      "relevance": "`SelfTest` service, `DiagnosticStatus`"
+    },
+    {
+      "package": "nav_msgs",
+      "repository": "ros2/common_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 8,
+        "srv": 4,
+        "action": 0
+      },
+      "relevance": "`Path`, `Goals`, `Odometry`"
+    },
+    {
+      "package": "geographic_msgs",
+      "repository": "ros-geographic-info/geographic_info",
+      "branch": "ros2",
+      "counts": {
+        "msg": 16,
+        "srv": 4,
+        "action": 0
+      },
+      "relevance": "`GeoPose`, `GeoPoint`, `GeoPath`"
+    },
+    {
+      "package": "lifecycle_msgs",
+      "repository": "ros2/rcl_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 4,
+        "srv": 4,
+        "action": 0
+      },
+      "relevance": "`ChangeState`, `GetState` for managed nodes"
+    },
+    {
+      "package": "rcl_interfaces",
+      "repository": "ros2/rcl_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 13,
+        "srv": 8,
+        "action": 0
+      },
+      "relevance": "`SetParameters` and related"
+    },
+    {
+      "package": "action_msgs",
+      "repository": "ros2/rcl_interfaces",
+      "branch": "rolling",
+      "counts": {
+        "msg": 3,
+        "srv": 1,
+        "action": 0
+      },
+      "relevance": "`GoalStatus`, `CancelGoal`"
+    },
+    {
+      "package": "control_msgs",
+      "repository": "ros-controls/control_msgs",
+      "branch": "master",
+      "counts": {
+        "msg": 39,
+        "srv": 3,
+        "action": 8
+      },
+      "relevance": "Gripper and head-pointing actions"
+    },
+    {
+      "package": "rosbag2_interfaces",
+      "repository": "ros2/rosbag2",
+      "branch": "rolling",
+      "counts": {
+        "msg": 4,
+        "srv": 18,
+        "action": 0
+      },
+      "relevance": "Recording services"
+    },
+    {
+      "package": "mavros_msgs",
+      "repository": "mavlink/mavros",
+      "branch": "ros2",
+      "counts": {
+        "msg": 82,
+        "srv": 47,
+        "action": 0
+      },
+      "relevance": "MAVLink bridge: commands, gimbal, missions, triggers"
+    },
+    {
+      "package": "px4_msgs",
+      "repository": "PX4/px4_msgs",
+      "branch": "main",
+      "counts": {
+        "msg": 271,
+        "srv": 1,
+        "action": 0
+      },
+      "relevance": "PX4 uXRCE-DDS messages, `VehicleCommand`"
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "action_msgs/msg/GoalStatus",
+      "package": "action_msgs",
+      "kind": "msg",
+      "name": "GoalStatus",
+      "fields": [
+        {
+          "type": "GoalInfo",
+          "name": "goal_info"
+        },
+        {
+          "type": "int8",
+          "name": "status"
+        }
+      ],
+      "constants": {
+        "fields": {
+          "count": 7,
+          "listed": [
+            "STATUS_UNKNOWN",
+            "STATUS_ACCEPTED",
+            "STATUS_EXECUTING",
+            "STATUS_CANCELING",
+            "STATUS_SUCCEEDED",
+            "STATUS_CANCELED"
+          ],
+          "truncated": true
+        }
+      }
+    },
+    {
+      "id": "action_msgs/srv/CancelGoal",
+      "package": "action_msgs",
+      "kind": "srv",
+      "name": "CancelGoal",
+      "request": [
+        {
+          "type": "GoalInfo",
+          "name": "goal_info"
+        }
+      ],
+      "response": [
+        {
+          "type": "int8",
+          "name": "return_code"
+        },
+        {
+          "type": "GoalInfo[]",
+          "name": "goals_canceling"
+        }
+      ],
+      "constants": {
+        "response": {
+          "count": 4,
+          "listed": [
+            "ERROR_NONE",
+            "ERROR_REJECTED",
+            "ERROR_UNKNOWN_GOAL_ID",
+            "ERROR_GOAL_TERMINATED"
+          ],
+          "truncated": false
+        }
+      },
+      "usedBy": [
+        "mission.abort",
+        "vehicle.stop"
+      ]
+    },
+    {
+      "id": "control_msgs/action/GripperCommand",
+      "package": "control_msgs",
+      "kind": "action",
+      "name": "GripperCommand",
+      "goal": [
+        {
+          "type": "GripperCommand",
+          "name": "command"
+        }
+      ],
+      "result": [
+        {
+          "type": "float64",
+          "name": "position"
+        },
+        {
+          "type": "float64",
+          "name": "effort"
+        },
+        {
+          "type": "bool",
+          "name": "stalled"
+        },
+        {
+          "type": "bool",
+          "name": "reached_goal"
+        }
+      ],
+      "feedback": [
+        {
+          "type": "float64",
+          "name": "position"
+        },
+        {
+          "type": "float64",
+          "name": "effort"
+        },
+        {
+          "type": "bool",
+          "name": "stalled"
+        },
+        {
+          "type": "bool",
+          "name": "reached_goal"
+        }
+      ],
+      "usedBy": [
+        "payload.gripper"
+      ]
+    },
+    {
+      "id": "control_msgs/action/PointHead",
+      "package": "control_msgs",
+      "kind": "action",
+      "name": "PointHead",
+      "goal": [
+        {
+          "type": "geometry_msgs/PointStamped",
+          "name": "target"
+        },
+        {
+          "type": "geometry_msgs/Vector3",
+          "name": "pointing_axis"
+        },
+        {
+          "type": "string",
+          "name": "pointing_frame"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "min_duration"
+        },
+        {
+          "type": "float64",
+          "name": "max_velocity"
+        }
+      ],
+      "result": [],
+      "feedback": [
+        {
+          "type": "float64",
+          "name": "pointing_angle_error"
+        }
+      ],
+      "usedBy": [
+        "gimbal.point-at"
+      ]
+    },
+    {
+      "id": "diagnostic_msgs/srv/SelfTest",
+      "package": "diagnostic_msgs",
+      "kind": "srv",
+      "name": "SelfTest",
+      "request": [],
+      "response": [
+        {
+          "type": "string",
+          "name": "id"
+        },
+        {
+          "type": "byte",
+          "name": "passed"
+        },
+        {
+          "type": "DiagnosticStatus[]",
+          "name": "status"
+        }
+      ],
+      "usedBy": [
+        "sensor.self-test"
+      ]
+    },
+    {
+      "id": "geographic_msgs/msg/GeoPoint",
+      "package": "geographic_msgs",
+      "kind": "msg",
+      "name": "GeoPoint",
+      "fields": [
+        {
+          "type": "float64",
+          "name": "latitude"
+        },
+        {
+          "type": "float64",
+          "name": "longitude"
+        },
+        {
+          "type": "float64",
+          "name": "altitude"
+        }
+      ]
+    },
+    {
+      "id": "geographic_msgs/msg/GeoPose",
+      "package": "geographic_msgs",
+      "kind": "msg",
+      "name": "GeoPose",
+      "fields": [
+        {
+          "type": "GeoPoint",
+          "name": "position"
+        },
+        {
+          "type": "geometry_msgs/Quaternion",
+          "name": "orientation"
+        }
+      ]
+    },
+    {
+      "id": "lifecycle_msgs/srv/ChangeState",
+      "package": "lifecycle_msgs",
+      "kind": "srv",
+      "name": "ChangeState",
+      "request": [
+        {
+          "type": "Transition",
+          "name": "transition"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ],
+      "usedBy": [
+        "sensor.reset",
+        "sensor.set-power",
+        "sensor.start-acquisition",
+        "sensor.stop-acquisition"
+      ]
+    },
+    {
+      "id": "lifecycle_msgs/srv/GetState",
+      "package": "lifecycle_msgs",
+      "kind": "srv",
+      "name": "GetState",
+      "request": [],
+      "response": [
+        {
+          "type": "State",
+          "name": "current_state"
+        }
+      ],
+      "usedBy": [
+        "sensor.get-status"
+      ]
+    },
+    {
+      "id": "mavros_msgs/msg/Waypoint",
+      "package": "mavros_msgs",
+      "kind": "msg",
+      "name": "Waypoint",
+      "fields": [
+        {
+          "type": "uint8",
+          "name": "frame"
+        },
+        {
+          "type": "uint16",
+          "name": "command"
+        },
+        {
+          "type": "bool",
+          "name": "is_current"
+        },
+        {
+          "type": "bool",
+          "name": "autocontinue"
+        },
+        {
+          "type": "float32",
+          "name": "param1"
+        },
+        {
+          "type": "float32",
+          "name": "param2"
+        },
+        {
+          "type": "float32",
+          "name": "param3"
+        },
+        {
+          "type": "float32",
+          "name": "param4"
+        },
+        {
+          "type": "float64",
+          "name": "x_lat"
+        },
+        {
+          "type": "float64",
+          "name": "y_long"
+        },
+        {
+          "type": "float64",
+          "name": "z_alt"
+        }
+      ],
+      "constants": {
+        "fields": {
+          "count": 22,
+          "listed": [
+            "FRAME_GLOBAL",
+            "FRAME_LOCAL_NED",
+            "FRAME_MISSION",
+            "FRAME_GLOBAL_REL_ALT",
+            "FRAME_LOCAL_ENU",
+            "FRAME_GLOBAL_INT"
+          ],
+          "truncated": true
+        }
+      }
+    },
+    {
+      "id": "mavros_msgs/srv/CommandBool",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandBool",
+      "request": [
+        {
+          "type": "bool",
+          "name": "value"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "vehicle.set-armed"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/CommandHome",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandHome",
+      "request": [
+        {
+          "type": "bool",
+          "name": "current_gps"
+        },
+        {
+          "type": "float32",
+          "name": "yaw"
+        },
+        {
+          "type": "float32",
+          "name": "latitude"
+        },
+        {
+          "type": "float32",
+          "name": "longitude"
+        },
+        {
+          "type": "float32",
+          "name": "altitude"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "vehicle.set-home"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/CommandInt",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandInt",
+      "request": [
+        {
+          "type": "bool",
+          "name": "broadcast"
+        },
+        {
+          "type": "uint8",
+          "name": "frame"
+        },
+        {
+          "type": "uint16",
+          "name": "command"
+        },
+        {
+          "type": "uint8",
+          "name": "current"
+        },
+        {
+          "type": "uint8",
+          "name": "autocontinue"
+        },
+        {
+          "type": "float32",
+          "name": "param1"
+        },
+        {
+          "type": "float32",
+          "name": "param2"
+        },
+        {
+          "type": "float32",
+          "name": "param3"
+        },
+        {
+          "type": "float32",
+          "name": "param4"
+        },
+        {
+          "type": "int32",
+          "name": "x"
+        },
+        {
+          "type": "int32",
+          "name": "y"
+        },
+        {
+          "type": "float32",
+          "name": "z"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ],
+      "usedBy": [
+        "vehicle.goto",
+        "vehicle.orbit"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/CommandLong",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandLong",
+      "request": [
+        {
+          "type": "bool",
+          "name": "broadcast"
+        },
+        {
+          "type": "uint16",
+          "name": "command"
+        },
+        {
+          "type": "uint8",
+          "name": "confirmation"
+        },
+        {
+          "type": "float32",
+          "name": "param1"
+        },
+        {
+          "type": "float32",
+          "name": "param2"
+        },
+        {
+          "type": "float32",
+          "name": "param3"
+        },
+        {
+          "type": "float32",
+          "name": "param4"
+        },
+        {
+          "type": "float32",
+          "name": "param5"
+        },
+        {
+          "type": "float32",
+          "name": "param6"
+        },
+        {
+          "type": "float32",
+          "name": "param7"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "camera.capture-image",
+        "camera.select-source",
+        "camera.set-focus",
+        "camera.set-mode",
+        "camera.set-trigger-distance",
+        "camera.set-zoom",
+        "camera.start-video",
+        "camera.stop-image-capture",
+        "camera.stop-video",
+        "mission.pause",
+        "mission.resume",
+        "mission.start",
+        "payload.release",
+        "payload.set-actuator",
+        "payload.set-lights",
+        "payload.set-switch",
+        "payload.winch",
+        "sensor.calibrate",
+        "vehicle.emergency-stop",
+        "vehicle.reboot",
+        "vehicle.return-to-home",
+        "vehicle.set-speed",
+        "vehicle.set-vertical-position",
+        "vehicle.terminate"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/CommandTOL",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandTOL",
+      "request": [
+        {
+          "type": "float32",
+          "name": "min_pitch"
+        },
+        {
+          "type": "float32",
+          "name": "yaw"
+        },
+        {
+          "type": "float32",
+          "name": "latitude"
+        },
+        {
+          "type": "float32",
+          "name": "longitude"
+        },
+        {
+          "type": "float32",
+          "name": "altitude"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "vehicle.land",
+        "vehicle.takeoff"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/CommandTriggerInterval",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandTriggerInterval",
+      "request": [
+        {
+          "type": "float32",
+          "name": "cycle_time"
+        },
+        {
+          "type": "float32",
+          "name": "integration_time"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "camera.set-trigger-distance"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/CommandVtolTransition",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "CommandVtolTransition",
+      "request": [
+        {
+          "type": "std_msgs/Header",
+          "name": "header"
+        },
+        {
+          "type": "uint8",
+          "name": "state"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 2,
+          "listed": [
+            "STATE_MC",
+            "STATE_FW"
+          ],
+          "truncated": false
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "vehicle.transition"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/GimbalManagerCameraTrack",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "GimbalManagerCameraTrack",
+      "request": [
+        {
+          "type": "uint8",
+          "name": "mode"
+        },
+        {
+          "type": "float32",
+          "name": "x"
+        },
+        {
+          "type": "float32",
+          "name": "y"
+        },
+        {
+          "type": "float32",
+          "name": "radius"
+        },
+        {
+          "type": "float32",
+          "name": "top_left_x"
+        },
+        {
+          "type": "float32",
+          "name": "top_left_y"
+        },
+        {
+          "type": "float32",
+          "name": "bottom_right_x"
+        },
+        {
+          "type": "float32",
+          "name": "bottom_right_y"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 3,
+          "listed": [
+            "CAMERA_TRACK_MODE_POINT",
+            "CAMERA_TRACK_MODE_RECTANGLE",
+            "CAMERA_TRACK_MODE_STOP_TRACKING"
+          ],
+          "truncated": false
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "gimbal.track-image-point"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/GimbalManagerPitchyaw",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "GimbalManagerPitchyaw",
+      "request": [
+        {
+          "type": "float32",
+          "name": "pitch"
+        },
+        {
+          "type": "float32",
+          "name": "yaw"
+        },
+        {
+          "type": "float32",
+          "name": "pitch_rate"
+        },
+        {
+          "type": "float32",
+          "name": "yaw_rate"
+        },
+        {
+          "type": "uint32",
+          "name": "flags"
+        },
+        {
+          "type": "uint8",
+          "name": "gimbal_device_id"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 5,
+          "listed": [
+            "GIMBAL_MANAGER_FLAGS_RETRACT",
+            "GIMBAL_MANAGER_FLAGS_NEUTRAL",
+            "GIMBAL_MANAGER_FLAGS_ROLL_LOCK",
+            "GIMBAL_MANAGER_FLAGS_PITCH_LOCK",
+            "GIMBAL_MANAGER_FLAGS_YAW_LOCK"
+          ],
+          "truncated": false
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "gimbal.point",
+        "gimbal.set-mode"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/GimbalManagerSetRoi",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "GimbalManagerSetRoi",
+      "request": [
+        {
+          "type": "uint8",
+          "name": "mode"
+        },
+        {
+          "type": "uint8",
+          "name": "gimbal_device_id"
+        },
+        {
+          "type": "float32",
+          "name": "latitude"
+        },
+        {
+          "type": "float32",
+          "name": "longitude"
+        },
+        {
+          "type": "float32",
+          "name": "altitude"
+        },
+        {
+          "type": "float32",
+          "name": "pitch_offset"
+        },
+        {
+          "type": "float32",
+          "name": "roll_offset"
+        },
+        {
+          "type": "float32",
+          "name": "yaw_offset"
+        },
+        {
+          "type": "uint8",
+          "name": "sysid"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 4,
+          "listed": [
+            "ROI_MODE_LOCATION",
+            "ROI_MODE_WP_NEXT_OFFSET",
+            "ROI_MODE_SYSID",
+            "ROI_MODE_NONE"
+          ],
+          "truncated": false
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "gimbal.clear-target",
+        "gimbal.point-at"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/MessageInterval",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "MessageInterval",
+      "request": [
+        {
+          "type": "uint32",
+          "name": "message_id"
+        },
+        {
+          "type": "float32",
+          "name": "message_rate"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ],
+      "usedBy": [
+        "sensor.set-sampling-rate"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/MountConfigure",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "MountConfigure",
+      "request": [
+        {
+          "type": "std_msgs/Header",
+          "name": "header"
+        },
+        {
+          "type": "uint8",
+          "name": "mode"
+        },
+        {
+          "type": "bool",
+          "name": "stabilize_roll"
+        },
+        {
+          "type": "bool",
+          "name": "stabilize_pitch"
+        },
+        {
+          "type": "bool",
+          "name": "stabilize_yaw"
+        },
+        {
+          "type": "uint8",
+          "name": "roll_input"
+        },
+        {
+          "type": "uint8",
+          "name": "pitch_input"
+        },
+        {
+          "type": "uint8",
+          "name": "yaw_input"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 8,
+          "listed": [
+            "MODE_RETRACT",
+            "MODE_NEUTRAL",
+            "MODE_MAVLINK_TARGETING",
+            "MODE_RC_TARGETING",
+            "MODE_GPS_POINT",
+            "INPUT_ANGLE_BODY_FRAME"
+          ],
+          "truncated": true
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        }
+      ],
+      "usedBy": [
+        "gimbal.point"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/SetMode",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "SetMode",
+      "request": [
+        {
+          "type": "uint8",
+          "name": "base_mode"
+        },
+        {
+          "type": "string",
+          "name": "custom_mode"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 11,
+          "listed": [
+            "MAV_MODE_PREFLIGHT",
+            "MAV_MODE_STABILIZE_DISARMED",
+            "MAV_MODE_STABILIZE_ARMED",
+            "MAV_MODE_MANUAL_DISARMED",
+            "MAV_MODE_MANUAL_ARMED",
+            "MAV_MODE_GUIDED_DISARMED"
+          ],
+          "truncated": true
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "mode_sent"
+        }
+      ],
+      "usedBy": [
+        "vehicle.return-to-home",
+        "vehicle.set-mode"
+      ]
+    },
+    {
+      "id": "mavros_msgs/srv/WaypointPush",
+      "package": "mavros_msgs",
+      "kind": "srv",
+      "name": "WaypointPush",
+      "request": [
+        {
+          "type": "uint16",
+          "name": "start_index"
+        },
+        {
+          "type": "mavros_msgs/Waypoint[]",
+          "name": "waypoints"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "uint32",
+          "name": "wp_transfered"
+        }
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/BackUp",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "BackUp",
+      "goal": [
+        {
+          "type": "geometry_msgs/Point",
+          "name": "target"
+        },
+        {
+          "type": "float32",
+          "name": "speed"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "time_allowance"
+        },
+        {
+          "type": "bool",
+          "name": "disable_collision_checks",
+          "default": "false"
+        }
+      ],
+      "result": [
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "total_elapsed_time"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 8,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "TIMEOUT",
+            "TF_ERROR"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [
+        {
+          "type": "float32",
+          "name": "distance_traveled"
+        }
+      ],
+      "usedBy": [
+        "vehicle.move-relative"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/DockRobot",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "DockRobot",
+      "goal": [
+        {
+          "type": "bool",
+          "name": "use_dock_id",
+          "default": "true"
+        },
+        {
+          "type": "string",
+          "name": "dock_id"
+        },
+        {
+          "type": "geometry_msgs/PoseStamped",
+          "name": "dock_pose"
+        },
+        {
+          "type": "string",
+          "name": "dock_type"
+        },
+        {
+          "type": "float32",
+          "name": "max_staging_time",
+          "default": "1000.0"
+        },
+        {
+          "type": "bool",
+          "name": "navigate_to_staging_pose",
+          "default": "true"
+        }
+      ],
+      "result": [
+        {
+          "type": "bool",
+          "name": "success",
+          "default": "true"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code",
+          "default": "0"
+        },
+        {
+          "type": "uint16",
+          "name": "num_retries",
+          "default": "0"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 11,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "DOCK_NOT_IN_DB",
+            "DOCK_NOT_VALID",
+            "FAILED_TO_STAGE"
+          ],
+          "truncated": true
+        },
+        "feedback": {
+          "count": 6,
+          "listed": [
+            "NONE",
+            "NAV_TO_STAGING_POSE",
+            "INITIAL_PERCEPTION",
+            "CONTROLLING",
+            "WAIT_FOR_CHARGE",
+            "RETRY"
+          ],
+          "truncated": false
+        }
+      },
+      "feedback": [
+        {
+          "type": "uint16",
+          "name": "state"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "docking_time"
+        },
+        {
+          "type": "uint16",
+          "name": "num_retries",
+          "default": "0"
+        }
+      ],
+      "usedBy": [
+        "vehicle.dock"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/DriveOnHeading",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "DriveOnHeading",
+      "goal": [
+        {
+          "type": "geometry_msgs/Point",
+          "name": "target"
+        },
+        {
+          "type": "float32",
+          "name": "speed"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "time_allowance"
+        },
+        {
+          "type": "bool",
+          "name": "disable_collision_checks",
+          "default": "false"
+        }
+      ],
+      "result": [
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "total_elapsed_time"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 8,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "TIMEOUT",
+            "TF_ERROR"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [
+        {
+          "type": "float32",
+          "name": "distance_traveled"
+        }
+      ],
+      "usedBy": [
+        "vehicle.move-relative"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/FollowGPSWaypoints",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "FollowGPSWaypoints",
+      "goal": [
+        {
+          "type": "uint32",
+          "name": "number_of_loops"
+        },
+        {
+          "type": "uint32",
+          "name": "goal_index",
+          "default": "0"
+        },
+        {
+          "type": "geographic_msgs/GeoPose[]",
+          "name": "gps_poses"
+        }
+      ],
+      "result": [
+        {
+          "type": "WaypointStatus[]",
+          "name": "missed_waypoints"
+        },
+        {
+          "type": "int16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 5,
+          "listed": [
+            "NONE",
+            "UNKNOWN",
+            "TASK_EXECUTOR_FAILED",
+            "NO_WAYPOINTS_GIVEN",
+            "STOP_ON_MISSED_WAYPOINT"
+          ],
+          "truncated": false
+        }
+      },
+      "feedback": [
+        {
+          "type": "uint32",
+          "name": "current_waypoint"
+        }
+      ],
+      "usedBy": [
+        "vehicle.follow-path",
+        "vehicle.goto"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/FollowPath",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "FollowPath",
+      "goal": [
+        {
+          "type": "nav_msgs/Path",
+          "name": "path"
+        },
+        {
+          "type": "string",
+          "name": "controller_id"
+        },
+        {
+          "type": "string",
+          "name": "goal_checker_id"
+        },
+        {
+          "type": "string",
+          "name": "progress_checker_id"
+        },
+        {
+          "type": "string",
+          "name": "path_handler_id"
+        }
+      ],
+      "result": [
+        {
+          "type": "std_msgs/Empty",
+          "name": "result"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 12,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "INVALID_CONTROLLER",
+            "TF_ERROR"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [
+        {
+          "type": "nav2_msgs/TrackingFeedback",
+          "name": "tracking_feedback"
+        }
+      ],
+      "usedBy": [
+        "vehicle.follow-path"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/NavigateThroughPoses",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "NavigateThroughPoses",
+      "goal": [
+        {
+          "type": "nav_msgs/Goals",
+          "name": "poses"
+        },
+        {
+          "type": "string",
+          "name": "behavior_tree"
+        }
+      ],
+      "result": [
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        },
+        {
+          "type": "WaypointStatus[]",
+          "name": "waypoint_statuses"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 7,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "FAILED_TO_LOAD_BEHAVIOR_TREE",
+            "TF_ERROR"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [
+        {
+          "type": "geometry_msgs/PoseStamped",
+          "name": "current_pose"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "navigation_time"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "estimated_time_remaining"
+        },
+        {
+          "type": "int16",
+          "name": "number_of_recoveries"
+        },
+        {
+          "type": "float32",
+          "name": "distance_remaining"
+        },
+        {
+          "type": "float32",
+          "name": "position_tracking_error"
+        },
+        {
+          "type": "float32",
+          "name": "heading_tracking_error"
+        },
+        {
+          "type": "int16",
+          "name": "number_of_poses_remaining"
+        },
+        {
+          "type": "WaypointStatus[]",
+          "name": "waypoint_statuses"
+        }
+      ],
+      "usedBy": [
+        "vehicle.follow-path"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/NavigateToPose",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "NavigateToPose",
+      "goal": [
+        {
+          "type": "geometry_msgs/PoseStamped",
+          "name": "pose"
+        },
+        {
+          "type": "string",
+          "name": "behavior_tree"
+        }
+      ],
+      "result": [
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 7,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "FAILED_TO_LOAD_BEHAVIOR_TREE",
+            "TF_ERROR"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [
+        {
+          "type": "geometry_msgs/PoseStamped",
+          "name": "current_pose"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "navigation_time"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "estimated_time_remaining"
+        },
+        {
+          "type": "int16",
+          "name": "number_of_recoveries"
+        },
+        {
+          "type": "float32",
+          "name": "distance_remaining"
+        },
+        {
+          "type": "float32",
+          "name": "position_tracking_error"
+        },
+        {
+          "type": "float32",
+          "name": "heading_tracking_error"
+        }
+      ],
+      "usedBy": [
+        "vehicle.goto"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/Spin",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "Spin",
+      "goal": [
+        {
+          "type": "float32",
+          "name": "target_yaw"
+        },
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "time_allowance"
+        },
+        {
+          "type": "bool",
+          "name": "disable_collision_checks",
+          "default": "false"
+        }
+      ],
+      "result": [
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "total_elapsed_time"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 7,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "TIMEOUT",
+            "TF_ERROR"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [
+        {
+          "type": "float32",
+          "name": "angular_distance_traveled"
+        }
+      ],
+      "usedBy": [
+        "vehicle.set-heading"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/UndockRobot",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "UndockRobot",
+      "goal": [
+        {
+          "type": "string",
+          "name": "dock_type"
+        },
+        {
+          "type": "float32",
+          "name": "max_undocking_time",
+          "default": "30.0"
+        }
+      ],
+      "result": [
+        {
+          "type": "bool",
+          "name": "success",
+          "default": "true"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code",
+          "default": "0"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 7,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "DOCK_NOT_VALID",
+            "FAILED_TO_CONTROL",
+            "TIMEOUT"
+          ],
+          "truncated": true
+        }
+      },
+      "feedback": [],
+      "usedBy": [
+        "vehicle.dock"
+      ]
+    },
+    {
+      "id": "nav2_msgs/action/Wait",
+      "package": "nav2_msgs",
+      "kind": "action",
+      "name": "Wait",
+      "goal": [
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "time"
+        }
+      ],
+      "result": [
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "total_elapsed_time"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "result": {
+          "count": 5,
+          "listed": [
+            "NONE",
+            "GOAL_REJECTED",
+            "SEND_GOAL_FAILURE",
+            "UNKNOWN",
+            "TIMEOUT"
+          ],
+          "truncated": false
+        }
+      },
+      "feedback": [
+        {
+          "type": "builtin_interfaces/Duration",
+          "name": "time_left"
+        }
+      ],
+      "usedBy": [
+        "mission.wait",
+        "vehicle.hold-position"
+      ]
+    },
+    {
+      "id": "nav2_msgs/msg/SpeedLimit",
+      "package": "nav2_msgs",
+      "kind": "msg",
+      "name": "SpeedLimit",
+      "fields": [
+        {
+          "type": "std_msgs/Header",
+          "name": "header"
+        },
+        {
+          "type": "bool",
+          "name": "percentage"
+        },
+        {
+          "type": "float64",
+          "name": "speed_limit"
+        }
+      ],
+      "usedBy": [
+        "vehicle.set-speed"
+      ]
+    },
+    {
+      "id": "nav2_msgs/msg/WaypointStatus",
+      "package": "nav2_msgs",
+      "kind": "msg",
+      "name": "WaypointStatus",
+      "fields": [
+        {
+          "type": "uint8",
+          "name": "waypoint_status"
+        },
+        {
+          "type": "uint32",
+          "name": "waypoint_index"
+        },
+        {
+          "type": "geometry_msgs/PoseStamped",
+          "name": "waypoint_pose"
+        },
+        {
+          "type": "uint16",
+          "name": "error_code"
+        },
+        {
+          "type": "string",
+          "name": "error_msg"
+        }
+      ],
+      "constants": {
+        "fields": {
+          "count": 4,
+          "listed": [
+            "PENDING",
+            "COMPLETED",
+            "SKIPPED",
+            "FAILED"
+          ],
+          "truncated": false
+        }
+      }
+    },
+    {
+      "id": "nav2_msgs/srv/ManageLifecycleNodes",
+      "package": "nav2_msgs",
+      "kind": "srv",
+      "name": "ManageLifecycleNodes",
+      "request": [
+        {
+          "type": "uint8",
+          "name": "command"
+        }
+      ],
+      "constants": {
+        "request": {
+          "count": 7,
+          "listed": [
+            "STARTUP",
+            "PAUSE",
+            "RESUME",
+            "RESET",
+            "SHUTDOWN",
+            "CONFIGURE"
+          ],
+          "truncated": true
+        }
+      },
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        }
+      ],
+      "usedBy": [
+        "mission.pause",
+        "mission.resume"
+      ]
+    },
+    {
+      "id": "px4_msgs/msg/VehicleCommand",
+      "package": "px4_msgs",
+      "kind": "msg",
+      "name": "VehicleCommand",
+      "fields": [
+        {
+          "type": "uint64",
+          "name": "timestamp"
+        },
+        {
+          "type": "float32",
+          "name": "param1"
+        },
+        {
+          "type": "float32",
+          "name": "param2"
+        },
+        {
+          "type": "float32",
+          "name": "param3"
+        },
+        {
+          "type": "float32",
+          "name": "param4"
+        },
+        {
+          "type": "float64",
+          "name": "param5"
+        },
+        {
+          "type": "float64",
+          "name": "param6"
+        },
+        {
+          "type": "float32",
+          "name": "param7"
+        },
+        {
+          "type": "uint32",
+          "name": "command"
+        },
+        {
+          "type": "uint8",
+          "name": "target_system"
+        },
+        {
+          "type": "uint8",
+          "name": "target_component"
+        },
+        {
+          "type": "uint8",
+          "name": "source_system"
+        },
+        {
+          "type": "uint16",
+          "name": "source_component"
+        },
+        {
+          "type": "uint8",
+          "name": "confirmation"
+        },
+        {
+          "type": "bool",
+          "name": "from_external"
+        }
+      ],
+      "constants": {
+        "fields": {
+          "count": 203,
+          "listed": [
+            "MESSAGE_VERSION",
+            "VEHICLE_CMD_CUSTOM_0",
+            "VEHICLE_CMD_CUSTOM_1",
+            "VEHICLE_CMD_CUSTOM_2",
+            "VEHICLE_CMD_NAV_WAYPOINT",
+            "VEHICLE_CMD_NAV_LOITER_UNLIM"
+          ],
+          "truncated": true
+        }
+      },
+      "usedBy": [
+        "vehicle.takeoff"
+      ]
+    },
+    {
+      "id": "px4_msgs/msg/VehicleCommandAck",
+      "package": "px4_msgs",
+      "kind": "msg",
+      "name": "VehicleCommandAck",
+      "fields": [
+        {
+          "type": "uint64",
+          "name": "timestamp"
+        },
+        {
+          "type": "uint32",
+          "name": "command"
+        },
+        {
+          "type": "uint8",
+          "name": "result"
+        },
+        {
+          "type": "uint8",
+          "name": "result_param1"
+        },
+        {
+          "type": "int32",
+          "name": "result_param2"
+        },
+        {
+          "type": "uint8",
+          "name": "target_system"
+        },
+        {
+          "type": "uint16",
+          "name": "target_component"
+        },
+        {
+          "type": "bool",
+          "name": "from_external"
+        }
+      ],
+      "constants": {
+        "fields": {
+          "count": 18,
+          "listed": [
+            "MESSAGE_VERSION",
+            "ORB_QUEUE_LENGTH",
+            "VEHICLE_CMD_RESULT_ACCEPTED",
+            "VEHICLE_CMD_RESULT_TEMPORARILY_REJECTED",
+            "VEHICLE_CMD_RESULT_DENIED",
+            "VEHICLE_CMD_RESULT_UNSUPPORTED"
+          ],
+          "truncated": true
+        }
+      }
+    },
+    {
+      "id": "px4_msgs/srv/VehicleCommand",
+      "package": "px4_msgs",
+      "kind": "srv",
+      "name": "VehicleCommand",
+      "request": [
+        {
+          "type": "VehicleCommand",
+          "name": "request"
+        }
+      ],
+      "response": [
+        {
+          "type": "VehicleCommandAck",
+          "name": "reply"
+        }
+      ]
+    },
+    {
+      "id": "rcl_interfaces/srv/SetParameters",
+      "package": "rcl_interfaces",
+      "kind": "srv",
+      "name": "SetParameters",
+      "request": [
+        {
+          "type": "Parameter[]",
+          "name": "parameters"
+        }
+      ],
+      "response": [
+        {
+          "type": "SetParametersResult[]",
+          "name": "results"
+        }
+      ],
+      "usedBy": [
+        "sensor.apply-configuration",
+        "sensor.set-sampling-rate"
+      ]
+    },
+    {
+      "id": "rosbag2_interfaces/srv/Record",
+      "package": "rosbag2_interfaces",
+      "kind": "srv",
+      "name": "Record",
+      "request": [
+        {
+          "type": "string",
+          "name": "uri"
+        },
+        {
+          "type": "builtin_interfaces/Time",
+          "name": "start_time"
+        }
+      ],
+      "response": [
+        {
+          "type": "int32",
+          "name": "return_code"
+        },
+        {
+          "type": "string",
+          "name": "error_string"
+        }
+      ],
+      "usedBy": [
+        "data.start-recording"
+      ]
+    },
+    {
+      "id": "rosbag2_interfaces/srv/Stop",
+      "package": "rosbag2_interfaces",
+      "kind": "srv",
+      "name": "Stop",
+      "request": [],
+      "response": [
+        {
+          "type": "int32",
+          "name": "return_code"
+        },
+        {
+          "type": "string",
+          "name": "error_string"
+        }
+      ],
+      "usedBy": [
+        "data.stop-recording"
+      ]
+    },
+    {
+      "id": "sensor_msgs/srv/SetCameraInfo",
+      "package": "sensor_msgs",
+      "kind": "srv",
+      "name": "SetCameraInfo",
+      "request": [
+        {
+          "type": "sensor_msgs/CameraInfo",
+          "name": "camera_info"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "string",
+          "name": "status_message"
+        }
+      ],
+      "usedBy": [
+        "sensor.calibrate"
+      ]
+    },
+    {
+      "id": "std_srvs/srv/SetBool",
+      "package": "std_srvs",
+      "kind": "srv",
+      "name": "SetBool",
+      "request": [
+        {
+          "type": "bool",
+          "name": "data"
+        }
+      ],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "string",
+          "name": "message"
+        }
+      ],
+      "usedBy": [
+        "sensor.set-power",
+        "vehicle.set-armed"
+      ]
+    },
+    {
+      "id": "std_srvs/srv/Trigger",
+      "package": "std_srvs",
+      "kind": "srv",
+      "name": "Trigger",
+      "request": [],
+      "response": [
+        {
+          "type": "bool",
+          "name": "success"
+        },
+        {
+          "type": "string",
+          "name": "message"
+        }
+      ],
+      "usedBy": [
+        "sensor.start-acquisition",
+        "sensor.stop-acquisition",
+        "sensor.trigger"
+      ]
+    }
+  ],
+  "tier3Package": {
+    "name": "uxs_interfaces",
+    "actions": 25,
+    "services": 42,
+    "sharedMessages": [
+      "Position",
+      "VerticalTarget"
+    ],
+    "examples": {
+      "uxs_interfaces/action/VehicleGoto.action": "# Go to position: Move to a position, then stop or continue to the next instruction.\n# Registry command: http://www.opengis.net/def/uxs-command/vehicle.goto\n# Completion: until-goal; persistence: none; hazard: flight-critical; level: Core\n# Note: For Routes waypoints, location is a context parameter filled from the waypoint geometry.\n# Goal\nuxs_interfaces/Position location\t# Target position.\nfloat64 speed\t# Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV). [m/s] Optional; NaN means unset.\nfloat64 acceptance_radius\t# Distance from the target at which the target counts as reached. [m] Optional; NaN means unset.\nfloat64 hold_time\t# Time to remain at the position after arrival before completing. [s] Optional; NaN means unset.\nfloat64 heading\t# Heading to hold on arrival. [rad] Optional; NaN means unset.\nuint8 pass_through\t# If true the vehicle does not stop at the position and may pass within acceptanceRadius. Optional; see tri-state constants.\nuint8 PASS_THROUGH_FALSE = 0\nuint8 PASS_THROUGH_TRUE = 1\nuint8 PASS_THROUGH_UNSET = 255\n---\n# Result\nbool success\nuint16 error_code\nuint16 ERROR_NONE = 0\nuint16 ERROR_UNSUPPORTED_PARAMETER = 1\nuint16 ERROR_INVALID_VALUE = 2\nuint16 ERROR_PRECONDITION_FAILED = 3\nuint16 ERROR_TIMEOUT = 4\nuint16 ERROR_HARDWARE_FAULT = 5\nuint16 ERROR_UNKNOWN = 99\nstring message\t# Explanation when success is false.\n---\n# Feedback\nfloat32 progress\t# 0.0 to 1.0, NaN if unknown.\nbuiltin_interfaces/Duration elapsed",
+      "uxs_interfaces/action/CameraCaptureImage.action": "# Capture image: Capture still images.\n# Registry command: http://www.opengis.net/def/uxs-command/camera.capture-image\n# Completion: until-goal; persistence: none; hazard: none; level: Core\n# Goal\nint32 count\t# Number of images. 0 means continue until camera.stop-image-capture. Optional; -1 means unset.\nfloat64 interval\t# Time between images. [s] Optional; NaN means unset.\n---\n# Result\nbool success\nuint16 error_code\nuint16 ERROR_NONE = 0\nuint16 ERROR_UNSUPPORTED_PARAMETER = 1\nuint16 ERROR_INVALID_VALUE = 2\nuint16 ERROR_PRECONDITION_FAILED = 3\nuint16 ERROR_TIMEOUT = 4\nuint16 ERROR_HARDWARE_FAULT = 5\nuint16 ERROR_UNKNOWN = 99\nstring message\t# Explanation when success is false.\nstring[] data_uris\t# URIs of the produced images.\n---\n# Feedback\nfloat32 progress\t# 0.0 to 1.0, NaN if unknown.\nbuiltin_interfaces/Duration elapsed",
+      "uxs_interfaces/srv/SensorGetStatus.srv": "# Get status: Return the state and health of the sensor.\n# Registry command: http://www.opengis.net/def/uxs-command/sensor.get-status\n# Completion: immediate; persistence: none; hazard: none; level: Core\n# Request\n---\n# Response\nbool success\nuint16 error_code\nuint16 ERROR_NONE = 0\nuint16 ERROR_UNSUPPORTED_PARAMETER = 1\nuint16 ERROR_INVALID_VALUE = 2\nuint16 ERROR_PRECONDITION_FAILED = 3\nuint16 ERROR_TIMEOUT = 4\nuint16 ERROR_HARDWARE_FAULT = 5\nuint16 ERROR_UNKNOWN = 99\nstring message\t# Explanation when success is false.\nuint8 state\t# State: 0 off, 1 standby, 2 idle, 3 acquiring, 4 busy, 5 fault.\nuint8 health\t# Health: 0 ok, 1 degraded, 2 failed.\nstring status_message\t# Message.",
+      "uxs_interfaces/msg/Position.msg": "# Geographic position with an optional vertical component.\n# Registry type: http://www.opengis.net/def/uxs-command/type/Position\nfloat64 latitude\t# deg, WGS 84\nfloat64 longitude\t# deg, WGS 84\nfloat64 vertical\t# m; NaN if unset. Positive up, except depth (positive down).\nuint8 vertical_reference\t# see VERTICAL_REFERENCE_*\nuint8 VERTICAL_REFERENCE_ELLIPSOID = 0\nuint8 VERTICAL_REFERENCE_MSL = 1\nuint8 VERTICAL_REFERENCE_TERRAIN = 2\nuint8 VERTICAL_REFERENCE_HOME = 3\nuint8 VERTICAL_REFERENCE_DEPTH = 4\nuint8 VERTICAL_REFERENCE_SEABED = 5\nuint8 VERTICAL_REFERENCE_UNSET = 255"
+    }
+  },
+  "registryCommands": [
+    {
+      "id": "vehicle.goto",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.goto",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/NavigateToPose",
+          "nav2_msgs/action/FollowGPSWaypoints"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandInt"
+        ],
+        "tier3": "action/VehicleGoto"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/NavigateToPose",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "NavigateToPose",
+          "rosName": "navigate_to_pose",
+          "fit": "partial",
+          "parameterMap": "`location` → `pose` (PoseStamped, frame `map`); `heading` → `pose.orientation`",
+          "conversions": "lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`); ENU yaw = π/2 − heading (rad), wrapped to (−π, π\\]; quaternion about z",
+          "notes": "`speed`, `acceptanceRadius`, `holdTime`, `passThrough` are not goal fields (controller and goal-checker parameters). They are dropped with a warning (REC 3)."
+        },
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/FollowGPSWaypoints",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "FollowGPSWaypoints",
+          "rosName": "follow_gps_waypoints",
+          "fit": "partial",
+          "parameterMap": "`location` → `gps_poses[0]` (GeoPose); `heading` → orientation",
+          "conversions": "Nav2 converts lat/lon itself through `/fromLL`; ENU yaw = π/2 − heading (rad), wrapped to (−π, π\\]; quaternion about z",
+          "notes": "Single-element list. Same unsupported parameters as above."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandInt",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandInt",
+          "rosName": "cmd/command_int",
+          "fit": "generic",
+          "parameterMap": "`DO_REPOSITION` (192): `speed` → param1, `location` → x (lat×1e7), y (lon×1e7), z",
+          "conversions": "degE7 integer conversion; frame from vertical reference",
+          "notes": "Guided-mode reposition; supports `speed`, `heading` (param4 yaw)."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleGoto",
+        "kind": "action",
+        "rosName": "uxs/vehicle/goto"
+      }
+    },
+    {
+      "id": "vehicle.follow-path",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.follow-path",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/FollowGPSWaypoints",
+          "nav2_msgs/action/NavigateThroughPoses",
+          "nav2_msgs/action/FollowPath"
+        ],
+        "tier2": [],
+        "tier3": "action/VehicleFollowPath"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/FollowGPSWaypoints",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "FollowGPSWaypoints",
+          "rosName": "follow_gps_waypoints",
+          "fit": "partial",
+          "parameterMap": "`path` → `gps_poses[]`; `closed` → not supported",
+          "conversions": "Nav2 converts lat/lon; orientations derived from path direction",
+          "notes": "Waypoint task executors run at each waypoint and are configured by parameters, not per goal."
+        },
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/NavigateThroughPoses",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "NavigateThroughPoses",
+          "rosName": "navigate_through_poses",
+          "fit": "partial",
+          "parameterMap": "`path` → `poses` (Goals, frame `map`)",
+          "conversions": "lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)",
+          "notes": "Through-poses planning; `interpolation` is planner-defined."
+        },
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/FollowPath",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "FollowPath",
+          "rosName": "follow_path",
+          "fit": "partial",
+          "parameterMap": "`path` → `path` (nav_msgs/Path in `map`); controller ids left empty",
+          "conversions": "lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)",
+          "notes": "Follows a given path exactly; no planning. `speed` is not a goal field."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleFollowPath",
+        "kind": "action",
+        "rosName": "uxs/vehicle/follow_path"
+      }
+    },
+    {
+      "id": "vehicle.hold-position",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.hold-position",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/Wait"
+        ],
+        "tier2": [],
+        "tier3": "action/VehicleHoldPosition"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/Wait",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "Wait",
+          "rosName": "wait",
+          "fit": "partial",
+          "parameterMap": "`duration` → `time`",
+          "conversions": "seconds → builtin_interfaces/Duration",
+          "notes": "Ground vehicles only (robot stays stationary). `holdMode`, `radius`, `location` unsupported; unlimited duration unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleHoldPosition",
+        "kind": "action",
+        "rosName": "uxs/vehicle/hold_position"
+      }
+    },
+    {
+      "id": "vehicle.orbit",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.orbit",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandInt"
+        ],
+        "tier3": "action/VehicleOrbit"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandInt",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandInt",
+          "rosName": "cmd/command_int",
+          "fit": "generic",
+          "parameterMap": "`DO_ORBIT` (34): `radius` → param1 (sign = direction), `speed` → param2, `center` → x, y, z",
+          "conversions": "degE7; radius sign from `direction`",
+          "notes": "`turns`, `duration` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleOrbit",
+        "kind": "action",
+        "rosName": "uxs/vehicle/orbit"
+      }
+    },
+    {
+      "id": "vehicle.set-heading",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-heading",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/Spin"
+        ],
+        "tier2": [],
+        "tier3": "action/VehicleSetHeading"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/Spin",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "Spin",
+          "rosName": "spin",
+          "fit": "partial",
+          "parameterMap": "`heading` → `target_yaw` (relative), `direction` → sign",
+          "conversions": "relative yaw = wrap(ENU yaw target − current yaw from TF); ENU yaw = π/2 − heading (rad), wrapped to (−π, π\\]; quaternion about z",
+          "notes": "`target_yaw` is a relative rotation in radians. `rate`, `lock` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleSetHeading",
+        "kind": "action",
+        "rosName": "uxs/vehicle/set_heading"
+      }
+    },
+    {
+      "id": "vehicle.move-relative",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.move-relative",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/DriveOnHeading",
+          "nav2_msgs/action/BackUp"
+        ],
+        "tier2": [],
+        "tier3": "action/VehicleMoveRelative"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/DriveOnHeading",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "DriveOnHeading",
+          "rosName": "drive_on_heading",
+          "fit": "partial",
+          "parameterMap": "`distance` → `target.x`; `speed` → `speed`",
+          "conversions": "metres, m/s",
+          "notes": "Forward motion only (`bearing` = 0 relative to vehicle). `verticalDistance` unsupported."
+        },
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/BackUp",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "BackUp",
+          "rosName": "backup",
+          "fit": "partial",
+          "parameterMap": "`distance` → `target.x`; `speed` → `speed`",
+          "conversions": "metres, m/s",
+          "notes": "Used for `bearing` = 180°; the behavior always drives backwards, whatever the sign of `target.x`."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleMoveRelative",
+        "kind": "action",
+        "rosName": "uxs/vehicle/move_relative"
+      }
+    },
+    {
+      "id": "vehicle.return-to-home",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.return-to-home",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/SetMode",
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "action/VehicleReturnToHome"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/SetMode",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "SetMode",
+          "rosName": "set_mode",
+          "fit": "partial",
+          "parameterMap": "`destination` = home → `custom_mode` of the RTL mode (autopilot specific)",
+          "conversions": null,
+          "notes": "Mode names depend on the autopilot (for example `RTL`)."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`NAV_RETURN_TO_LAUNCH` (20), no parameters",
+          "conversions": null,
+          "notes": "`finalAction` and `vertical` are not carried."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleReturnToHome",
+        "kind": "action",
+        "rosName": "uxs/vehicle/return_to_home"
+      }
+    },
+    {
+      "id": "vehicle.stop",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.stop",
+      "interfaces": {
+        "tier1": [
+          "action_msgs/srv/CancelGoal"
+        ],
+        "tier2": [],
+        "tier3": "action/VehicleStop"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "action_msgs/srv/CancelGoal",
+          "package": "action_msgs",
+          "kind": "service",
+          "name": "CancelGoal",
+          "rosName": "{action}/_action/cancel_goal",
+          "fit": "partial",
+          "parameterMap": "`mode` = controlled → cancel all goals on the movement action servers (goal id zero, stamp zero)",
+          "conversions": null,
+          "notes": "Stops by cancellation; the platform then holds. For `immediate`, also publish a zero `geometry_msgs/Twist` on the velocity command topic."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleStop",
+        "kind": "action",
+        "rosName": "uxs/vehicle/stop"
+      }
+    },
+    {
+      "id": "vehicle.set-vertical-position",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-vertical-position",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "action/VehicleSetVerticalPosition"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_CHANGE_ALTITUDE` (186): `target.value` → param1, reference → frame param2",
+          "conversions": "reference → MAV_FRAME",
+          "notes": "`rate` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleSetVerticalPosition",
+        "kind": "action",
+        "rosName": "uxs/vehicle/set_vertical_position"
+      }
+    },
+    {
+      "id": "vehicle.takeoff",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.takeoff",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandTOL",
+          "px4_msgs/msg/VehicleCommand"
+        ],
+        "tier3": "action/VehicleTakeoff"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandTOL",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandTOL",
+          "rosName": "cmd/takeoff",
+          "fit": "partial",
+          "parameterMap": "`target.value` → `altitude`; `location` → `latitude`, `longitude`; `heading` → `yaw`",
+          "conversions": "degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)",
+          "notes": "`climbRate` unsupported. `min_pitch` left 0."
+        },
+        {
+          "tier": 2,
+          "interface": "px4_msgs/msg/VehicleCommand",
+          "package": "px4_msgs",
+          "kind": "topic",
+          "name": "VehicleCommand",
+          "rosName": "/fmu/in/vehicle_command",
+          "fit": "generic",
+          "parameterMap": "`VEHICLE_CMD_NAV_TAKEOFF` (22): `heading` → param4, `location` → param5/6, altitude → param7",
+          "conversions": "float64 param5/6 (full precision)",
+          "notes": "PX4 uXRCE-DDS; ack on `VehicleCommandAck`. A `px4_msgs/srv/VehicleCommand` service (request `VehicleCommand`, reply `VehicleCommandAck`) is also defined."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleTakeoff",
+        "kind": "action",
+        "rosName": "uxs/vehicle/takeoff"
+      }
+    },
+    {
+      "id": "vehicle.land",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.land",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandTOL"
+        ],
+        "tier3": "action/VehicleLand"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandTOL",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandTOL",
+          "rosName": "cmd/land",
+          "fit": "partial",
+          "parameterMap": "`location` → `latitude`, `longitude`; `heading` → `yaw`",
+          "conversions": "degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)",
+          "notes": "`descentRate`, `precision`, `disarmAfter` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleLand",
+        "kind": "action",
+        "rosName": "uxs/vehicle/land"
+      }
+    },
+    {
+      "id": "vehicle.transition",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.transition",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandVtolTransition"
+        ],
+        "tier3": "action/VehicleTransition"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandVtolTransition",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandVtolTransition",
+          "rosName": "cmd/vtol_transition",
+          "fit": "exact",
+          "parameterMap": "`state`: hover → `STATE_MC` (3), forward-flight → `STATE_FW` (4)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleTransition",
+        "kind": "action",
+        "rosName": "uxs/vehicle/transition"
+      }
+    },
+    {
+      "id": "vehicle.surface",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.surface",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "action/VehicleSurface"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleSurface",
+        "kind": "action",
+        "rosName": "uxs/vehicle/surface"
+      }
+    },
+    {
+      "id": "vehicle.dock",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.dock",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/DockRobot",
+          "nav2_msgs/action/UndockRobot"
+        ],
+        "tier2": [],
+        "tier3": "action/VehicleDock"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/DockRobot",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "DockRobot",
+          "rosName": "dock_robot",
+          "fit": "partial",
+          "parameterMap": "`station` → `dock_id` (`use_dock_id` true) or `location` → `dock_pose` (`use_dock_id` false)",
+          "conversions": "lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)",
+          "notes": "`action` = dock. `heading` unsupported."
+        },
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/UndockRobot",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "UndockRobot",
+          "rosName": "undock_robot",
+          "fit": "exact",
+          "parameterMap": "`action` = undock; `station` → `dock_type`",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/VehicleDock",
+        "kind": "action",
+        "rosName": "uxs/vehicle/dock"
+      }
+    },
+    {
+      "id": "vehicle.set-speed",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-speed",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/msg/SpeedLimit"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/VehicleSetSpeed"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/msg/SpeedLimit",
+          "package": "nav2_msgs",
+          "kind": "topic",
+          "name": "SpeedLimit",
+          "rosName": "speed_limit",
+          "fit": "partial",
+          "parameterMap": "`speed` → `speed_limit` (`percentage` false)",
+          "conversions": "m/s",
+          "notes": "Nav2 controller server subscribes to it. `speedType`, `throttle` unsupported. Topic, not a service: completion is immediate without acknowledgment."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_CHANGE_SPEED` (178): `speedType` → param1, `speed` → param2, `throttle` → param3",
+          "conversions": "absent optional value → −1",
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleSetSpeed",
+        "kind": "service",
+        "rosName": "uxs/vehicle/set_speed"
+      }
+    },
+    {
+      "id": "vehicle.set-mode",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-mode",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/SetMode"
+        ],
+        "tier3": "srv/VehicleSetMode"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/SetMode",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "SetMode",
+          "rosName": "set_mode",
+          "fit": "partial",
+          "parameterMap": "`platformMode` → `custom_mode`; generic `mode` → autopilot mapping",
+          "conversions": null,
+          "notes": "Generic modes have no standard string mapping."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleSetMode",
+        "kind": "service",
+        "rosName": "uxs/vehicle/set_mode"
+      }
+    },
+    {
+      "id": "vehicle.set-armed",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-armed",
+      "interfaces": {
+        "tier1": [
+          "std_srvs/srv/SetBool"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandBool"
+        ],
+        "tier3": "srv/VehicleSetArmed"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandBool",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandBool",
+          "rosName": "cmd/arming",
+          "fit": "partial",
+          "parameterMap": "`armed` → `value`",
+          "conversions": null,
+          "notes": "`force` unsupported (send through `CommandLong` with the force code under explicit authorization)."
+        },
+        {
+          "tier": 1,
+          "interface": "std_srvs/srv/SetBool",
+          "package": "std_srvs",
+          "kind": "service",
+          "name": "SetBool",
+          "rosName": "arm",
+          "fit": "partial",
+          "parameterMap": "`armed` → `data`",
+          "conversions": null,
+          "notes": "Convention for drivers that expose arming as SetBool. No standard service name."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleSetArmed",
+        "kind": "service",
+        "rosName": "uxs/vehicle/set_armed"
+      }
+    },
+    {
+      "id": "vehicle.set-home",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.set-home",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandHome"
+        ],
+        "tier3": "srv/VehicleSetHome"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandHome",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandHome",
+          "rosName": "cmd/set_home",
+          "fit": "exact",
+          "parameterMap": "`location` absent → `current_gps` true; else `latitude`, `longitude`, `altitude`",
+          "conversions": "degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)",
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleSetHome",
+        "kind": "service",
+        "rosName": "uxs/vehicle/set_home"
+      }
+    },
+    {
+      "id": "vehicle.reboot",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.reboot",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/VehicleReboot"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`PREFLIGHT_REBOOT_SHUTDOWN` (246)",
+          "conversions": null,
+          "notes": "Destructive: separate authorization required."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleReboot",
+        "kind": "service",
+        "rosName": "uxs/vehicle/reboot"
+      }
+    },
+    {
+      "id": "mission.start",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.start",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/MissionStart"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`MISSION_START` (300): `firstItem` → param1, `lastItem` → param2",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/MissionStart",
+        "kind": "service",
+        "rosName": "uxs/mission/start"
+      }
+    },
+    {
+      "id": "mission.pause",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.pause",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/srv/ManageLifecycleNodes"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/MissionPause"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/srv/ManageLifecycleNodes",
+          "package": "nav2_msgs",
+          "kind": "service",
+          "name": "ManageLifecycleNodes",
+          "rosName": "lifecycle_manager_navigation/manage_nodes",
+          "fit": "partial",
+          "parameterMap": "command `PAUSE` (1)",
+          "conversions": null,
+          "notes": "Pauses the Nav2 lifecycle nodes. `behavior` unsupported."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_PAUSE_CONTINUE` (193): param1 = 0",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/MissionPause",
+        "kind": "service",
+        "rosName": "uxs/mission/pause"
+      }
+    },
+    {
+      "id": "mission.resume",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.resume",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/srv/ManageLifecycleNodes"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/MissionResume"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/srv/ManageLifecycleNodes",
+          "package": "nav2_msgs",
+          "kind": "service",
+          "name": "ManageLifecycleNodes",
+          "rosName": "lifecycle_manager_navigation/manage_nodes",
+          "fit": "exact",
+          "parameterMap": "command `RESUME` (2)",
+          "conversions": null,
+          "notes": "—"
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_PAUSE_CONTINUE` (193): param1 = 1",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/MissionResume",
+        "kind": "service",
+        "rosName": "uxs/mission/resume"
+      }
+    },
+    {
+      "id": "mission.abort",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.abort",
+      "interfaces": {
+        "tier1": [
+          "action_msgs/srv/CancelGoal"
+        ],
+        "tier2": [],
+        "tier3": "srv/MissionAbort"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "action_msgs/srv/CancelGoal",
+          "package": "action_msgs",
+          "kind": "service",
+          "name": "CancelGoal",
+          "rosName": "{action}/_action/cancel_goal",
+          "fit": "partial",
+          "parameterMap": "cancel all goals, then issue the fallback (`hold`, `return-to-home`, `land`, `surface`, `stop`) as a new command (REC 28)",
+          "conversions": null,
+          "notes": "Composite of cancel and another registry command."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/MissionAbort",
+        "kind": "service",
+        "rosName": "uxs/mission/abort"
+      },
+      "composite": {
+        "recommendation": "REC 28",
+        "steps": [
+          "resolve-fallback",
+          "cancel-goals",
+          "send-fallback",
+          "report"
+        ],
+        "cancel": {
+          "interface": "action_msgs/srv/CancelGoal",
+          "goalId": "zero",
+          "stamp": "zero"
+        },
+        "fallbacks": {
+          "hold": "vehicle.hold-position",
+          "return-to-home": "vehicle.return-to-home",
+          "land": "vehicle.land",
+          "surface": "vehicle.surface",
+          "stop": "vehicle.stop"
+        },
+        "stopSendsNoSecondRequest": true
+      }
+    },
+    {
+      "id": "mission.wait",
+      "uri": "http://www.opengis.net/def/uxs-command/mission.wait",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/action/Wait"
+        ],
+        "tier2": [],
+        "tier3": "action/MissionWait"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/action/Wait",
+          "package": "nav2_msgs",
+          "kind": "action",
+          "name": "Wait",
+          "rosName": "wait",
+          "fit": "partial",
+          "parameterMap": "`duration` → `time`; `until` → `time` = until − now",
+          "conversions": "seconds → Duration",
+          "notes": "Ground behavior. Not suitable for aerial vehicles that must keep flying."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/MissionWait",
+        "kind": "action",
+        "rosName": "uxs/mission/wait"
+      }
+    },
+    {
+      "id": "vehicle.emergency-stop",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.emergency-stop",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/VehicleEmergencyStop"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "Platform specific (for example `DO_FLIGHTTERMINATION` (185))",
+          "conversions": null,
+          "notes": "Destructive. There is no standard ROS 2 emergency-stop service."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleEmergencyStop",
+        "kind": "service",
+        "rosName": "uxs/vehicle/emergency_stop"
+      }
+    },
+    {
+      "id": "vehicle.terminate",
+      "uri": "http://www.opengis.net/def/uxs-command/vehicle.terminate",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/VehicleTerminate"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_FLIGHTTERMINATION` (185) or `DO_PARACHUTE` (208)",
+          "conversions": null,
+          "notes": "Destructive: separate authorization required."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/VehicleTerminate",
+        "kind": "service",
+        "rosName": "uxs/vehicle/terminate"
+      }
+    },
+    {
+      "id": "sensor.set-power",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.set-power",
+      "interfaces": {
+        "tier1": [
+          "lifecycle_msgs/srv/ChangeState",
+          "std_srvs/srv/SetBool"
+        ],
+        "tier2": [],
+        "tier3": "srv/SensorSetPower"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "lifecycle_msgs/srv/ChangeState",
+          "package": "lifecycle_msgs",
+          "kind": "service",
+          "name": "ChangeState",
+          "rosName": "{node}/change_state",
+          "fit": "partial",
+          "parameterMap": "`state` on → transition `ACTIVATE` (3); standby → `DEACTIVATE` (4); off → `INACTIVE_SHUTDOWN` (6) or `ACTIVE_SHUTDOWN` (7)",
+          "conversions": null,
+          "notes": "Applies to sensor driver nodes that are lifecycle nodes. Physical power switching is outside ROS."
+        },
+        {
+          "tier": 1,
+          "interface": "std_srvs/srv/SetBool",
+          "package": "std_srvs",
+          "kind": "service",
+          "name": "SetBool",
+          "rosName": "set_power",
+          "fit": "partial",
+          "parameterMap": "`state` on → `data` true; off → false",
+          "conversions": null,
+          "notes": "Convention for drivers. `standby` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/SensorSetPower",
+        "kind": "service",
+        "rosName": "uxs/sensor/set_power"
+      }
+    },
+    {
+      "id": "sensor.start-acquisition",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.start-acquisition",
+      "interfaces": {
+        "tier1": [
+          "std_srvs/srv/Trigger",
+          "lifecycle_msgs/srv/ChangeState"
+        ],
+        "tier2": [],
+        "tier3": "srv/SensorStartAcquisition"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "std_srvs/srv/Trigger",
+          "package": "std_srvs",
+          "kind": "service",
+          "name": "Trigger",
+          "rosName": "start",
+          "fit": "partial",
+          "parameterMap": "no parameters",
+          "conversions": null,
+          "notes": "Convention for drivers. `duration`, `sampleCount`, `rate` unsupported; `rate` is set through `SetParameters`."
+        },
+        {
+          "tier": 1,
+          "interface": "lifecycle_msgs/srv/ChangeState",
+          "package": "lifecycle_msgs",
+          "kind": "service",
+          "name": "ChangeState",
+          "rosName": "{node}/change_state",
+          "fit": "partial",
+          "parameterMap": "transition `ACTIVATE` (3)",
+          "conversions": null,
+          "notes": "Lifecycle drivers publish only while active."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/SensorStartAcquisition",
+        "kind": "service",
+        "rosName": "uxs/sensor/start_acquisition"
+      }
+    },
+    {
+      "id": "sensor.stop-acquisition",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.stop-acquisition",
+      "interfaces": {
+        "tier1": [
+          "std_srvs/srv/Trigger",
+          "lifecycle_msgs/srv/ChangeState"
+        ],
+        "tier2": [],
+        "tier3": "srv/SensorStopAcquisition"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "std_srvs/srv/Trigger",
+          "package": "std_srvs",
+          "kind": "service",
+          "name": "Trigger",
+          "rosName": "stop",
+          "fit": "exact",
+          "parameterMap": "no parameters",
+          "conversions": null,
+          "notes": "Convention for drivers."
+        },
+        {
+          "tier": 1,
+          "interface": "lifecycle_msgs/srv/ChangeState",
+          "package": "lifecycle_msgs",
+          "kind": "service",
+          "name": "ChangeState",
+          "rosName": "{node}/change_state",
+          "fit": "exact",
+          "parameterMap": "transition `DEACTIVATE` (4)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/SensorStopAcquisition",
+        "kind": "service",
+        "rosName": "uxs/sensor/stop_acquisition"
+      }
+    },
+    {
+      "id": "sensor.trigger",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.trigger",
+      "interfaces": {
+        "tier1": [
+          "std_srvs/srv/Trigger"
+        ],
+        "tier2": [],
+        "tier3": "action/SensorTrigger"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "std_srvs/srv/Trigger",
+          "package": "std_srvs",
+          "kind": "service",
+          "name": "Trigger",
+          "rosName": "trigger",
+          "fit": "partial",
+          "parameterMap": "no parameters",
+          "conversions": null,
+          "notes": "Convention for camera and sensor drivers. `count` and `interval` unsupported (call repeatedly)."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/SensorTrigger",
+        "kind": "action",
+        "rosName": "uxs/sensor/trigger"
+      }
+    },
+    {
+      "id": "sensor.set-sampling-rate",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.set-sampling-rate",
+      "interfaces": {
+        "tier1": [
+          "rcl_interfaces/srv/SetParameters"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/MessageInterval"
+        ],
+        "tier3": "srv/SensorSetSamplingRate"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "rcl_interfaces/srv/SetParameters",
+          "package": "rcl_interfaces",
+          "kind": "service",
+          "name": "SetParameters",
+          "rosName": "{node}/set_parameters",
+          "fit": "partial",
+          "parameterMap": "`rate` → a driver-specific parameter (for example `frame_rate`)",
+          "conversions": "Hz",
+          "notes": "Parameter name is driver-specific and declared in the System description."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/MessageInterval",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "MessageInterval",
+          "rosName": "set_message_interval",
+          "fit": "partial",
+          "parameterMap": "`rate` → `message_rate`; message id identifies the stream",
+          "conversions": "Hz (0 disables; negative = default)",
+          "notes": "MAVLink message streams only."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/SensorSetSamplingRate",
+        "kind": "service",
+        "rosName": "uxs/sensor/set_sampling_rate"
+      }
+    },
+    {
+      "id": "sensor.apply-configuration",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.apply-configuration",
+      "interfaces": {
+        "tier1": [
+          "rcl_interfaces/srv/SetParameters"
+        ],
+        "tier2": [],
+        "tier3": "srv/SensorApplyConfiguration"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "rcl_interfaces/srv/SetParameters",
+          "package": "rcl_interfaces",
+          "kind": "service",
+          "name": "SetParameters",
+          "rosName": "{node}/set_parameters",
+          "fit": "partial",
+          "parameterMap": "`configuration` → parameter file or parameter set identified by name",
+          "conversions": null,
+          "notes": "Named configuration sets are a deployment convention."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/SensorApplyConfiguration",
+        "kind": "service",
+        "rosName": "uxs/sensor/apply_configuration"
+      }
+    },
+    {
+      "id": "sensor.calibrate",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.calibrate",
+      "interfaces": {
+        "tier1": [
+          "sensor_msgs/srv/SetCameraInfo"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "action/SensorCalibrate"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "sensor_msgs/srv/SetCameraInfo",
+          "package": "sensor_msgs",
+          "kind": "service",
+          "name": "SetCameraInfo",
+          "rosName": "set_camera_info",
+          "fit": "partial",
+          "parameterMap": "stores a calibration result (`camera_info`)",
+          "conversions": null,
+          "notes": "Stores the result of a calibration, it does not perform one."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`PREFLIGHT_CALIBRATION` (241)",
+          "conversions": null,
+          "notes": "Flight-critical for vehicle-state sensors."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/SensorCalibrate",
+        "kind": "action",
+        "rosName": "uxs/sensor/calibrate"
+      }
+    },
+    {
+      "id": "sensor.self-test",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.self-test",
+      "interfaces": {
+        "tier1": [
+          "diagnostic_msgs/srv/SelfTest"
+        ],
+        "tier2": [],
+        "tier3": "action/SensorSelfTest"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "diagnostic_msgs/srv/SelfTest",
+          "package": "diagnostic_msgs",
+          "kind": "service",
+          "name": "SelfTest",
+          "rosName": "self_test",
+          "fit": "partial",
+          "parameterMap": "response `passed` → `passed`; `status[]` → `details`",
+          "conversions": null,
+          "notes": "`level` unsupported (the service has no request fields)."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/SensorSelfTest",
+        "kind": "action",
+        "rosName": "uxs/sensor/self_test"
+      }
+    },
+    {
+      "id": "sensor.reset",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.reset",
+      "interfaces": {
+        "tier1": [
+          "lifecycle_msgs/srv/ChangeState"
+        ],
+        "tier2": [],
+        "tier3": "action/SensorReset"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "lifecycle_msgs/srv/ChangeState",
+          "package": "lifecycle_msgs",
+          "kind": "service",
+          "name": "ChangeState",
+          "rosName": "{node}/change_state",
+          "fit": "partial",
+          "parameterMap": "`CLEANUP` (2) then `CONFIGURE` (1)",
+          "conversions": null,
+          "notes": "`scope` granularity unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/SensorReset",
+        "kind": "action",
+        "rosName": "uxs/sensor/reset"
+      }
+    },
+    {
+      "id": "sensor.get-status",
+      "uri": "http://www.opengis.net/def/uxs-command/sensor.get-status",
+      "interfaces": {
+        "tier1": [
+          "lifecycle_msgs/srv/GetState"
+        ],
+        "tier2": [],
+        "tier3": "srv/SensorGetStatus"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "lifecycle_msgs/srv/GetState",
+          "package": "lifecycle_msgs",
+          "kind": "service",
+          "name": "GetState",
+          "rosName": "{node}/get_state",
+          "fit": "partial",
+          "parameterMap": "`current_state` → `state`",
+          "conversions": null,
+          "notes": "`health` from the `/diagnostics` topic (`DiagnosticStatus.level`: OK, WARN, ERROR, STALE)."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/SensorGetStatus",
+        "kind": "service",
+        "rosName": "uxs/sensor/get_status"
+      }
+    },
+    {
+      "id": "data.start-recording",
+      "uri": "http://www.opengis.net/def/uxs-command/data.start-recording",
+      "interfaces": {
+        "tier1": [
+          "rosbag2_interfaces/srv/Record"
+        ],
+        "tier2": [],
+        "tier3": "srv/DataStartRecording"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "rosbag2_interfaces/srv/Record",
+          "package": "rosbag2_interfaces",
+          "kind": "service",
+          "name": "Record",
+          "rosName": "rosbag2_recorder/record",
+          "fit": "partial",
+          "parameterMap": "`label` → `uri`",
+          "conversions": "`start_time` left zero",
+          "notes": "`storage` and `maxDuration` unsupported. Response is `return_code` and `error_string`."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/DataStartRecording",
+        "kind": "service",
+        "rosName": "uxs/data/start_recording"
+      }
+    },
+    {
+      "id": "data.stop-recording",
+      "uri": "http://www.opengis.net/def/uxs-command/data.stop-recording",
+      "interfaces": {
+        "tier1": [
+          "rosbag2_interfaces/srv/Stop"
+        ],
+        "tier2": [],
+        "tier3": "srv/DataStopRecording"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "rosbag2_interfaces/srv/Stop",
+          "package": "rosbag2_interfaces",
+          "kind": "service",
+          "name": "Stop",
+          "rosName": "rosbag2_recorder/stop",
+          "fit": "exact",
+          "parameterMap": "no parameters",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/DataStopRecording",
+        "kind": "service",
+        "rosName": "uxs/data/stop_recording"
+      }
+    },
+    {
+      "id": "data.mark-event",
+      "uri": "http://www.opengis.net/def/uxs-command/data.mark-event",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/DataMarkEvent"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/DataMarkEvent",
+        "kind": "service",
+        "rosName": "uxs/data/mark_event"
+      }
+    },
+    {
+      "id": "camera.capture-image",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.capture-image",
+      "interfaces": {
+        "tier1": [
+          "nav2_msgs/msg/PhotoAtWaypoint"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "action/CameraCaptureImage"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`IMAGE_START_CAPTURE` (2000): `interval` → param2, `count` → param3",
+          "conversions": null,
+          "notes": "MAVLink camera protocol. Produced image location is not returned."
+        },
+        {
+          "tier": 1,
+          "interface": "nav2_msgs/msg/PhotoAtWaypoint",
+          "package": "nav2_msgs",
+          "kind": "topic",
+          "name": "PhotoAtWaypoint",
+          "rosName": "(waypoint task executor plugin)",
+          "fit": "partial",
+          "parameterMap": "one image at each waypoint, configured by parameters",
+          "conversions": null,
+          "notes": "Plugin of the Nav2 waypoint follower. Per-waypoint parameters are not possible."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/CameraCaptureImage",
+        "kind": "action",
+        "rosName": "uxs/camera/capture_image"
+      }
+    },
+    {
+      "id": "camera.stop-image-capture",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.stop-image-capture",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraStopImageCapture"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`IMAGE_STOP_CAPTURE` (2001)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraStopImageCapture",
+        "kind": "service",
+        "rosName": "uxs/camera/stop_image_capture"
+      }
+    },
+    {
+      "id": "camera.start-video",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.start-video",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraStartVideo"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`VIDEO_START_CAPTURE` (2500)",
+          "conversions": null,
+          "notes": "`maxDuration`, `label` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraStartVideo",
+        "kind": "service",
+        "rosName": "uxs/camera/start_video"
+      }
+    },
+    {
+      "id": "camera.stop-video",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.stop-video",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraStopVideo"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`VIDEO_STOP_CAPTURE` (2501)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraStopVideo",
+        "kind": "service",
+        "rosName": "uxs/camera/stop_video"
+      }
+    },
+    {
+      "id": "camera.set-mode",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-mode",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraSetMode"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`SET_CAMERA_MODE` (530)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraSetMode",
+        "kind": "service",
+        "rosName": "uxs/camera/set_mode"
+      }
+    },
+    {
+      "id": "camera.configure-image",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.configure-image",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/CameraConfigureImage"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraConfigureImage",
+        "kind": "service",
+        "rosName": "uxs/camera/configure_image"
+      }
+    },
+    {
+      "id": "camera.set-exposure",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-exposure",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/CameraSetExposure"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraSetExposure",
+        "kind": "service",
+        "rosName": "uxs/camera/set_exposure"
+      }
+    },
+    {
+      "id": "camera.set-zoom",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-zoom",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraSetZoom"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`SET_CAMERA_ZOOM` (531)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraSetZoom",
+        "kind": "service",
+        "rosName": "uxs/camera/set_zoom"
+      }
+    },
+    {
+      "id": "camera.set-focus",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-focus",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraSetFocus"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`SET_CAMERA_FOCUS` (532)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraSetFocus",
+        "kind": "service",
+        "rosName": "uxs/camera/set_focus"
+      }
+    },
+    {
+      "id": "camera.select-source",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.select-source",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraSelectSource"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`SET_CAMERA_SOURCE` (534)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraSelectSource",
+        "kind": "service",
+        "rosName": "uxs/camera/select_source"
+      }
+    },
+    {
+      "id": "camera.set-trigger-distance",
+      "uri": "http://www.opengis.net/def/uxs-command/camera.set-trigger-distance",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandTriggerInterval",
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/CameraSetTriggerDistance"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandTriggerInterval",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandTriggerInterval",
+          "rosName": "cmd/trigger_interval",
+          "fit": "partial",
+          "parameterMap": "time-based: `cycle_time`, `integration_time`",
+          "conversions": null,
+          "notes": "Distance-based triggering uses `CommandLong` `DO_SET_CAM_TRIGG_DIST` (206)."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_SET_CAM_TRIGG_DIST` (206): `distance` → param1, `triggerNow` → param3",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/CameraSetTriggerDistance",
+        "kind": "service",
+        "rosName": "uxs/camera/set_trigger_distance"
+      }
+    },
+    {
+      "id": "gimbal.point",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.point",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/GimbalManagerPitchyaw",
+          "mavros_msgs/srv/MountConfigure"
+        ],
+        "tier3": "action/GimbalPoint"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/GimbalManagerPitchyaw",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "GimbalManagerPitchyaw",
+          "rosName": "gimbal_control/manager/pitchyaw",
+          "fit": "partial",
+          "parameterMap": "`pitch` → `pitch`, `yaw` → `yaw`, `pitchRate` → `pitch_rate`, `yawRate` → `yaw_rate`; `frame` → `flags` lock bits",
+          "conversions": "degrees and deg/s (passed through to the MAVLink command); radians → degrees",
+          "notes": "`roll` unsupported. `gimbal_device_id` 0 = all."
+        },
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/MountConfigure",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "MountConfigure",
+          "rosName": "mount_control/configure",
+          "fit": "partial",
+          "parameterMap": "`frame`/mode → `mode` and stabilize flags",
+          "conversions": null,
+          "notes": "Older mount protocol."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/GimbalPoint",
+        "kind": "action",
+        "rosName": "uxs/gimbal/point"
+      }
+    },
+    {
+      "id": "gimbal.point-at",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.point-at",
+      "interfaces": {
+        "tier1": [
+          "control_msgs/action/PointHead"
+        ],
+        "tier2": [
+          "mavros_msgs/srv/GimbalManagerSetRoi"
+        ],
+        "tier3": "srv/GimbalPointAt"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/GimbalManagerSetRoi",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "GimbalManagerSetRoi",
+          "rosName": "gimbal_control/manager/set_roi",
+          "fit": "exact",
+          "parameterMap": "`location` → `latitude`, `longitude`, `altitude`; `mode` = `ROI_MODE_LOCATION` (0)",
+          "conversions": "degrees; float32 latitude/longitude (resolution ≈ 0.4 m at 45° N): unsuitable where metre accuracy matters; prefer `CommandInt` (int32 degE7)",
+          "notes": "—"
+        },
+        {
+          "tier": 1,
+          "interface": "control_msgs/action/PointHead",
+          "package": "control_msgs",
+          "kind": "action",
+          "name": "PointHead",
+          "rosName": "point_head",
+          "fit": "partial",
+          "parameterMap": "`location` → `target` (PointStamped in a local frame)",
+          "conversions": "lat/lon → map frame with `robot_localization` service `/fromLL` (`GeoPoint` → `Point`)",
+          "notes": "For pan-tilt heads driven through TF; `pointing_axis`, `min_duration` from configuration."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/GimbalPointAt",
+        "kind": "service",
+        "rosName": "uxs/gimbal/point_at"
+      }
+    },
+    {
+      "id": "gimbal.clear-target",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.clear-target",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/GimbalManagerSetRoi"
+        ],
+        "tier3": "srv/GimbalClearTarget"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/GimbalManagerSetRoi",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "GimbalManagerSetRoi",
+          "rosName": "gimbal_control/manager/set_roi",
+          "fit": "exact",
+          "parameterMap": "`mode` = `ROI_MODE_NONE` (3)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/GimbalClearTarget",
+        "kind": "service",
+        "rosName": "uxs/gimbal/clear_target"
+      }
+    },
+    {
+      "id": "gimbal.set-mode",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.set-mode",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/GimbalManagerPitchyaw"
+        ],
+        "tier3": "srv/GimbalSetMode"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/GimbalManagerPitchyaw",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "GimbalManagerPitchyaw",
+          "rosName": "gimbal_control/manager/pitchyaw",
+          "fit": "partial",
+          "parameterMap": "`stow` → `flags` RETRACT (1); `follow` → no lock flags; `lock` → lock flags (4, 8, 16)",
+          "conversions": null,
+          "notes": "Angles are left unset."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/GimbalSetMode",
+        "kind": "service",
+        "rosName": "uxs/gimbal/set_mode"
+      }
+    },
+    {
+      "id": "gimbal.track-image-point",
+      "uri": "http://www.opengis.net/def/uxs-command/gimbal.track-image-point",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/GimbalManagerCameraTrack"
+        ],
+        "tier3": "srv/GimbalTrackImagePoint"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/GimbalManagerCameraTrack",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "GimbalManagerCameraTrack",
+          "rosName": "gimbal_control/manager/camera_track",
+          "fit": "exact",
+          "parameterMap": "`x`, `y` → `x`, `y` with `mode` = `CAMERA_TRACK_MODE_POINT` (0)",
+          "conversions": "normalized image coordinates",
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/GimbalTrackImagePoint",
+        "kind": "service",
+        "rosName": "uxs/gimbal/track_image_point"
+      }
+    },
+    {
+      "id": "ranging.set-range",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-range",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/RangingSetRange"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/RangingSetRange",
+        "kind": "service",
+        "rosName": "uxs/ranging/set_range"
+      }
+    },
+    {
+      "id": "ranging.set-gain",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-gain",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/RangingSetGain"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/RangingSetGain",
+        "kind": "service",
+        "rosName": "uxs/ranging/set_gain"
+      }
+    },
+    {
+      "id": "ranging.set-frequency",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-frequency",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/RangingSetFrequency"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/RangingSetFrequency",
+        "kind": "service",
+        "rosName": "uxs/ranging/set_frequency"
+      }
+    },
+    {
+      "id": "ranging.set-scan-sector",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-scan-sector",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/RangingSetScanSector"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/RangingSetScanSector",
+        "kind": "service",
+        "rosName": "uxs/ranging/set_scan_sector"
+      }
+    },
+    {
+      "id": "ranging.set-transmit",
+      "uri": "http://www.opengis.net/def/uxs-command/ranging.set-transmit",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "srv/RangingSetTransmit"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/RangingSetTransmit",
+        "kind": "service",
+        "rosName": "uxs/ranging/set_transmit"
+      }
+    },
+    {
+      "id": "sample.collect",
+      "uri": "http://www.opengis.net/def/uxs-command/sample.collect",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [],
+        "tier3": "action/SampleCollect"
+      },
+      "bindings": [],
+      "tier3": {
+        "interface": "uxs_interfaces/action/SampleCollect",
+        "kind": "action",
+        "rosName": "uxs/sample/collect"
+      }
+    },
+    {
+      "id": "payload.gripper",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.gripper",
+      "interfaces": {
+        "tier1": [
+          "control_msgs/action/GripperCommand"
+        ],
+        "tier2": [],
+        "tier3": "action/PayloadGripper"
+      },
+      "bindings": [
+        {
+          "tier": 1,
+          "interface": "control_msgs/action/GripperCommand",
+          "package": "control_msgs",
+          "kind": "action",
+          "name": "GripperCommand",
+          "rosName": "gripper_cmd",
+          "fit": "partial",
+          "parameterMap": "`action` open/close → `command.position`; `force` → `command.max_effort`",
+          "conversions": "position in metres or radians as the gripper defines",
+          "notes": "Mapping of open/close to positions is gripper configuration."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/PayloadGripper",
+        "kind": "action",
+        "rosName": "uxs/payload/gripper"
+      }
+    },
+    {
+      "id": "payload.release",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.release",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "action/PayloadRelease"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_GRIPPER` (211) or `DO_SET_SERVO` (183)",
+          "conversions": null,
+          "notes": "Airframe specific."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/PayloadRelease",
+        "kind": "action",
+        "rosName": "uxs/payload/release"
+      }
+    },
+    {
+      "id": "payload.winch",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.winch",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "action/PayloadWinch"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_WINCH` (42600)",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/action/PayloadWinch",
+        "kind": "action",
+        "rosName": "uxs/payload/winch"
+      }
+    },
+    {
+      "id": "payload.set-lights",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.set-lights",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/PayloadSetLights"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`ILLUMINATOR_ON_OFF` (2200)",
+          "conversions": null,
+          "notes": "`intensity` and `lightId` unsupported."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/PayloadSetLights",
+        "kind": "service",
+        "rosName": "uxs/payload/set_lights"
+      }
+    },
+    {
+      "id": "payload.set-switch",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.set-switch",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/PayloadSetSwitch"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_SET_RELAY` (181): `channel` → param1, `on` → param2",
+          "conversions": null,
+          "notes": "—"
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/PayloadSetSwitch",
+        "kind": "service",
+        "rosName": "uxs/payload/set_switch"
+      }
+    },
+    {
+      "id": "payload.set-actuator",
+      "uri": "http://www.opengis.net/def/uxs-command/payload.set-actuator",
+      "interfaces": {
+        "tier1": [],
+        "tier2": [
+          "mavros_msgs/srv/CommandLong"
+        ],
+        "tier3": "srv/PayloadSetActuator"
+      },
+      "bindings": [
+        {
+          "tier": 2,
+          "interface": "mavros_msgs/srv/CommandLong",
+          "package": "mavros_msgs",
+          "kind": "service",
+          "name": "CommandLong",
+          "rosName": "cmd/command",
+          "fit": "generic",
+          "parameterMap": "`DO_SET_SERVO` (183): `channel` → param1, `value` → PWM param2",
+          "conversions": "normalized \\[−1, 1\\] → PWM µs",
+          "notes": "Flight-critical."
+        }
+      ],
+      "tier3": {
+        "interface": "uxs_interfaces/srv/PayloadSetActuator",
+        "kind": "service",
+        "rosName": "uxs/payload/set_actuator"
+      }
+    }
+  ]
+}

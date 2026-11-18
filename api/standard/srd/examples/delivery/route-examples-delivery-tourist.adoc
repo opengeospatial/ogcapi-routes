@@ -1,0 +1,1276 @@
+[appendix]
+:appendix-caption: Annex
+
+== Route Examples for Delivery Vehicles
+
+_Draft 0.1. Companion files: `delivery-route-examples.json` (3 routes)._
+
+=== Purpose
+
+Three complete examples show how the *Delivery Vehicle Action Registry* are used in OGC API -- Routes route exchange, together with commands from the *Common Command Registry for Uncrewed Systems* where a vehicle moves:
+
+[cols=",,,,>,>"]
+|===
+| Example | Registry | Vehicle | Stops / places | Features | Actions
+
+| Drone delivery round (2 parcels)
+| Delivery
+| DRONE
+| 2
+| 8
+| 20
+
+| Sidewalk robot round (2 parcels)
+| Delivery
+| ROBOT
+| 2
+| 10
+| 23
+
+| Van round (4 stops, pickup, charging)
+| Delivery
+| VAN
+| 4
+| 14
+| 24
+
+|===
+
+All were generated from the same models and checked automatically for conformance to the Route Exchange Model structure and to the registries (parameters, scope, applicability, ordering). The first, comprehensive example (a UAV inspection) is described in _A Comprehensive Route Exchange Example for a UxV_. Coordinates and identifiers are illustrative; the Turin and Como places are real towns, but the coordinates are approximate and the vehicles, stations and tickets are fictitious.
+
+=== Conventions used in all examples
+
+* The structure follows the Route Exchange Model: `overview`, `start`, `segment` (a Point at the end of its stretch), `waypoint`, `end`, with `featureType`, `length`, `duration_s` and `timestamp`.
+* Each route lists the registries it uses in `actionRegistries`, and the Systems it addresses in `targets` (overview).
+* A *segment action* applies to the stretch ending at the segment's Point and is issued when the vehicle leaves the previous waypoint. A *waypoint action* is issued on arrival.
+* `sequence` is per target and follows route order. `execution.ordering = sequential`: each action starts when the previous one is complete.
+* Waypoint properties `stopId`, `parcels`, `timeWindow` are informative extensions.
+* Contingencies are route-level `{condition, action}` pairs, using registry actions.
+
+'''
+
+=== Drone delivery round (2 parcels)
+
+A delivery drone drops one parcel on a winch line and lands for a verified handover at the second stop.
+
+*Vehicle class:* DRONE · *Mode:* `uav-delivery` · *Length:* 3047 m · *Duration:* 12 min 26 s · *Features:* 8 · *Actions:* 20 · *Contingencies:* 3
+
+*Request* (summary): mode `uav-delivery`, preference `fastest`, 4 waypoints, 6 task groups, constraints {maxHeight_m_agl: 120, payload_kg: 2.4}.
+
+==== Features
+
+[cols=">,,,,,,"]
+|===
+| # | featureType | Name / mode | Position (lon, lat[, z MSL]) | Time (UTC) | Length / duration | Actions
+
+| 1
+| overview
+| mode `uav-delivery`
+| 13 points
+|
+| 3047 m / 746 s
+| --
+
+| 2
+| start
+| Hub Mirafiori
+| 7.634, 45.03, 238
+| 09:00
+| --
+| `delivery.load-at-depot`, `vehicle.takeoff`
+
+| 3
+| segment
+| mode `uav-delivery`
+| 7.642, 45.0345, 240
+|
+| 807 m / 67 s
+| `vehicle.set-speed`, `delivery.notify-recipient`
+
+| 4
+| waypoint
+| Stop S1 (garden drop)
+| 7.642, 45.0345, 240
+| 09:06
+| --
+| `delivery.arrive-at-stop`, `delivery.notify-recipient`, `delivery.drop-package-line`, `delivery.capture-proof`, `delivery.notify-recipient`, `delivery.depart-stop`
+
+| 5
+| segment
+| mode `uav-delivery`
+| 7.6485, 45.039, 241
+|
+| 718 m / 60 s
+| `delivery.notify-recipient`
+
+| 6
+| waypoint
+| Stop S2 (landing pad)
+| 7.6485, 45.039, 241
+| 09:08
+| --
+| `delivery.arrive-at-stop`, `vehicle.land`, `delivery.verify-recipient`, `delivery.handover`, `delivery.depart-stop`, `vehicle.takeoff`
+
+| 7
+| segment
+| mode `uav-delivery`
+| 7.634, 45.03, 238
+|
+| 1522 m / 109 s
+| --
+
+| 8
+| end
+| Hub Mirafiori
+| 7.634, 45.03, 238
+| 09:12
+| --
+| `vehicle.land`, `delivery.unload-at-depot`, `delivery.charge`
+|===
+
+==== Actions
+
+[cols=">,>,,,,,"]
+|===
+| Feature | Seq | Target | Action | Parameters | Completion | Hazard
+
+| 2 (start)
+| 1
+| `dronedel-12`
+| `delivery.load-at-depot`
+| depotId=HUB-MIR, maxDuration=300
+| until-duration
+| none
+
+| 2 (start)
+| 2
+| `dronedel-12`
+| `vehicle.takeoff`
+| target={value: 40, reference: home}
+| until-goal
+| flight-critical
+
+| 3 (segment)
+| 3
+| `dronedel-12`
+| `vehicle.set-speed`
+| speed=14
+| immediate
+| flight-critical
+
+| 3 (segment)
+| 4
+| `dronedel-12`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=120, channel=app
+| immediate
+| none
+
+| 4 (waypoint)
+| 5
+| `dronedel-12`
+| `delivery.arrive-at-stop`
+| stopId=S1, approachMode=hover, toleranceRadius=3
+| until-goal
+| none
+
+| 4 (waypoint)
+| 6
+| `dronedel-12`
+| `delivery.notify-recipient`
+| event=arrived
+| immediate
+| none
+
+| 4 (waypoint)
+| 7
+| `dronedel-12`
+| `delivery.drop-package-line`
+| lineLength=12, hoverHeight=15, rate=1.0
+| until-goal
+| flight-critical
+
+| 4 (waypoint)
+| 8
+| `dronedel-12`
+| `delivery.capture-proof`
+| type=photo, parcelId=P-1001
+| until-goal
+| none
+
+| 4 (waypoint)
+| 9
+| `dronedel-12`
+| `delivery.notify-recipient`
+| event=delivered
+| immediate
+| none
+
+| 4 (waypoint)
+| 10
+| `dronedel-12`
+| `delivery.depart-stop`
+| stopId=S1, outcome=delivered
+| immediate
+| none
+
+| 5 (segment)
+| 11
+| `dronedel-12`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=120
+| immediate
+| none
+
+| 6 (waypoint)
+| 12
+| `dronedel-12`
+| `delivery.arrive-at-stop`
+| stopId=S2, approachMode=drop-point
+| until-goal
+| none
+
+| 6 (waypoint)
+| 13
+| `dronedel-12`
+| `vehicle.land`
+| precision=required, disarmAfter=false
+| until-goal
+| flight-critical
+
+| 6 (waypoint)
+| 14
+| `dronedel-12`
+| `delivery.verify-recipient`
+| method=qr-code, maxAttempts=3
+| until-goal
+| none
+
+| 6 (waypoint)
+| 15
+| `dronedel-12`
+| `delivery.handover`
+| parcelId=P-1002, method=drop-zone, proof=photo, contactless=true, compartment=0
+| until-goal
+| flight-critical
+
+| 6 (waypoint)
+| 16
+| `dronedel-12`
+| `delivery.depart-stop`
+| stopId=S2, outcome=delivered
+| immediate
+| none
+
+| 6 (waypoint)
+| 17
+| `dronedel-12`
+| `vehicle.takeoff`
+| target={value: 40, reference: home}
+| until-goal
+| flight-critical
+
+| 8 (end)
+| 18
+| `dronedel-12`
+| `vehicle.land`
+| precision=required
+| until-goal
+| flight-critical
+
+| 8 (end)
+| 19
+| `dronedel-12`
+| `delivery.unload-at-depot`
+| depotId=HUB-MIR, reason=end-of-shift
+| until-duration
+| none
+
+| 8 (end)
+| 20
+| `dronedel-12`
+| `delivery.charge`
+| stationId=HUB-MIR-PAD3, targetLevel=100
+| until-goal
+| none
+|===
+
+==== Command streams
+
+[cols=",,>"]
+|===
+| Target | Actions (in sequence order) | Count
+
+| `dronedel-12`
+| `delivery.load-at-depot` → `vehicle.takeoff` → `vehicle.set-speed` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `delivery.notify-recipient` → `delivery.drop-package-line` → `delivery.capture-proof` → `delivery.notify-recipient` → `delivery.depart-stop` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `vehicle.land` → `delivery.verify-recipient` → `delivery.handover` → `delivery.depart-stop` → `vehicle.takeoff` → `vehicle.land` → `delivery.unload-at-depot` → `delivery.charge`
+| 20
+|===
+
+==== Contingencies
+
+|===
+| Condition | Details | Action
+
+| `link-lost`
+| timeout_s=15
+| `vehicle.return-to-home` (destination=home, finalAction=land) on `dronedel-12`
+
+| `recipient-unavailable`
+| stop=S2
+| `delivery.return-parcel` (parcelId=P-1002, reason=recipient-absent) on `dronedel-12`
+
+| `landing-site-blocked`
+| stop=S2
+| `delivery.report-issue` (category=blocked-path, needsHelp=true) on `dronedel-12`
+|===
+
+==== What to notice
+
+* The stop framing is explicit: `delivery.arrive-at-stop` first, `delivery.depart-stop` last, for both S1 and S2.
+* S1 delivers on a winch line. The handover is one action (`delivery.drop-package-line`), proof is a separate `delivery.capture-proof`.
+* S2 is a landing handover: `vehicle.land` (Common Registry) → verify (QR code) → `delivery.handover` (`drop-zone`) → `vehicle.takeoff`.
+* A segment action issues `delivery.notify-recipient` (approaching) two minutes before arrival.
+* Contingencies cover recipient-unavailable (return the parcel), a blocked landing site (report and ask for help) and loss of link.
+
+==== Excerpt: feature 4
+
+[,json]
+----
+{
+  "id": 4,
+  "type": "Feature",
+  "properties": {
+    "featureType": "waypoint",
+    "name": "Stop S1 (garden drop)",
+    "timestamp": "2026-10-12T09:06:07Z",
+    "stopId": "S1",
+    "parcels": [
+      "P-1001"
+    ],
+    "timeWindow": {
+      "earliest": "2026-10-12T09:10:00Z",
+      "latest": "2026-10-12T09:40:00Z"
+    },
+    "actions": [
+      {
+        "actionType": "delivery.arrive-at-stop",
+        "target": "https://example.org/api/systems/dronedel-12",
+        "sequence": 5,
+        "params": {
+          "stopId": "S1",
+          "approachMode": "hover",
+          "toleranceRadius": 3
+        }
+      },
+      {
+        "actionType": "delivery.notify-recipient",
+        "target": "https://example.org/api/systems/dronedel-12",
+        "sequence": 6,
+        "params": {
+          "event": "arrived"
+        }
+      },
+      {
+        "actionType": "delivery.drop-package-line",
+        "target": "https://example.org/api/systems/dronedel-12",
+        "sequence": 7,
+        "params": {
+          "lineLength": 12,
+          "hoverHeight": 15,
+          "rate": 1.0
+        }
+      },
+      {
+        "actionType": "delivery.capture-proof",
+        "target": "https://example.org/api/systems/dronedel-12",
+        "sequence": 8,
+        "params": {
+          "type": "photo",
+          "parcelId": "P-1001"
+        }
+      },
+      {
+        "actionType": "delivery.notify-recipient",
+        "target": "https://example.org/api/systems/dronedel-12",
+        "sequence": 9,
+        "params": {
+          "event": "delivered"
+        }
+      },
+      {
+        "actionType": "delivery.depart-stop",
+        "target": "https://example.org/api/systems/dronedel-12",
+        "sequence": 10,
+        "params": {
+          "stopId": "S1",
+          "outcome": "delivered"
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [7.642, 45.0345, 240]
+  }
+}
+----
+
+=== 2.2 Sidewalk robot round (2 parcels)
+
+A sidewalk robot passes a gate, verifies a PIN for a hand-to-recipient handover, waits at a crossing and waits for a second recipient.
+
+*Vehicle class:* ROBOT · *Mode:* `sidewalk-robot` · *Length:* 1782 m · *Duration:* 30 min 10 s · *Features:* 10 · *Actions:* 23 · *Contingencies:* 3
+
+*Request* (summary): mode `sidewalk-robot`, preference `safest`, 5 waypoints, 8 task groups, constraints {avoid: ['stairs', 'kerbs-over-8cm'], maxSlope_percent: 8}.
+
+==== Features
+
+[cols=">,,,,,,"]
+|===
+| # | featureType | Name / mode | Position (lon, lat[, z MSL]) | Time (UTC) | Length / duration | Actions
+
+| 1
+| overview
+| mode `sidewalk-robot`
+| 17 points
+|
+| 1782 m / 1810 s
+| --
+
+| 2
+| start
+| Hub Crocetta
+| 7.656, 45.059, 241
+| 10:30
+| --
+| `delivery.load-at-depot`
+
+| 3
+| segment
+| mode `sidewalk`
+| 7.6602, 45.0615, 242
+|
+| 433 m / 289 s
+| `vehicle.set-speed`, `delivery.notify-recipient`
+
+| 4
+| waypoint
+| Stop S1 (apartment, gate)
+| 7.6602, 45.0615, 242
+| 10:38
+| --
+| `delivery.request-access`, `delivery.arrive-at-stop`, `delivery.notify-recipient`, `delivery.verify-recipient`, `delivery.open-compartment`, `delivery.handover`, `delivery.close-compartment`, `delivery.release-access`, `delivery.depart-stop`
+
+| 5
+| segment
+| mode `sidewalk`
+| 7.6625, 45.0628, 242
+|
+| 232 m / 193 s
+| `vehicle.set-speed`
+
+| 6
+| waypoint
+| Crossing Corso Duca
+| 7.6625, 45.0628, 242
+| 10:44
+| --
+| `mission.wait`
+
+| 7
+| segment
+| mode `sidewalk`
+| 7.6648, 45.064, 243
+|
+| 226 m / 151 s
+| `delivery.notify-recipient`
+
+| 8
+| waypoint
+| Stop S2 (office)
+| 7.6648, 45.064, 243
+| 10:47
+| --
+| `delivery.arrive-at-stop`, `delivery.notify-recipient`, `delivery.hold-for-recipient`, `delivery.verify-recipient`, `delivery.handover`, `delivery.depart-stop`
+
+| 9
+| segment
+| mode `sidewalk`
+| 7.656, 45.059, 241
+|
+| 891 m / 557 s
+| --
+
+| 10
+| end
+| Hub Crocetta
+| 7.656, 45.059, 241
+| 11:00
+| --
+| `delivery.charge`, `delivery.unload-at-depot`
+|===
+
+==== Actions
+
+[cols=">,>,,,,,"]
+|===
+| Feature | Seq | Target | Action | Parameters | Completion | Hazard
+
+| 2 (start)
+| 1
+| `robot-31`
+| `delivery.load-at-depot`
+| depotId=HUB-CRO, maxDuration=240
+| until-duration
+| none
+
+| 3 (segment)
+| 2
+| `robot-31`
+| `vehicle.set-speed`
+| speed=1.4
+| immediate
+| flight-critical
+
+| 3 (segment)
+| 3
+| `robot-31`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=300
+| immediate
+| none
+
+| 4 (waypoint)
+| 4
+| `robot-31`
+| `delivery.request-access`
+| accessType=gate, credential=ref-8841, timeout=120
+| until-goal
+| none
+
+| 4 (waypoint)
+| 5
+| `robot-31`
+| `delivery.arrive-at-stop`
+| stopId=S1, approachMode=door
+| until-goal
+| none
+
+| 4 (waypoint)
+| 6
+| `robot-31`
+| `delivery.notify-recipient`
+| event=arrived
+| immediate
+| none
+
+| 4 (waypoint)
+| 7
+| `robot-31`
+| `delivery.verify-recipient`
+| method=pin, maxAttempts=3
+| until-goal
+| none
+
+| 4 (waypoint)
+| 8
+| `robot-31`
+| `delivery.open-compartment`
+| compartment=2, autoCloseAfter=60
+| immediate
+| none
+
+| 4 (waypoint)
+| 9
+| `robot-31`
+| `delivery.handover`
+| parcelId=P-2001, method=hand-to-recipient, proof=photo, contactless=false, compartment=2
+| until-goal
+| flight-critical
+
+| 4 (waypoint)
+| 10
+| `robot-31`
+| `delivery.close-compartment`
+| compartment=2
+| until-goal
+| none
+
+| 4 (waypoint)
+| 11
+| `robot-31`
+| `delivery.release-access`
+| accessType=gate
+| immediate
+| none
+
+| 4 (waypoint)
+| 12
+| `robot-31`
+| `delivery.depart-stop`
+| stopId=S1, outcome=delivered
+| immediate
+| none
+
+| 5 (segment)
+| 13
+| `robot-31`
+| `vehicle.set-speed`
+| speed=1.0
+| immediate
+| flight-critical
+
+| 6 (waypoint)
+| 14
+| `robot-31`
+| `mission.wait`
+| duration=30
+| until-duration
+| none
+
+| 7 (segment)
+| 15
+| `robot-31`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=300
+| immediate
+| none
+
+| 8 (waypoint)
+| 16
+| `robot-31`
+| `delivery.arrive-at-stop`
+| stopId=S2, approachMode=curb
+| until-goal
+| none
+
+| 8 (waypoint)
+| 17
+| `robot-31`
+| `delivery.notify-recipient`
+| event=arrived
+| immediate
+| none
+
+| 8 (waypoint)
+| 18
+| `robot-31`
+| `delivery.hold-for-recipient`
+| maxWait=180, onTimeout=safe-place
+| until-duration
+| none
+
+| 8 (waypoint)
+| 19
+| `robot-31`
+| `delivery.verify-recipient`
+| method=qr-code
+| until-goal
+| none
+
+| 8 (waypoint)
+| 20
+| `robot-31`
+| `delivery.handover`
+| parcelId=P-2002, method=hand-to-recipient, proof=photo, contactless=true, compartment=1
+| until-goal
+| flight-critical
+
+| 8 (waypoint)
+| 21
+| `robot-31`
+| `delivery.depart-stop`
+| stopId=S2, outcome=delivered
+| immediate
+| none
+
+| 10 (end)
+| 22
+| `robot-31`
+| `delivery.charge`
+| targetLevel=100
+| until-goal
+| none
+
+| 10 (end)
+| 23
+| `robot-31`
+| `delivery.unload-at-depot`
+| depotId=HUB-CRO, reason=end-of-shift
+| until-duration
+| none
+|===
+
+==== Command streams
+
+[cols=",,>"]
+|===
+| Target | Actions (in sequence order) | Count
+
+| `robot-31`
+| `delivery.load-at-depot` → `vehicle.set-speed` → `delivery.notify-recipient` → `delivery.request-access` → `delivery.arrive-at-stop` → `delivery.notify-recipient` → `delivery.verify-recipient` → `delivery.open-compartment` → `delivery.handover` → `delivery.close-compartment` → `delivery.release-access` → `delivery.depart-stop` → `vehicle.set-speed` → `mission.wait` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `delivery.notify-recipient` → `delivery.hold-for-recipient` → `delivery.verify-recipient` → `delivery.handover` → `delivery.depart-stop` → `delivery.charge` → `delivery.unload-at-depot`
+| 23
+|===
+
+==== Contingencies
+
+|===
+| Condition | Details | Action
+
+| `recipient-absent`
+| stop=S2
+| `delivery.handover` (parcelId=P-2002, method=safe-place, proof=photo, contactless=true, compartment=1) on `robot-31`
+
+| `access-denied`
+| stop=S1
+| `delivery.return-parcel` (parcelId=P-2001, reason=access-denied) on `robot-31`
+
+| `path-blocked`
+| --
+| `delivery.report-issue` (category=blocked-path, needsHelp=false) on `robot-31`
+|===
+
+==== What to notice
+
+* The gate is handled with `delivery.request-access` before the stop and `delivery.release-access` after the handover. The credential is a reference, not a code.
+* S1 is a full door handover with PIN verification, compartment open and close, and a photo as proof.
+* A road crossing is an intermediate waypoint with `mission.wait` (Common Registry).
+* At S2 the robot waits up to 3 minutes; `onTimeout: safe-place` documents the fallback, and the contingency list holds the safe-place handover.
+* `execution.onFailure` is `continue`: a failed stop does not stop the round.
+
+==== Excerpt: feature 4
+
+[,json]
+----
+{
+  "id": 4,
+  "type": "Feature",
+  "properties": {
+    "featureType": "waypoint",
+    "name": "Stop S1 (apartment, gate)",
+    "timestamp": "2026-10-12T10:38:49Z",
+    "stopId": "S1",
+    "parcels": [
+      "P-2001"
+    ],
+    "actions": [
+      {
+        "actionType": "delivery.request-access",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 4,
+        "params": {
+          "accessType": "gate",
+          "credential": "ref-8841",
+          "timeout": 120
+        }
+      },
+      {
+        "actionType": "delivery.arrive-at-stop",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 5,
+        "params": {
+          "stopId": "S1",
+          "approachMode": "door"
+        }
+      },
+      {
+        "actionType": "delivery.notify-recipient",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 6,
+        "params": {
+          "event": "arrived"
+        }
+      },
+      {
+        "actionType": "delivery.verify-recipient",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 7,
+        "params": {
+          "method": "pin",
+          "maxAttempts": 3
+        }
+      },
+      {
+        "actionType": "delivery.open-compartment",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 8,
+        "params": {
+          "compartment": 2,
+          "autoCloseAfter": 60
+        }
+      },
+      {
+        "actionType": "delivery.handover",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 9,
+        "params": {
+          "parcelId": "P-2001",
+          "method": "hand-to-recipient",
+          "proof": "photo",
+          "contactless": false,
+          "compartment": 2
+        }
+      },
+      {
+        "actionType": "delivery.close-compartment",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 10,
+        "params": {
+          "compartment": 2
+        }
+      },
+      {
+        "actionType": "delivery.release-access",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 11,
+        "params": {
+          "accessType": "gate"
+        }
+      },
+      {
+        "actionType": "delivery.depart-stop",
+        "target": "https://example.org/api/systems/robot-31",
+        "sequence": 12,
+        "params": {
+          "stopId": "S1",
+          "outcome": "delivered"
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [7.6602, 45.0615, 242]
+  }
+}
+----
+
+=== 2.3 Van round (4 stops, pickup, charging)
+
+An electric van with time windows, an age-checked handover, a pickup and a charging stop.
+
+*Vehicle class:* VAN · *Mode:* `delivery-van` · *Length:* 8869 m · *Duration:* 1 h 13 min · *Features:* 14 · *Actions:* 24 · *Contingencies:* 2
+
+*Request* (summary): mode `delivery-van`, preference `fastest`, 7 waypoints, 11 task groups, constraints {maxHeight_m: 2.8, maxWeight_t: 3.5, avoid: ['ztl']}.
+
+==== Features
+
+[cols=">,,,,,,"]
+|===
+| # | featureType | Name / mode | Position (lon, lat[, z MSL]) | Time (UTC) | Length / duration | Actions
+
+| 1
+| overview
+| mode `delivery-van`
+| 25 points
+|
+| 8869 m / 4422 s
+| --
+
+| 2
+| start
+| Depot Nord
+| 7.642, 45.105, 250
+| 08:00
+| --
+| `delivery.load-at-depot`
+
+| 3
+| segment
+| mode `road`
+| 7.658, 45.098, 245
+|
+| 1484 m / 186 s
+| `delivery.notify-recipient`
+
+| 4
+| waypoint
+| Stop S1
+| 7.658, 45.098, 245
+| 08:18
+| --
+| `delivery.arrive-at-stop`, `delivery.park`, `delivery.handover`, `delivery.depart-stop`
+
+| 5
+| segment
+| mode `road`
+| 7.6665, 45.0905, 245
+|
+| 1071 m / 134 s
+| `delivery.notify-recipient`
+
+| 6
+| waypoint
+| Stop S2 (age check)
+| 7.6665, 45.0905, 245
+| 08:24
+| --
+| `delivery.arrive-at-stop`, `delivery.park`, `delivery.verify-recipient`, `delivery.handover`, `delivery.depart-stop`
+
+| 7
+| segment
+| mode `road`
+| 7.659, 45.0835, 244
+|
+| 979 m / 122 s
+| `delivery.notify-recipient`
+
+| 8
+| waypoint
+| Stop S3 (pickup)
+| 7.659, 45.0835, 244
+| 08:30
+| --
+| `delivery.arrive-at-stop`, `delivery.park`, `delivery.pickup`, `delivery.depart-stop`
+
+| 9
+| segment
+| mode `road`
+| 7.65, 45.078, 243
+|
+| 938 m / 117 s
+| --
+
+| 10
+| waypoint
+| Charging stop
+| 7.65, 45.078, 243
+| 08:36
+| --
+| `delivery.charge`
+
+| 11
+| segment
+| mode `road`
+| 7.6385, 45.0745, 245
+|
+| 989 m / 124 s
+| `delivery.notify-recipient`
+
+| 12
+| waypoint
+| Stop S4
+| 7.6385, 45.0745, 245
+| 09:03
+| --
+| `delivery.arrive-at-stop`, `delivery.park`, `delivery.handover`, `delivery.depart-stop`
+
+| 13
+| segment
+| mode `road`
+| 7.642, 45.105, 250
+|
+| 3408 m / 379 s
+| --
+
+| 14
+| end
+| Depot Nord
+| 7.642, 45.105, 250
+| 09:13
+| --
+| `delivery.unload-at-depot`
+|===
+
+==== Actions
+
+[cols=">,>,,,,,"]
+|===
+| Feature | Seq | Target | Action | Parameters | Completion | Hazard
+
+| 2 (start)
+| 1
+| `van-05`
+| `delivery.load-at-depot`
+| depotId=DEP-N, maxDuration=900
+| until-duration
+| none
+
+| 3 (segment)
+| 2
+| `van-05`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=300, channel=sms
+| immediate
+| none
+
+| 4 (waypoint)
+| 3
+| `van-05`
+| `delivery.arrive-at-stop`
+| stopId=S1
+| until-goal
+| none
+
+| 4 (waypoint)
+| 4
+| `van-05`
+| `delivery.park`
+| parkingType=curb, maxDuration=300
+| until-goal
+| flight-critical
+
+| 4 (waypoint)
+| 5
+| `van-05`
+| `delivery.handover`
+| parcelId=P-3001, method=doorstep, proof=photo, contactless=true
+| until-goal
+| flight-critical
+
+| 4 (waypoint)
+| 6
+| `van-05`
+| `delivery.depart-stop`
+| stopId=S1, outcome=delivered
+| immediate
+| none
+
+| 5 (segment)
+| 7
+| `van-05`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=300, channel=sms
+| immediate
+| none
+
+| 6 (waypoint)
+| 8
+| `van-05`
+| `delivery.arrive-at-stop`
+| stopId=S2
+| until-goal
+| none
+
+| 6 (waypoint)
+| 9
+| `van-05`
+| `delivery.park`
+| parkingType=curb, maxDuration=300
+| until-goal
+| flight-critical
+
+| 6 (waypoint)
+| 10
+| `van-05`
+| `delivery.verify-recipient`
+| method=id-check, ageCheck=18
+| until-goal
+| none
+
+| 6 (waypoint)
+| 11
+| `van-05`
+| `delivery.handover`
+| parcelId=P-3002, method=hand-to-recipient, proof=signature, contactless=false
+| until-goal
+| flight-critical
+
+| 6 (waypoint)
+| 12
+| `van-05`
+| `delivery.depart-stop`
+| stopId=S2, outcome=delivered
+| immediate
+| none
+
+| 7 (segment)
+| 13
+| `van-05`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=300, channel=sms
+| immediate
+| none
+
+| 8 (waypoint)
+| 14
+| `van-05`
+| `delivery.arrive-at-stop`
+| stopId=S3
+| until-goal
+| none
+
+| 8 (waypoint)
+| 15
+| `van-05`
+| `delivery.park`
+| parkingType=curb, maxDuration=300
+| until-goal
+| flight-critical
+
+| 8 (waypoint)
+| 16
+| `van-05`
+| `delivery.pickup`
+| parcelId=R-77, method=hand-to-vehicle
+| until-goal
+| none
+
+| 8 (waypoint)
+| 17
+| `van-05`
+| `delivery.depart-stop`
+| stopId=S3, outcome=delivered
+| immediate
+| none
+
+| 10 (waypoint)
+| 18
+| `van-05`
+| `delivery.charge`
+| stationId=CHG-12, targetLevel=70, maxDuration=1500
+| until-goal
+| none
+
+| 11 (segment)
+| 19
+| `van-05`
+| `delivery.notify-recipient`
+| event=approaching, leadTime=300, channel=sms
+| immediate
+| none
+
+| 12 (waypoint)
+| 20
+| `van-05`
+| `delivery.arrive-at-stop`
+| stopId=S4
+| until-goal
+| none
+
+| 12 (waypoint)
+| 21
+| `van-05`
+| `delivery.park`
+| parkingType=curb, maxDuration=300
+| until-goal
+| flight-critical
+
+| 12 (waypoint)
+| 22
+| `van-05`
+| `delivery.handover`
+| parcelId=P-3004, method=safe-place, proof=photo, contactless=true
+| until-goal
+| flight-critical
+
+| 12 (waypoint)
+| 23
+| `van-05`
+| `delivery.depart-stop`
+| stopId=S4, outcome=delivered
+| immediate
+| none
+
+| 14 (end)
+| 24
+| `van-05`
+| `delivery.unload-at-depot`
+| depotId=DEP-N, reason=returns
+| until-duration
+| none
+|===
+
+==== Command streams
+
+[cols=",,>"]
+|===
+| Target | Actions (in sequence order) | Count
+
+| `van-05`
+| `delivery.load-at-depot` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `delivery.park` → `delivery.handover` → `delivery.depart-stop` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `delivery.park` → `delivery.verify-recipient` → `delivery.handover` → `delivery.depart-stop` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `delivery.park` → `delivery.pickup` → `delivery.depart-stop` → `delivery.charge` → `delivery.notify-recipient` → `delivery.arrive-at-stop` → `delivery.park` → `delivery.handover` → `delivery.depart-stop` → `delivery.unload-at-depot`
+| 24
+|===
+
+==== Contingencies
+
+|===
+| Condition | Details | Action
+
+| `recipient-absent`
+| --
+| `delivery.reattempt` (parcelId=P-3002, earliest=2026-10-13T08:00:00Z, latest=2026-10-13T18:00:00Z) on `van-05`
+
+| `parking-unavailable`
+| --
+| `delivery.report-issue` (category=access, needsHelp=false) on `van-05`
+|===
+
+==== What to notice
+
+* Four stops, a pickup (S3), and a mid-round charging stop. Time windows are waypoint properties.
+* S2 is age-restricted: `delivery.verify-recipient` with `id-check` and `ageCheck: 18`, then a handover to the recipient with a signature.
+* S4 is delivered to a safe place with photo proof.
+* `delivery.park` frames the curb stay at every stop, with a five-minute limit.
+* The contingencies schedule a reattempt for the next day and report a parking problem.
+
+==== Excerpt: feature 4
+
+[,json]
+----
+{
+  "id": 4,
+  "type": "Feature",
+  "properties": {
+    "featureType": "waypoint",
+    "name": "Stop S1",
+    "timestamp": "2026-10-12T08:18:06Z",
+    "stopId": "S1",
+    "parcels": [
+      "P-3001"
+    ],
+    "timeWindow": {
+      "earliest": "2026-10-12T08:30:00Z",
+      "latest": "2026-10-12T09:00:00Z"
+    },
+    "actions": [
+      {
+        "actionType": "delivery.arrive-at-stop",
+        "target": "https://example.org/api/systems/van-05",
+        "sequence": 3,
+        "params": {
+          "stopId": "S1"
+        }
+      },
+      {
+        "actionType": "delivery.park",
+        "target": "https://example.org/api/systems/van-05",
+        "sequence": 4,
+        "params": {
+          "parkingType": "curb",
+          "maxDuration": 300
+        }
+      },
+      {
+        "actionType": "delivery.handover",
+        "target": "https://example.org/api/systems/van-05",
+        "sequence": 5,
+        "params": {
+          "parcelId": "P-3001",
+          "method": "doorstep",
+          "proof": "photo",
+          "contactless": true
+        }
+      },
+      {
+        "actionType": "delivery.depart-stop",
+        "target": "https://example.org/api/systems/van-05",
+        "sequence": 6,
+        "params": {
+          "stopId": "S1",
+          "outcome": "delivered"
+        }
+      }
+    ]
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [7.658, 45.098, 245]
+  }
+}
+----
+
+=== References
+
+* OGC API -- Routes, Route Exchange Model
+* Delivery Vehicle Action Registry

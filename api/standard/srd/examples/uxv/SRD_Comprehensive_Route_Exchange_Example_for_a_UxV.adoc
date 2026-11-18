@@ -1,0 +1,1375 @@
+[appendix]
+:appendix-caption: Annex
+
+== A Comprehensive Route Exchange Example for a UxV
+
+=== Purpose
+
+This document shows what an OGC API -- Routes *route response* looks like for an uncrewed vehicle when the route carries *actions*. A route response is a *feature collection*: the `Route` class of the diagram is the collection, its «property» attributes are members of the collection, and its features are the four «FeatureType» classes `RouteOverview`, `Start`, `RouteSegment` and `Destination`. The collection embeds the `RouteDefinition` that describes it (composition, role `describedBy`).
+
+*Input and output are different things.* The route definition is the *input* to the route server: waypoints, a mode, and spatial and temporal constraints. It has no actions, because waypoints are inputs to the algorithms. The route is the *output*: the server creates the geometry, adds the points it needs, allocates the vehicle, and *creates all the actions*.
+
+The example is a multirotor UAV that inspects two towers, drops a sensor with a winch and returns. It uses 21 different commands of the Common Command Registry for Uncrewed Systems on four targets (vehicle, camera, gimbal, winch), with 4 route-level actions, 15 waypoint actions and 4 segment actions. Coordinates and identifiers are made up, and the extensions of Clause 2.3 are proposals. The route was validated (Clause 6).
+
+=== How the example follows the diagram
+
+==== Stereotypes and classes
+
+|===
+| Diagram element | Stereotype | In the JSON
+
+| *Route* (`id`, `title`, `description`, `start`, `end`, `overview`, `actions`, `segments`, `attributes`)
+| none; its attributes are «property»
+| The *FeatureCollection*. `id`, `title`, `description` and *`actions`* (the route-level list) are members of the collection. `start`, `overview`, `segments` and `end` are its features. Constraint: `overview.duration` and `overview.length` equal the sums over the segments
+
+| *RouteDefinition* (`start`, `end`, `mode`, `intermediateWaypoints`, `spatialConstraints`, `temporalConstraints`), composed in Route as role *`describedBy`*
+| «property» attributes
+| The *`describedBy`* member of the collection: the definition is part of the route response. It carries no actions in the diagram
+
+| *RouteOverview* (`path`, `length`, `constraints`, `processingTime`, `comment`), `featureType = overview`
+| «FeatureType»
+| The `overview` feature. `path` (`GM_Curve`) is the `LineString` geometry; the other attributes are properties (4013 m, `duration_s` 469 s). It is not a `RouteWaypoint`, so it has *no actions*
+
+| *Start* (`featureType = start`)
+| «FeatureType»
+| The `start` feature, a Point. It is a `RouteWaypoint`, so it has `actions`
+
+| *RouteSegment* (`length`, `segment_actions`, `previousEnd`, `title`; `featureType = segment`)
+| «FeatureType»
+| One `segment` feature per leg, a Point at the *end* of the leg. `previousEnd` is the id of the feature where the leg starts. `segment_actions` apply along the leg
+
+| *Destination* (`featureType = end`)
+| «FeatureType»
+| The `end` feature, a Point, with its `actions`
+
+| *RouteWaypoint* (`actions`), a `Waypoint` (`title`, `constraint`, `id`, `location`)
+| *no stereotype*
+| *Not a feature type.* It is the supertype of `Start`, `RouteSegment` and `Destination`, so their features inherit `actions`, `title`, `constraint`, `id` and the Point `location`. An intermediate waypoint is therefore *the end point of a segment*: its actions are the `actions` of that segment. The code-list value `route_waypoint` is not used by any feature type, so no feature has it
+
+| *RouteComponent* (`featureType`, `attributes`)
+| abstract
+| `featureType` on every feature; `attributes` not used
+
+| *Mode*, *SupportedRegion*, *SpatialConstraint*, *TemporalConstraint*
+| «property» attributes
+| Objects in `describedBy`. Enumerations `Domain` (`air`, `ground`, `maritime`), `RestrictionType` (`doNotEnter`, `doNotLeave`, `override`) and `TemporalConstraintType` (`noEarlierThan`, `noLaterThan`, `interval`) give the values
+
+| *Action*
+| none
+| Our action instance (2.2)
+
+| *Attribute*
+| «Type»
+| Not used
+|===
+
+==== The action instance
+
+The `Action` class of the diagram has `id`, `title` and `description`. The examples keep the action definition used in the registries:
+
+|===
+| Member | Meaning
+
+| `actionType`
+| Identifier of a registry action (the registry holds its title, description and parameter schema)
+
+| `target`
+| System the action is addressed to (vehicle or payload)
+
+| `sequence`
+| Order among the actions of the same target, over the whole route (Clause 3)
+
+| `params`
+| Parameter values. Position parameters that are context parameters are filled from the point and omitted
+|===
+
+==== Extensions to the diagram
+
+|===
+| Where | Member | Meaning
+
+| Route (collection)
+| `actionRegistries`, `contingencies`, `targets`, `execution`, `vehicleClass`, `verticalReference`
+| Registries used; `{condition, action}` pairs; Systems addressed; how a client executes; route options
+
+| Overview
+| `totalDuration_s`
+| Duration including the time spent at waypoints (`duration_s` is the sum over the segments, as the constraint requires)
+
+| Segment
+| `travelMode`, `waypointId`, `timestamp`
+| Means of travel on the leg; id of the definition's waypoint that the segment ends at (`Waypoint.id`); arrival time
+
+| Start, end
+| `timestamp`
+| Time
+
+| Segment
+| (absent) `waypointId`
+| A segment that the server *inserts* (a point the input did not name) has no `waypointId`
+|===
+
+=== Actions at three levels
+
+|===
+| Level | Model element | JSON | Issued | Reverted
+
+| *Route*
+| `Route.actions`
+| `actions` on the feature collection
+| When execution begins, in order, before the actions of the `start` feature
+| Yes, after the actions of the `end` feature
+
+| *Waypoint*
+| `RouteWaypoint.actions`, inherited by `Start`, `RouteSegment` (its end point) and `Destination`
+| `properties.actions` of `start`, `segment` or `end`
+| On arrival at the feature's Point
+| No
+
+| *Segment*
+| `RouteSegment.segment_actions`
+| `properties.segment_actions` of a `segment`
+| When the vehicle leaves the point named by `previousEnd`, so it applies along the leg
+| Yes, at the segment's Point, before that point's own `actions`
+|===
+
+The order is: route actions; then, for each leg, the `segment_actions` of the segment, their reverts, and the `actions` at the segment's end point. The arrival actions of the *last* leg belong to the `end` feature and not to the last segment, because both have the same Point.
+
+Which levels a command may appear at is part of its registry entry (`scope`). Route and segment levels are for settings and states that last: the executor undoes them when the level ends.
+
+*Layering.* The route sets a cruise speed of 8 m/s (`vehicle.set-speed` at route level). Some segments set their own speed, and when such a segment ends the speed returns to 8 m/s. Segments without a speed action use the route-level speed.
+
+=== The scenario
+
+The multirotor `uav-07` starts from Pad A. At route level the executor powers the camera, selects the visible source, starts recording and sets the cruise speed. The vehicle takes off, flies a survey strip to tower T1 (photos every 20 m on the way, five zoomed photos at the tower), orbits tower T2 while recording video, hovers at a drop point and lowers a sensor on a winch, returns at a lower altitude and lands. The camera is switched off and recording stops by the route-level reverts. Travel time 7 min 49 s, 13 min 29 s with the time at waypoints, 4013 m, 9 features, 23 actions, 4 contingencies.
+
+==== Route definition
+
+The input is the `RouteDefinition` of the diagram and nothing else: the start, the end, the waypoints to be visited (identified by `id`, named by `title`, placed by `location`), the mode, and spatial and temporal constraints. *It contains no actions.* Waypoints have no actions in the diagram because they are inputs to the algorithms; the actions are produced by the route server.
+
+[,json]
+----
+{
+  "start": {
+    "id": "start",
+    "title": "Pad A",
+    "location": {
+      "type": "Point",
+      "coordinates": [7.88, 45.19]
+    }
+  },
+  "intermediateWaypoints": [
+    {
+      "id": "tower-t1",
+      "title": "Tower T1",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.8902, 45.1941]
+      }
+    },
+    {
+      "id": "tower-t2",
+      "title": "Tower T2",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.8975, 45.196]
+      }
+    },
+    {
+      "id": "sensor-site",
+      "title": "Sensor drop site",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.902, 45.1988]
+      }
+    }
+  ],
+  "end": {
+    "id": "end",
+    "title": "Pad A",
+    "location": {
+      "type": "Point",
+      "coordinates": [7.88, 45.19]
+    }
+  },
+  "mode": {
+    "id": "uav-multirotor",
+    "title": "Multirotor UAV",
+    "domain": [
+      "air"
+    ],
+    "supportedRegions": [
+      {
+        "id": "reg-po",
+        "title": "Po valley test area",
+        "bbox": [7.8, 45.1, 8.0, 45.3]
+      }
+    ]
+  },
+  "spatialConstraints": [
+    {
+      "id": "sc-fence",
+      "title": "Operating area",
+      "type": "doNotLeave",
+      "area": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [7.87, 45.185],
+            [7.912, 45.185],
+            [7.912, 45.205],
+            [7.87, 45.205],
+            [7.87, 45.185]
+          ]
+        ]
+      },
+      "lower_vertical_limit": 150,
+      "upper_vertical_limit": 320
+    },
+    {
+      "id": "sc-nfz",
+      "title": "Temporary no-fly zone",
+      "type": "doNotEnter",
+      "area": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [7.893, 45.193],
+            [7.894, 45.193],
+            [7.894, 45.1938],
+            [7.893, 45.1938],
+            [7.893, 45.193]
+          ]
+        ]
+      },
+      "buffer": 10
+    }
+  ],
+  "temporalConstraints": [
+    {
+      "id": "tc-day",
+      "title": "Daylight window",
+      "type": "interval",
+      "timePoint": "2026-10-12T07:00:00Z",
+      "delta": 36000
+    }
+  ]
+}
+----
+
+==== What the route server adds
+
+|===
+| Input | Output created by the server
+
+| `start`
+| The `start` feature, its time, and the actions at the start (take-off)
+
+| `intermediateWaypoints` `tower-t1`, `tower-t2`, `sensor-site`
+| One `segment` each (`waypointId` names the input waypoint), the planned altitude (3rd coordinate, MSL), the arrival time and the actions at the waypoint
+
+| _(not in the input)_
+| Two points the server inserted: `Ingress` and `Return corridor`, as segments without `waypointId`
+
+| `end`
+| The `end` feature and the landing
+
+| `mode` (`uav-multirotor`, domain `air`)
+| The allocated vehicle and payloads (`targets`), the speeds and the travel mode of the segments
+
+| `spatialConstraints`
+| A path that keeps inside the operating area and out of the no-fly zone (`overview.constraints` says so)
+
+| `temporalConstraints`
+| Times of the route that fit the daylight window
+
+| _(nothing)_
+| Route-level, segment-level and waypoint-level *actions*, the execution policy and the contingencies
+|===
+
+*Where the actions come from.* The server has what the input does not: the asset catalogue (tower T1 and T2 are inspection assets with a template: photos at T1, a video orbit at T2; the sensor site takes a winch drop), the capabilities of the allocated vehicle (camera, gimbal, winch), the operator's procedures (route-level recording and cruise speed, take-off and landing procedure), the registries of actions, and safety rules. The client only says _where_ and _within which limits_.
+
+=== The route 
+
+==== Members of the collection
+
+|===
+| Member | Value
+
+| `type`
+| `FeatureCollection`
+
+| `id`, `title`, `description`
+| `+https://example.org/api/routes/uxv-insp-0042+`, "Tower inspection with sensor drop", "A multirotor inspects two towers, drops a sensor with a winch and lands."
+
+| `describedBy`
+| The input definition of Clause 4.1, unchanged
+
+| `actions`
+| 4 route-level actions
+
+| Extensions
+| `actionRegistries`, `contingencies`, `targets`, `execution`, `vehicleClass`, `verticalReference`, `links`
+
+| `features`
+| 9 features: `overview`, `start`, 6 segments, `end`
+|===
+
+==== Features
+
+|===
+| id | featureType | Title | Position (lon, lat[, z MSL]) | Time (UTC) | Length / duration | `segment_actions` (along the stretch) | `actions` (at the point)
+
+| overview
+| overview
+| --
+| 25 points
+|
+| 4013 m / 469 s
+| --
+| --
+
+| start
+| start
+| Pad A
+| 7.88, 45.19, 188
+| 08:00
+| --
+| --
+| `vehicle.takeoff`
+
+| seg1
+| segment
+| Ingress (`uav-multirotor`)
+| 7.8855, 45.1925, 235
+| 08:01
+| 515 m / 52 s
+| `vehicle.set-speed`
+| `gimbal.point`
+
+| seg2
+| segment
+| Tower T1 (`uav-multirotor`)
+| 7.8902, 45.1941, 236
+| 08:03
+| 411 m / 68 s
+| `camera.set-trigger-distance`, `vehicle.set-speed`
+| `vehicle.set-heading`, `gimbal.point-at`, `camera.set-zoom`, `camera.capture-image`
+
+| seg3
+| segment
+| Tower T2 (`uav-multirotor`)
+| 7.8975, 45.196, 246
+| 08:04
+| 613 m / 77 s
+| --
+| `camera.start-video`, `vehicle.orbit`, `camera.stop-video`
+
+| seg4
+| segment
+| Sensor drop site (`uav-multirotor`)
+| 7.902, 45.1988, 240
+| 08:08
+| 472 m / 59 s
+| --
+| `vehicle.hold-position`, `payload.winch`, `payload.release`, `payload.winch`
+
+| seg5
+| segment
+| Return corridor (`uav-multirotor`)
+| 7.895, 45.195, 235
+| 08:10
+| 695 m / 50 s
+| `vehicle.set-speed`
+| `vehicle.set-vertical-position`
+
+| seg6
+| segment
+| Pad A (`uav-multirotor`)
+| 7.88, 45.19, 188
+| 08:13
+| 1307 m / 163 s
+| --
+| --
+
+| end
+| end
+| Pad A
+| 7.88, 45.19, 188
+| 08:13
+| --
+| --
+| `vehicle.land`
+|===
+
+A `segment` with a `waypointId` ends at the input waypoint of that id. A segment *without* `waypointId` ends at a point the server inserted (here `Ingress` and `Return corridor`). The `end` feature has the same Point as the last segment.
+
+==== Actions in execution order
+
+|===
+| Level | Feature | Seq | Target | Action | Parameters | Completion | Hazard
+
+| route
+| --
+| 1
+| `camera-01`
+| `sensor.set-power`
+| state=on
+| immediate
+| none
+
+| route
+| --
+| 2
+| `camera-01`
+| `camera.select-source`
+| source=visible
+| immediate
+| none
+
+| route
+| --
+| 3
+| `camera-01`
+| `data.start-recording`
+| label=insp-2026-10-12-a
+| immediate
+| none
+
+| route
+| --
+| 1
+| `uav-07`
+| `vehicle.set-speed`
+| speed=8, speedType=ground
+| immediate
+| flight-critical
+
+| waypoint
+| start
+| 2
+| `uav-07`
+| `vehicle.takeoff`
+| target={value: 45, reference: home}, climbRate=3.0
+| until-goal
+| flight-critical
+
+| segment
+| seg1
+| 3
+| `uav-07`
+| `vehicle.set-speed`
+| speed=12, speedType=ground
+| immediate
+| flight-critical
+
+| waypoint
+| seg1
+| 1
+| `gimbal-01`
+| `gimbal.point`
+| pitch=-30, frame=vehicle
+| until-goal
+| none
+
+| segment
+| seg2
+| 4
+| `camera-01`
+| `camera.set-trigger-distance`
+| distance=20
+| immediate
+| none
+
+| segment
+| seg2
+| 4
+| `uav-07`
+| `vehicle.set-speed`
+| speed=6
+| immediate
+| flight-critical
+
+| waypoint
+| seg2
+| 5
+| `uav-07`
+| `vehicle.set-heading`
+| heading=90, reference=true-north
+| until-goal
+| flight-critical
+
+| waypoint
+| seg2
+| 2
+| `gimbal-01`
+| `gimbal.point-at`
+| location={latitude: 45.19445, longitude: 7.8905, vertical: 205, verticalReference: msl}
+| immediate
+| none
+
+| waypoint
+| seg2
+| 5
+| `camera-01`
+| `camera.set-zoom`
+| zoomLevel=3
+| immediate
+| none
+
+| waypoint
+| seg2
+| 6
+| `camera-01`
+| `camera.capture-image`
+| count=5, interval=2
+| until-goal
+| none
+
+| waypoint
+| seg3
+| 7
+| `camera-01`
+| `camera.start-video`
+| maxDuration=180, label=T2-orbit
+| immediate
+| none
+
+| waypoint
+| seg3
+| 6
+| `uav-07`
+| `vehicle.orbit`
+| radius=25, direction=clockwise, turns=1.5, facing=center, speed=4
+| until-goal
+| flight-critical
+
+| waypoint
+| seg3
+| 8
+| `camera-01`
+| `camera.stop-video`
+| --
+| immediate
+| none
+
+| waypoint
+| seg4
+| 7
+| `uav-07`
+| `vehicle.hold-position`
+| duration=5
+| until-duration
+| flight-critical
+
+| waypoint
+| seg4
+| 1
+| `winch-01`
+| `payload.winch`
+| action=deploy, length=15, rate=1.0
+| until-goal
+| flight-critical
+
+| waypoint
+| seg4
+| 2
+| `winch-01`
+| `payload.release`
+| slot=0, mode=deploy
+| until-goal
+| flight-critical
+
+| waypoint
+| seg4
+| 3
+| `winch-01`
+| `payload.winch`
+| action=retract, length=15, rate=1.5
+| until-goal
+| flight-critical
+
+| segment
+| seg5
+| 8
+| `uav-07`
+| `vehicle.set-speed`
+| speed=14, speedType=ground
+| immediate
+| flight-critical
+
+| waypoint
+| seg5
+| 9
+| `uav-07`
+| `vehicle.set-vertical-position`
+| target={value: 40, reference: home}, rate=2.0
+| until-goal
+| flight-critical
+
+| waypoint
+| end
+| 10
+| `uav-07`
+| `vehicle.land`
+| precision=opportunistic, descentRate=1.0, disarmAfter=true
+| until-goal
+| flight-critical
+|===
+
+==== Automatic reverts
+
+|===
+| Level | Feature | Action | Reverted at the end of the level by
+
+| route
+| --
+| `sensor.set-power` (state=on)
+| restore previous power state
+
+| route
+| --
+| `camera.select-source` (source=visible)
+| restore previous source
+
+| route
+| --
+| `data.start-recording` (label=insp-2026-10-12-a)
+| `data.stop-recording`
+
+| route
+| --
+| `vehicle.set-speed` (speed=8, speedType=ground)
+| restore the speed in force before (the route-level speed, or the platform default)
+
+| segment
+| seg1
+| `vehicle.set-speed` (speed=12, speedType=ground)
+| restore the speed in force before (the route-level speed, or the platform default)
+
+| segment
+| seg2
+| `camera.set-trigger-distance` (distance=20)
+| `camera.set-trigger-distance` with `distance = 0`
+
+| segment
+| seg2
+| `vehicle.set-speed` (speed=6)
+| restore the speed in force before (the route-level speed, or the platform default)
+
+| segment
+| seg5
+| `vehicle.set-speed` (speed=14, speedType=ground)
+| restore the speed in force before (the route-level speed, or the platform default)
+|===
+
+The route-level `sensor.set-power`, `camera.select-source`, `data.start-recording` and `vehicle.set-speed` are undone after the `end` feature's actions. `camera.set-trigger-distance` is undone at the end of segment `seg2`, and the speed of a segment goes back to the route-level speed.
+
+Behaviours to notice:
+
+* *Order across levels.* Route actions first; then for each leg the segment actions, then the actions at the end point. Each target's `sequence` increases along this order: the camera's route-level actions are 1--3, and its later actions follow.
+* *Overriding the context position.* `gimbal.point-at` carries an explicit tower location. The vehicle position (the segment's Point) is a different place.
+* *Paired actions.* `camera.start-video` / `camera.stop-video` and the winch `deploy` / `retract` surround the long-running `vehicle.orbit` and `payload.release`.
+* *A latched setting at waypoint level stays.* `vehicle.set-vertical-position` in the `actions` of `seg5` is not reverted, so the lower altitude holds for the rest of the route.
+* *Not in the route.* Arming and mission start have scope `none` and need explicit authorization.
+
+==== Command streams per target
+
+|===
+| Target | Actions in sequence order | Count
+
+| `camera-01`
+| `sensor.set-power` → `camera.select-source` → `data.start-recording` → `camera.set-trigger-distance` → `camera.set-zoom` → `camera.capture-image` → `camera.start-video` → `camera.stop-video`
+| 8
+
+| `uav-07`
+| `vehicle.set-speed` → `vehicle.takeoff` → `vehicle.set-speed` → `vehicle.set-speed` → `vehicle.set-heading` → `vehicle.orbit` → `vehicle.hold-position` → `vehicle.set-speed` → `vehicle.set-vertical-position` → `vehicle.land`
+| 10
+
+| `gimbal-01`
+| `gimbal.point` → `gimbal.point-at`
+| 2
+
+| `winch-01`
+| `payload.winch` → `payload.release` → `payload.winch`
+| 3
+|===
+
+==== Contingencies
+
+|===
+| Condition | Details | Action
+
+| `link-lost`
+| timeout_s=15
+| `vehicle.return-to-home` (destination=home, finalAction=land) on `uav-07`
+
+| `battery-below`
+| threshold={value: 25, unit: %}
+| `vehicle.return-to-home` (destination=home, finalAction=land) on `uav-07`
+
+| `geofence-breach`
+| --
+| `vehicle.stop` (mode=controlled) on `uav-07`
+
+| `winch-fault`
+| target=https://example.org/api/systems/winch-01
+| `payload.winch` (action=hold) on `winch-01`
+|===
+
+Contingencies are armed for the whole route and executed when the condition occurs. A `flight-critical` action in a contingency needs the same authorization as one in the route.
+
+==== The full route
+
+[,json]
+----
+{
+  "type": "FeatureCollection",
+  "id": "https://example.org/api/routes/uxv-insp-0042",
+  "title": "Tower inspection with sensor drop",
+  "description": "A multirotor inspects two towers, drops a sensor with a winch and lands.",
+  "describedBy": {
+    "start": {
+      "id": "start",
+      "title": "Pad A",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.88, 45.19]
+      }
+    },
+    "intermediateWaypoints": [
+      {
+        "id": "tower-t1",
+        "title": "Tower T1",
+        "location": {
+          "type": "Point",
+          "coordinates": [7.8902, 45.1941]
+        }
+      },
+      {
+        "id": "tower-t2",
+        "title": "Tower T2",
+        "location": {
+          "type": "Point",
+          "coordinates": [7.8975, 45.196]
+        }
+      },
+      {
+        "id": "sensor-site",
+        "title": "Sensor drop site",
+        "location": {
+          "type": "Point",
+          "coordinates": [7.902, 45.1988]
+        }
+      }
+    ],
+    "end": {
+      "id": "end",
+      "title": "Pad A",
+      "location": {
+        "type": "Point",
+        "coordinates": [7.88, 45.19]
+      }
+    },
+    "mode": {
+      "id": "uav-multirotor",
+      "title": "Multirotor UAV",
+      "domain": [
+        "air"
+      ],
+      "supportedRegions": [
+        {
+          "id": "reg-po",
+          "title": "Po valley test area",
+          "bbox": [7.8, 45.1, 8.0, 45.3]
+        }
+      ]
+    },
+    "spatialConstraints": [
+      {
+        "id": "sc-fence",
+        "title": "Operating area",
+        "type": "doNotLeave",
+        "area": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [7.87, 45.185],
+              [7.912, 45.185],
+              [7.912, 45.205],
+              [7.87, 45.205],
+              [7.87, 45.185]
+            ]
+          ]
+        },
+        "lower_vertical_limit": 150,
+        "upper_vertical_limit": 320
+      },
+      {
+        "id": "sc-nfz",
+        "title": "Temporary no-fly zone",
+        "type": "doNotEnter",
+        "area": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [7.893, 45.193],
+              [7.894, 45.193],
+              [7.894, 45.1938],
+              [7.893, 45.1938],
+              [7.893, 45.193]
+            ]
+          ]
+        },
+        "buffer": 10
+      }
+    ],
+    "temporalConstraints": [
+      {
+        "id": "tc-day",
+        "title": "Daylight window",
+        "type": "interval",
+        "timePoint": "2026-10-12T07:00:00Z",
+        "delta": 36000
+      }
+    ]
+  },
+  "actions": [
+    {
+      "actionType": "sensor.set-power",
+      "target": "https://example.org/api/systems/camera-01",
+      "sequence": 1,
+      "params": {
+        "state": "on"
+      }
+    },
+    {
+      "actionType": "camera.select-source",
+      "target": "https://example.org/api/systems/camera-01",
+      "sequence": 2,
+      "params": {
+        "source": "visible"
+      }
+    },
+    {
+      "actionType": "data.start-recording",
+      "target": "https://example.org/api/systems/camera-01",
+      "sequence": 3,
+      "params": {
+        "label": "insp-2026-10-12-a"
+      }
+    },
+    {
+      "actionType": "vehicle.set-speed",
+      "target": "https://example.org/api/systems/uav-07",
+      "sequence": 1,
+      "params": {
+        "speed": 8,
+        "speedType": "ground"
+      }
+    }
+  ],
+  "vehicleClass": "UAV",
+  "verticalReference": "msl",
+  "targets": [
+    {
+      "id": "https://example.org/api/systems/uav-07",
+      "role": "vehicle",
+      "type": "multirotor"
+    },
+    {
+      "id": "https://example.org/api/systems/camera-01",
+      "role": "payload",
+      "type": "camera",
+      "subsystemOf": "https://example.org/api/systems/uav-07"
+    },
+    {
+      "id": "https://example.org/api/systems/gimbal-01",
+      "role": "payload",
+      "type": "gimbal",
+      "subsystemOf": "https://example.org/api/systems/uav-07"
+    },
+    {
+      "id": "https://example.org/api/systems/winch-01",
+      "role": "payload",
+      "type": "winch",
+      "subsystemOf": "https://example.org/api/systems/uav-07"
+    }
+  ],
+  "execution": {
+    "trigger": "on-arrival",
+    "arrivalToleranceMeters": 5,
+    "ordering": "sequential",
+    "onFailure": "halt"
+  },
+  "links": [
+    {
+      "rel": "self",
+      "type": "application/geo+json",
+      "href": "https://example.org/api/routes/uxv-insp-0042"
+    },
+    {
+      "rel": "describedby",
+      "type": "application/json",
+      "href": "https://example.org/api/routes/uxv-insp-0042/definition"
+    }
+  ],
+  "actionRegistries": [
+    {
+      "id": "common",
+      "uri": "http://www.opengis.net/def/uxs-command/",
+      "version": "0.1.0-draft"
+    }
+  ],
+  "contingencies": [
+    {
+      "condition": "link-lost",
+      "timeout_s": 15,
+      "action": {
+        "actionType": "vehicle.return-to-home",
+        "target": "https://example.org/api/systems/uav-07",
+        "params": {
+          "destination": "home",
+          "finalAction": "land"
+        }
+      }
+    },
+    {
+      "condition": "battery-below",
+      "threshold": {
+        "value": 25,
+        "unit": "%"
+      },
+      "action": {
+        "actionType": "vehicle.return-to-home",
+        "target": "https://example.org/api/systems/uav-07",
+        "params": {
+          "destination": "home",
+          "finalAction": "land"
+        }
+      }
+    },
+    {
+      "condition": "geofence-breach",
+      "action": {
+        "actionType": "vehicle.stop",
+        "target": "https://example.org/api/systems/uav-07",
+        "params": {
+          "mode": "controlled"
+        }
+      }
+    },
+    {
+      "condition": "winch-fault",
+      "target": "https://example.org/api/systems/winch-01",
+      "action": {
+        "actionType": "payload.winch",
+        "target": "https://example.org/api/systems/winch-01",
+        "params": {
+          "action": "hold"
+        }
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "overview",
+      "type": "Feature",
+      "properties": {
+        "featureType": "overview",
+        "length": 4013,
+        "duration_s": 469,
+        "totalDuration_s": 809,
+        "processingTime": "2026-10-12T07:00:00Z",
+        "constraints": [
+          "sc-fence (doNotLeave, 150-320 m MSL) respected",
+          "sc-nfz (doNotEnter, buffer 10 m) avoided",
+          "tc-day (interval 07:00-17:00 UTC) satisfied"
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [7.88, 45.19, 188],
+          [7.881325, 45.190735, 199.8],
+          [7.88275, 45.19125, 211.5],
+          [7.884175, 45.191765, 223.2],
+          [7.8855, 45.1925, 235],
+          [7.886643, 45.192994, 235.2],
+          [7.88785, 45.1933, 235.5],
+          [7.889057, 45.193606, 235.8],
+          [7.8902, 45.1941, 236],
+          [7.891987, 45.194721, 238.5],
+          [7.89385, 45.19505, 241.0],
+          [7.895713, 45.195379, 243.5],
+          [7.8975, 45.196, 246],
+          [7.898569, 45.19679, 244.5],
+          [7.89975, 45.1974, 243.0],
+          [7.900931, 45.19801, 241.5],
+          [7.902, 45.1988, 240],
+          [7.900326, 45.19771, 238.8],
+          [7.8985, 45.1969, 237.5],
+          [7.896674, 45.19609, 236.2],
+          [7.895, 45.195, 235],
+          [7.89135, 45.19345, 223.2],
+          [7.8875, 45.1925, 211.5],
+          [7.88365, 45.19155, 199.8],
+          [7.88, 45.19, 188]
+        ]
+      }
+    },
+    {
+      "id": "start",
+      "type": "Feature",
+      "properties": {
+        "featureType": "start",
+        "title": "Pad A",
+        "timestamp": "2026-10-12T08:00:00Z",
+        "actions": [
+          {
+            "actionType": "vehicle.takeoff",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 2,
+            "params": {
+              "target": {
+                "value": 45,
+                "reference": "home"
+              },
+              "climbRate": 3.0
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.88, 45.19, 188]
+      }
+    },
+    {
+      "id": "seg1",
+      "type": "Feature",
+      "properties": {
+        "featureType": "segment",
+        "title": "Ingress",
+        "previousEnd": "start",
+        "length": 515,
+        "duration_s": 52,
+        "travelMode": "uav-multirotor",
+        "timestamp": "2026-10-12T08:01:52Z",
+        "segment_actions": [
+          {
+            "actionType": "vehicle.set-speed",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 3,
+            "params": {
+              "speed": 12,
+              "speedType": "ground"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "actionType": "gimbal.point",
+            "target": "https://example.org/api/systems/gimbal-01",
+            "sequence": 1,
+            "params": {
+              "pitch": -30,
+              "frame": "vehicle"
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.8855, 45.1925, 235]
+      }
+    },
+    {
+      "id": "seg2",
+      "type": "Feature",
+      "properties": {
+        "featureType": "segment",
+        "title": "Tower T1",
+        "previousEnd": "seg1",
+        "waypointId": "tower-t1",
+        "length": 411,
+        "duration_s": 68,
+        "travelMode": "uav-multirotor",
+        "timestamp": "2026-10-12T08:03:00Z",
+        "segment_actions": [
+          {
+            "actionType": "camera.set-trigger-distance",
+            "target": "https://example.org/api/systems/camera-01",
+            "sequence": 4,
+            "params": {
+              "distance": 20
+            }
+          },
+          {
+            "actionType": "vehicle.set-speed",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 4,
+            "params": {
+              "speed": 6
+            }
+          }
+        ],
+        "actions": [
+          {
+            "actionType": "vehicle.set-heading",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 5,
+            "params": {
+              "heading": 90,
+              "reference": "true-north"
+            }
+          },
+          {
+            "actionType": "gimbal.point-at",
+            "target": "https://example.org/api/systems/gimbal-01",
+            "sequence": 2,
+            "params": {
+              "location": {
+                "latitude": 45.19445,
+                "longitude": 7.8905,
+                "vertical": 205,
+                "verticalReference": "msl"
+              }
+            }
+          },
+          {
+            "actionType": "camera.set-zoom",
+            "target": "https://example.org/api/systems/camera-01",
+            "sequence": 5,
+            "params": {
+              "zoomLevel": 3
+            }
+          },
+          {
+            "actionType": "camera.capture-image",
+            "target": "https://example.org/api/systems/camera-01",
+            "sequence": 6,
+            "params": {
+              "count": 5,
+              "interval": 2
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.8902, 45.1941, 236]
+      }
+    },
+    {
+      "id": "seg3",
+      "type": "Feature",
+      "properties": {
+        "featureType": "segment",
+        "title": "Tower T2",
+        "previousEnd": "seg2",
+        "waypointId": "tower-t2",
+        "length": 613,
+        "duration_s": 77,
+        "travelMode": "uav-multirotor",
+        "timestamp": "2026-10-12T08:04:57Z",
+        "actions": [
+          {
+            "actionType": "camera.start-video",
+            "target": "https://example.org/api/systems/camera-01",
+            "sequence": 7,
+            "params": {
+              "maxDuration": 180,
+              "label": "T2-orbit"
+            }
+          },
+          {
+            "actionType": "vehicle.orbit",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 6,
+            "params": {
+              "radius": 25,
+              "direction": "clockwise",
+              "turns": 1.5,
+              "facing": "center",
+              "speed": 4
+            }
+          },
+          {
+            "actionType": "camera.stop-video",
+            "target": "https://example.org/api/systems/camera-01",
+            "sequence": 8,
+            "params": {}
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.8975, 45.196, 246]
+      }
+    },
+    {
+      "id": "seg4",
+      "type": "Feature",
+      "properties": {
+        "featureType": "segment",
+        "title": "Sensor drop site",
+        "previousEnd": "seg3",
+        "waypointId": "sensor-site",
+        "length": 472,
+        "duration_s": 59,
+        "travelMode": "uav-multirotor",
+        "timestamp": "2026-10-12T08:08:26Z",
+        "actions": [
+          {
+            "actionType": "vehicle.hold-position",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 7,
+            "params": {
+              "duration": 5
+            }
+          },
+          {
+            "actionType": "payload.winch",
+            "target": "https://example.org/api/systems/winch-01",
+            "sequence": 1,
+            "params": {
+              "action": "deploy",
+              "length": 15,
+              "rate": 1.0
+            }
+          },
+          {
+            "actionType": "payload.release",
+            "target": "https://example.org/api/systems/winch-01",
+            "sequence": 2,
+            "params": {
+              "slot": 0,
+              "mode": "deploy"
+            }
+          },
+          {
+            "actionType": "payload.winch",
+            "target": "https://example.org/api/systems/winch-01",
+            "sequence": 3,
+            "params": {
+              "action": "retract",
+              "length": 15,
+              "rate": 1.5
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.902, 45.1988, 240]
+      }
+    },
+    {
+      "id": "seg5",
+      "type": "Feature",
+      "properties": {
+        "featureType": "segment",
+        "title": "Return corridor",
+        "previousEnd": "seg4",
+        "length": 695,
+        "duration_s": 50,
+        "travelMode": "uav-multirotor",
+        "timestamp": "2026-10-12T08:10:46Z",
+        "segment_actions": [
+          {
+            "actionType": "vehicle.set-speed",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 8,
+            "params": {
+              "speed": 14,
+              "speedType": "ground"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "actionType": "vehicle.set-vertical-position",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 9,
+            "params": {
+              "target": {
+                "value": 40,
+                "reference": "home"
+              },
+              "rate": 2.0
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.895, 45.195, 235]
+      }
+    },
+    {
+      "id": "seg6",
+      "type": "Feature",
+      "properties": {
+        "featureType": "segment",
+        "title": "Pad A",
+        "previousEnd": "seg5",
+        "waypointId": "end",
+        "length": 1307,
+        "duration_s": 163,
+        "travelMode": "uav-multirotor",
+        "timestamp": "2026-10-12T08:13:29Z"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.88, 45.19, 188]
+      }
+    },
+    {
+      "id": "end",
+      "type": "Feature",
+      "properties": {
+        "featureType": "end",
+        "title": "Pad A",
+        "timestamp": "2026-10-12T08:13:29Z",
+        "actions": [
+          {
+            "actionType": "vehicle.land",
+            "target": "https://example.org/api/systems/uav-07",
+            "sequence": 10,
+            "params": {
+              "precision": "opportunistic",
+              "descentRate": 1.0,
+              "disarmAfter": true
+            }
+          }
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [7.88, 45.19, 188]
+      }
+    }
+  ]
+}
+----
+
+=== Validation performed
+
+For every action: the identifier exists in the registry; parameters exist and have the right type, range and enumeration; required parameters are present (context parameters excepted); the level (route, waypoint or segment) is in the action's `scope`; it applies to a UAV; `sequence` increases per target in the order of Clause 3. For the route: it is a feature collection; the only feature types are `overview`, `start`, `segment` and `end` (no `route_waypoint`), in the order overview, start, segments, end; `start` and `end` points equal the overview ends and the last segment ends at the destination; `overview.length` and `overview.duration_s` equal the sums over the segments; each segment's Point is on the overview path and its `previousEnd` refers to an earlier feature whose Point is on the path; the definition has only the members of `RouteDefinition`, and its waypoints only `id`, `title`, `location` and `constraint` (no actions); the segments that have a `waypointId` follow the input waypoints in order, with the same location and constraint; `describedBy` equals the input; `segment_actions` appear only on segments; the overview has no actions; timestamps increase. Contingency actions were checked for identifier and parameters.
+
+=== Caveats
+
+* Geometry between waypoints is a smooth interpolation, not a planned path.
+* The definition has no actions: it is the input of the route server. Everything except the definition is the server's output.
+* `timestamp`, `travelMode` and `waypointId` come from the Route Exchange Model or are additions, and are not attributes of the diagram's classes. `previousEnd` is used as the id of the feature where the leg starts.
+* The diagram says `title` where earlier drafts of this series used `name`.
+* Elevation is MSL; clients that need height above home or ground convert (see the MAVLink mapping).
+
+'''
+
+=== References
+
+* GML Route class diagram (stereotypes «FeatureType», «property», «Enumeration», «CodeList», «Type»)
+* OGC API -- Routes, Route Exchange Model
+* Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)

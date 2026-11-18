@@ -5,10 +5,29 @@ This document also uses terms defined in the OGC Standard for Modular specificat
 
 For the purposes of this document, the following additional terms and definitions apply.
 
+action::
+operation that a routing API makes available to be included in a route and executed by a vehicle, sensor, camera, gimbal, or payload during the traversal of the route
+
+NOTE: Each action is identified by a name and has a schema that specifies its parameters. Recommended action names are provided in the action registries specified in clause 7.
+
+attribute::
+named, typed property of a route or route segment whose definition is published once in the attribute catalog and is referenced by its `attributeId` wherever a value for that attribute is included in a route representation
+
+attribute catalog::
+discoverable collection of attribute definitions published by a routing API at the path `/attributes` that enables clients to interpret route component properties without relying on implementation-specific documentation
+
+contingency::
+predefined fallback plan associated with a route that is executed when one of its trigger conditions occurs, for example "reroute", "abort_mission" or "return_to_base"
+
 cost function::
 a function that maps an event or values of one or more variables into a real number intuitively representing some "cost" associated with the event
 
 EXAMPLE: For routing, typical "costs" that would be incurred are duration (fastest route) or distance (shortest route).
+
+domain::
+operating environment in which a mode operates
+
+EXAMPLE: The recommended domains are "ground", "maritime" and "air".
 
 feature::
 abstraction of real world phenomena [ISO 19101-1:2014]
@@ -19,10 +38,39 @@ a set of features from a dataset [OGC API - Features - Part 1: Core]
 GeoJSON::
 geospatial data interchange format based on JavaScript Object Notation (JSON) [IETF RFC 7946]
 
+intermediate waypoint::
+additional waypoint specified by the client between the start and end locations of a route, through which the computed route shall pass
+
+job control::
+capability of a routing API to support synchronous and asynchronous execution of route computation requests, using the execution model specified in OGC API - Processes - Part 1: Core
+
+mode::
+restriction based on the route operation or type of transport desired when computing a route, for example "drone", "truck-shortest" or "public-fastest"
+
+NOTE: The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route.
+
+overview::
+representation of the complete route as a single feature (featureType "overview") summarizing the route as a whole, for example its geometry, total length and total duration
+
 route::
 sequence of connected segments providing directions to travel between specific waypoints
 
 NOTE: This definition does not use the definition from ISO 19134:2007 because of use of terms such as "links" and "network".
+
+route definition::
+set of input parameters provided by the client to request the computation of a new route, including at least the waypoints, and optionally a name, a mode, actions, attributes and constraints
+
+segment (route segment)::
+contiguous part of a route between two consecutive decision points, represented as a feature (featureType "segment") with its own geometry, actions and attributes
+
+spatial constraint::
+geographic area, expressed as a GeoJSON MultiPolygon, that the computed route shall not pass through
+
+status document::
+JSON document returned by a routing API reporting the state of a route computation, with a `status` selected from "accepted", "running", "successful", "failed" or "dismissed"
+
+temporal constraint::
+time-based restriction on a route, specified as a RFC 3339 date-time time point and a type of "noEarlierThan", "noLaterThan" or "interval"
 
 waypoint::
 location that plays a role in choosing candidate routes potentially satisfying a routing request [ISO 19133:2005]

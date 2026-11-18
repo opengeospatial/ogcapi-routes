@@ -16,13 +16,13 @@
 |{set:cellbgcolor:#FFFFFF}
 |[big]*Open Geospatial Consortium*
 |Submission Date: <yyyy-mm-dd>
-|Approval Date:   <yyyy-mm-dd>
-|Publication Date:   <yyyy-mm-dd>
+|Approval Date:   <yyyy-mm-dd>
+|Publication Date:   <yyyy-mm-dd>
 |External identifier of this OGC(R) document: http://www.opengis.net/doc/is/ogcapi-routes-1/1.0.0-draft.1
-|Internal reference number of this OGC(R) document:    21-000
+|Internal reference number of this OGC(R) document:    21-000
 |Version: 1.0.0-draft.1
 |Category: OGC(R) Implementation Specification
-|Editor:   Clemens Portele, Ignacio Correas
+|Editor:   Clemens Portele, Ignacio Correas
 |===
 
 [cols = "^", frame = "none"]
@@ -48,10 +48,10 @@ Recipients of this document are invited to submit, with their comments, notifica
 
 [width = "50%", grid = "none"]
 |===
-|Document type:   	OGC® Standard
-|Document subtype:   	if applicable
-|Document stage:   	Draft
-|Document language: 	English
+|Document type:   	OGC® Standard
+|Document subtype:   	if applicable
+|Document stage:   	Draft
+|Document language: 	English
 |===
 
 <<<
@@ -102,6 +102,24 @@ include::clause_9_security_considerations.adoc[]
 add or remove annexes after "A" as necessary
 ////
 include::annex-a.adoc[]
+
+include::srd/SRD_Common_Command_Registry_for_Uncrewed_Systems_UAV_UGV_USV_UUV.adoc[]
+
+include::srd/examples/uxv/SRD_Comprehensive_Route_Exchange_Example_for_a_UxV.adoc[]
+
+include::srd/mavlink/SRD_MAVLink_Binding_Profile_for_OGC_API_Routes_Actions.adoc[]
+
+include::srd/mavlink/SRD_Common_Command_Registry_MAVLink_Field_Binding_Profile.adoc[]
+
+include::srd/ROS2/SRD_ROS2_Binding_for_the_Common_Command_Registry.adoc[]
+
+include::srd/SRD_Delivery_Vehicle_Action_Registry.adoc[]
+
+include::srd/examples/delivery/route-examples-delivery-tourist.adoc[]
+
+include::srd/SRD_Tourist_Route_Action_Registry.adoc[]
+
+include::srd/examples/tourist/SRD_Route_Examples_for_Delivery_Vehicles_and_Tourist_Routes.adoc[]
 
 //<<<
 //include::annex-n.adoc[]

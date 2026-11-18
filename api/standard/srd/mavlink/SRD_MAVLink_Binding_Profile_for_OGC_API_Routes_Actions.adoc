@@ -1,0 +1,974 @@
+[appendix]
+:appendix-caption: Annex
+
+== A MAVLink Binding Profile for OGC API -- Routes Actions
+
+=== Purpose
+
+MAVLink is a lightweight messaging protocol commonly used for communication between uncrewed vehicles, flight controllers, onboard computers, ground stations, and other vehicle components.
+
+This document specifies a *profile of OGC API -- Routes*, requested via `profile=mavlink` (query parameter, or `Accept-Profile`/`Content-Profile` header per the OGC API profiles convention), that answers extensibility for actions for one concrete, widely deployed vehicle protocol: *MAVLink*.
+
+This document generalizes the list/schema pattern to actions and specifies *exactly what a client obtains* when it dereferences an action: a JSON Schema whose fields derive mechanically from a `MAV_CMD` definition, plus a machine-readable *Binding Descriptor* saying how each field is put on the MAVLink wire.
+
+Concretely:
+
+* `GET /actions`: the action identifiers supported by this server (mirrors ``#72``'s `GET /routes/modes`).
+* `+GET /actions/{actionId}+`: a *JSON Schema* of the action's parameters (mirrors ``#72``'s `+GET /routes/modes/{modeid}+`), derived from the corresponding `MAV_CMD`.
+* `+GET /actions/{actionId}/binding+`: the *Binding Descriptor* mapping schema fields to MAVLink `param1..param7`, `x/y/z`, frame and delivery mechanism.
+* An `actions[]` entry on a waypoint or segment is an instance of an action type whose `params` validate against that schema.
+* The ordered actions of a route are *compiled* into a MAVLink mission (mission protocol) and, where needed, a series of guided commands (command protocol).
+
+MAVLink-specific concerns handled here: NaN-as-default semantics, `int32` degE7 coordinates, altitude frames, `(system_id, component_id)` addressing, mission vs. command delivery, and autopilot quirks. *Annex A* maps every `MAV_CMD` defined in the official dialects to an action.
+
+Commands defined by the Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV) are carried as composite actions whose identifier is the registry identifier (Clause 4.13, Annex B). For example, `mission.abort` is an action that abandons the route and performs a fallback, although MAVLink has no single `MAV_CMD` for it.
+
+This profile is self-contained. It depends only on OGC API -- Routes and on the MAVLink message definitions. The registry is a register of Routes actions (registry Clause 2.9) and is an optional layer here: this profile only maps registry actions onto MAVLink, and a server that does not expose them needs nothing from it.
+
+=== Non-goals
+
+* Does not define how the Routes server computes geometry, timing or optimization (unchanged from Routes Core).
+* Does not define a MAVLink transport (serial, UDP, TCP), or how a gateway is deployed. It only defines what a conformant compiler and gateway do at their boundaries.
+* Does not standardize telemetry (mapping of `GLOBAL_POSITION_INT`, `ATTITUDE`, etc.). Telemetry is touched only where execution feedback needs it.
+* Does not cover streaming setpoint control (`SET_POSITION_TARGET_*`, `SET_ATTITUDE_TARGET`). Those are continuous control streams, not discrete route actions.
+* Does not define how a vehicle loads or executes a route, or what it does with a parameter it cannot honor. That is vehicle specific and outside OGC API -- Routes (registry Clause 2.11). The REC clauses describe a typical approach.
+* Does not mandate autonomous execution. Arming, mission start and mode changes are operator or gateway policy decisions (Clause 4.12).
+* Does not replace the MAVLink XML definitions. Where this document paraphrases `MAV_CMD` semantics, the dialect XML is authoritative.
+
+=== Requirements and recommendations
+
+This document labels its statements in two ways. *REQ* marks a proposed requirement on the Routes side: what a routing server lists, serves, validates and generates. *REC* marks a recommendation for the loading side: what a component that loads a route onto a vehicle, or the vehicle itself, typically does. Loading is vehicle specific and outside OGC API -- Routes, so a REC uses SHOULD. It records the reasoning behind this document, and an implementation may depart from it. Like every SRD in this series, the document is non-binding.
+
+'''
+
+=== Terminology mapping
+
+|===
+| OGC API -- Routes concept | MAVLink concept | Notes
+
+| Action type (`actionType`)
+| A `MAV_CMD`, *or* a composite alias expanding to one or more ``MAV_CMD``s
+| Clause 4.2; Annex A
+
+| Action parameter schema (`+GET /actions/{id}+`)
+| Derived from the `<entry>`/`<param>` definition of the `MAV_CMD`
+| Clause 4.3
+
+| _(new)_ Binding Descriptor
+| Mapping `schema field → param1..7 / x / y / z / frame`
+| Clause 4.4
+
+| Registry command (`mission.abort`)
+| A composite action over one or more ``MAV_CMD``s and gateway operations, selected by the command's parameters
+| Clause 4.13; Annex B
+
+| Action instance (`actions[]` entry)
+| `MISSION_ITEM_INT` (mission delivery) or `COMMAND_INT`/`COMMAND_LONG` (guided delivery)
+| Clauses 4.7 and 4.8
+
+| Action `target` (vehicle or payload)
+| `(system_id, component_id)`
+| 8 bits each; Clause 4.5
+
+| Ordered actions for one target
+| Ordered mission items, or ordered guided commands
+| Clauses 4.5 and 4.7
+
+| Route, in route order
+| Mission plan (`MISSION_ITEM_INT` list), `seq = 0…n-1`
+|
+
+| Waypoint geometry
+| `x`, `y`, `z` of a NAV mission item
+| GeoJSON is lon/lat, MAVLink `x` is *latitude*
+
+| Route identifier (`routeId`)
+| `opaque_id` of the mission
+| Clause 4.10
+
+| Execution feedback
+| `COMMAND_ACK`, `MISSION_ACK`, `MISSION_CURRENT`, `MISSION_ITEM_REACHED`
+| Clause 4.9
+
+| Action definition version
+| Dialect + dialect version
+| Clause 4.11
+|===
+
+'''
+
+=== Conformance classes
+
+|===
+| Class | Kind | URI (suggested) | Depends on | Needs a live MAVLink link?
+
+| (a) Action Catalog
+| Requirement class
+| `+.../conf/mavlink-catalog+`
+| Routes Core, `profile=mavlink` negotiation
+| No
+
+| (b) Mission Compilation
+| Recommended level
+| `+.../conf/mavlink-mission-compilation+`
+| (a)
+| No
+
+| (c) Mission Protocol Binding
+| Recommended level
+| `+.../conf/mavlink-mission-binding+`
+| (b), a reachable MAVLink endpoint
+| Yes
+
+| (d) Guided Command Binding
+| Recommended level
+| `+.../conf/mavlink-guided-binding+`
+| (a), a reachable MAVLink endpoint
+| Yes
+
+| (e) Execution Feedback
+| Recommended level
+| `+.../conf/mavlink-execution-feedback+`
+| (c) and/or (d)
+| Yes
+|===
+
+Classes (a) and (b) allow a planner, simulator or offline tool to verify that a route is *expressible* as a MAVLink mission without any vehicle. Classes (c) and (d) cover the two MAVLink execution models (uploaded autonomous mission vs. immediate commands). Class (e) defines how MAVLink signals are interpreted as execution state.
+
+A server that exposes registry actions follows REQ 42--44. REC 45--46 are recommendations for a loader.
+
+Only class (a) states requirements for a Routes server. Classes (b)--(e) describe what a component that loads a route onto a vehicle typically does. Loading is vehicle specific and outside OGC API -- Routes, so these classes are recommended levels and use REC.
+
+'''
+
+=== Requirements and recommendations
+
+==== Profile negotiation
+
+*REQ 1* -- A server SHALL indicate support by accepting `profile=mavlink` as a query parameter on route-related requests (`POST /routes`, `+GET /routes/{routeId}+`, `+GET /routes/{routeId}/definition+`) and/or the `Accept-Profile`/`Content-Profile` headers. When the profile is requested but not supported, the server SHALL respond per the standard profile-negotiation failure behavior (406 or a fallback default profile).
+
+*REQ 2* -- A response produced under this profile SHOULD echo the negotiated profile in `Content-Profile`, and SHALL carry the route-level extension object of REQ 19 (`properties.mavlink`) when the route is intended for MAVLink compilation.
+
+==== The action catalog
+
+*REQ 3* -- A server conformant to class (a) SHALL expose `GET /actions` returning `{id, description}` objects (following ``#62``'s pattern rather than bare strings), extended with:
+
+[,json]
+----
+{
+  "id": "mavlink.nav-waypoint",
+  "description": "Navigate to waypoint (MAV_CMD_NAV_WAYPOINT)",
+  "binding": "mavlink",
+  "hazard": "flight-critical",
+  "scope": ["waypoint"],
+  "status": "stable"
+}
+----
+
+* `binding` SHALL be `"mavlink"`.
+* `hazard` SHALL be `none`, `flight-critical` or `destructive` (REQ 38).
+* `scope` lists where the action may appear: `waypoint`, `segment`, or both.
+* `status` SHALL be `stable`, `wip`, `deprecated` or `superseded`, taken from the dialect XML (`<wip/>`, `<deprecated>`, `<superseded>`).
+
+*REQ 4* -- Two kinds of identifiers are defined.
+
+. *Native actions.* One-to-one with a `MAV_CMD`. The `id` is `mavlink.` followed by the enum name with `MAV_CMD_` removed, lower-cased, underscores replaced by hyphens (`MAV_CMD_NAV_LOITER_TIME` → `mavlink.nav-loiter-time`). Annex A lists all of them.
+. *Composite actions.* Domain-friendly names (for example `capture-photo`, `hover-and-land`) whose Binding Descriptor expands to one or more MAVLink steps (Clause 4.4). Composite identifiers SHALL NOT use the `mavlink.` prefix. Registry identifiers (REQ 42) are composite identifiers.
+
+*REQ 5* -- `GET /actions` SHOULD accept an optional `target` query parameter (a target per REQ 16). When present, the server SHOULD return only actions the target is believed to support, because command support varies per firmware, vehicle type and payload. Support MAY be determined from `AUTOPILOT_VERSION` capabilities, MAVLink component metadata (commands metadata), a static configuration, or an operator allowlist. A server that cannot determine support SHALL return the unfiltered catalog and SHOULD mark the response `"supportChecked": false`.
+
+*REQ 6* -- `+GET /actions/{actionId}+` SHALL return a JSON Schema (draft 2020-12) of the action's parameters (Clause 4.3). An unknown `actionId` SHALL return `404`, consistent with `#72` for an unknown `modeid`. The schema describes the action _type_, so a known action not supported by a given `target` still returns `200`.
+
+*REQ 7* -- Actions with `hazard: destructive`, and actions whose `status` is `wip`, `deprecated` or `superseded`, SHALL NOT appear in the default catalog. A server MAY list them when the request includes `includeAll=true` or when explicitly enabled by deployment policy.
+
+==== Schema derivation (`+GET /actions/{actionId}+`)
+
+*REQ 8* -- For a native action, the schema SHALL be derived from the `MAV_CMD` `<entry>` as follows. `$id` SHALL be the action's URL, and `x-definition` SHALL be the MAVLink documentation URI for the command in its dialect (for example `+https://mavlink.io/en/messages/common.html#MAV_CMD_NAV_LOITER_TIME+`).
+
+|===
+| MAVLink `<param>` property | JSON Schema property
+
+| `label`
+| property name (camelCased) and `title`
+
+| description text
+| `description`
+
+| floating-point, no `enum`
+| `"type": "number"`
+
+| `increment="1"` (integer semantics)
+| `"type": "integer"`
+
+| `enum="MAV_BOOL"`
+| `"type": "boolean"` (`true` ↔ 1, `false` ↔ 0)
+
+| any other `enum="X"`
+| `"type": "string"`, `"enum"` = the entry names of `X` (wire value = entry value)
+
+| bitmask enum
+| `"type": "array"`, `uniqueItems`, items enum of entry names (wire value = bitwise OR)
+
+| `units`
+| `"x-unit"` (UCUM), for example `m`, `m/s`, `deg`, `s`, `ms`, `%`
+
+| `minValue` / `maxValue`
+| `minimum` / `maximum`
+
+| `increment`
+| `multipleOf` when not 1 (informative)
+
+| `default`
+| `default`
+
+| `reserved="true"`, or description "Empty"
+| *omitted*; wire value per REC 13
+
+| params 5, 6, 7 of a destination command
+| *omitted*; position comes from geometry (REQ 10)
+|===
+
+The schema SHALL set `"additionalProperties": false`.
+
+*REQ 9* -- Required vs. optional. A property SHALL be in `required` unless (a) the XML gives a `default`, or (b) the description states that NaN means "use default"/"ignore". Optional properties, when absent from an action instance, are encoded per REC 13. JSON has no `NaN`, so NaN is never represented in `params`; absence is the only way to request the default.
+
+*REQ 10* -- Positions.
+
+* *Destination commands* (`isDestination="true"`, for example `NAV_WAYPOINT`, `NAV_LAND`). `x`, `y`, `z` come from the feature geometry (REC 20) and appear in no schema.
+* *Other commands with a location* (`hasLocation="true"` but not a destination, for example `DO_SET_ROI_LOCATION`, `DO_SET_HOME`, `CONDITION_GATE`, fence and rally commands). The schema SHALL carry one property `location`: a GeoJSON `Point` (RFC 7946) with `[lon, lat]` or `[lon, lat, alt]`. The compiler converts it per REC 20 and REC 21. Altitude in this property uses the same datum as the route.
+* *All other commands.* Parameters 5, 6, 7 are ordinary fields with the XML's labels.
+
+*REQ 11* -- Enum values. To keep schemas deterministic, enum strings SHALL be the full entry names (for example `"MAV_FRAME_GLOBAL_RELATIVE_ALT"`). Servers SHOULD NOT invent aliases.
+
+*Example* -- `mavlink.nav-loiter-time` (`MAV_CMD_NAV_LOITER_TIME`, 19):
+
+[,json]
+----
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/actions/mavlink.nav-loiter-time",
+  "title": "Loiter (time)",
+  "x-definition": "https://mavlink.io/en/messages/common.html#MAV_CMD_NAV_LOITER_TIME",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "time": { "type": "number", "minimum": 0, "x-unit": "s" },
+    "headingRequired": { "type": "boolean" },
+    "radius": { "type": "number", "x-unit": "m",
+      "description": "Positive: clockwise. Negative: counter-clockwise." },
+    "xtrackLocation": { "type": "number" }
+  },
+  "required": ["time", "headingRequired", "radius", "xtrackLocation"]
+}
+----
+
+==== The Binding Descriptor
+
+*REQ 12* -- A server conformant to class (a) SHALL expose `+GET /actions/{actionId}/binding+` returning a *Binding Descriptor*. It is a separate resource so that `+/actions/{actionId}+` remains a plain JSON Schema consistent with `#72`, while all MAVLink knowledge lives here.
+
+[,json]
+----
+{
+  "actionId": "hover-and-land",
+  "binding": "mavlink",
+  "dialect": { "name": "common", "definitionsRef": "https://mavlink.io/en/messages/common.html" },
+  "dialectVersion": "<immutable identifier, e.g. a git commit of the XML>",
+  "hazard": "flight-critical",
+  "scope": ["waypoint"],
+  "segmentScope": "instant",
+  "steps": [
+    {
+      "kind": "mavCmd",
+      "command": "MAV_CMD_NAV_LOITER_TIME",
+      "commandId": 19,
+      "delivery": ["mission"],
+      "position": "geometry",
+      "replacesDefaultNav": true,
+      "params": [
+        { "mavParam": 1, "field": "hoverSeconds" },
+        { "mavParam": 2, "fixed": 0 },
+        { "mavParam": 3, "fixed": 0 },
+        { "mavParam": 4, "fixed": 0 }
+      ]
+    },
+    {
+      "kind": "mavCmd",
+      "command": "MAV_CMD_NAV_LAND",
+      "commandId": 21,
+      "delivery": ["mission"],
+      "position": "geometry",
+      "params": [
+        { "mavParam": 1, "fixed": 0 },
+        { "mavParam": 2, "fixed": 0 },
+        { "mavParam": 4, "absent": "NaN" }
+      ]
+    }
+  ]
+}
+----
+
+|===
+| Member | Meaning
+
+| `dialect`, `dialectVersion`
+| REQ 37
+
+| `hazard`, `scope`
+| as in REQ 3
+
+| `segmentScope`
+| For segment use: `instant` (executed once at the segment start) or `persistent` (changes state until reverted; requires `revert`)
+
+| `revert`
+| Steps executed at the segment end for `persistent` actions (for example camera trigger distance set back to 0)
+
+| `steps[].kind`
+| `mavCmd`, or `paramExt` (camera-protocol settings written with `PARAM_EXT_SET` when no `MAV_CMD` exists)
+
+| `steps[].delivery`
+| `mission` and/or `guided`. Native actions take this from the XML: `mission="true"` → `mission`, `command="true"` → `guided`
+
+| `steps[].missionType`
+| `mission` (default), `fence` or `rally`, from the XML `fence`/`rally` flags
+
+| `steps[].position`
+| `geometry`, `location` (the `location` property), or `none`
+
+| `steps[].replacesDefaultNav`
+| If true, this NAV step is emitted *instead of* the default `NAV_WAYPOINT` at that waypoint (REC 25)
+
+| `steps[].pipelined`
+| Guided only: may be sent without waiting for the previous command's terminal status
+|===
+
+Each `params[]` entry has `mavParam` (1--7) and one source: `field` (a schema property), `fixed` (a constant), or `generated` (`counter` = per-target increasing integer, `targetCamera`, `missionId`). `absent` gives the wire value used when the referenced optional field is missing (`"NaN"` or a number). `transform` gives `{scale, offset}` or a named derived mapping (REQ 14).
+
+*REC 13* -- Every `param1..param7` of a step that is neither mapped nor fixed SHOULD be set on the wire to its dialect-documented "empty" value: `NaN` where the definition says NaN means "ignore/default", otherwise `0`. `x` and `y` are integers in `MISSION_ITEM_INT` and `COMMAND_INT` and cannot carry NaN; for those slots a numeric `absent` SHOULD be used.
+
+*REQ 14* -- Unit and value transforms SHALL be declared in the descriptor, not left to the client. Linear transforms are `value_wire = value * scale + offset`. A named derived mapping needs inputs outside `params` (for example deriving a camera trigger distance from an overlap percentage needs field of view, sensor size and altitude). It SHALL list those inputs in an `inputs` array, and a server that cannot supply them SHALL NOT list the action for that target.
+
+==== Action instances, targets and ordering
+
+*REQ 15* -- Under this profile each `Waypoint`/`Segment` feature's `actions[]` entries SHALL have the shape:
+
+[,json]
+----
+{
+  "actionType": "capture-photo",
+  "target": "mavlink:7/100",
+  "sequence": 1,
+  "params": { "imageCount": 1 }
+}
+----
+
+* `actionType` SHALL correspond to an `id` resolvable at `+GET /actions/{actionId}+`.
+* `params` SHALL validate against that schema.
+* `target` is optional. When present it SHALL follow REQ 16. When absent, it is resolved when the route is loaded (registry Clause 2.11).
+* `sequence` SHALL follow REQ 18.
+
+*REQ 16* -- Target grammar. When present, a `target` is a string of one of the forms:
+
+----
+mavlink:<system_id>[/<component_id>]
+mavlink://<network>/<system_id>[/<component_id>]
+----
+
+`system_id` and `component_id` are integers 1--255. An omitted `component_id` means `MAV_COMP_ID_AUTOPILOT1` (1). `<network>` is a deployment-defined label for installations where MAVLink IDs are not unique across links. Servers MAY additionally accept deployment-defined aliases that they resolve to this form, but responses SHALL use the canonical form. `system_id = 0` and `component_id = 0` (broadcast) SHALL be rejected.
+
+*REC 17* -- A payload (camera, gimbal, winch) is addressed by its own component ID (for example `MAV_COMP_ID_CAMERA` = 100, `MAV_COMP_ID_GIMBAL` = 154). If a payload has no MAVLink component of its own and is driven through the autopilot, its actions SHOULD use the autopilot's target. In *mission delivery*, all items are uploaded to the vehicle's mission-handling component regardless of `target` (REC 25); how the autopilot forwards a payload command is implementation-defined. In *guided delivery*, commands are sent directly to the addressed component.
+
+*REQ 18* -- Ordering.
+
+* `sequence` SHALL be a monotonically increasing integer, unique among the `actions[]` entries that share a `target`, expressing the route-fixed order for that target.
+* Within one feature, array order is significant.
+* A MAVLink mission is one ordered list executed by one autopilot, so in mission delivery the *route's feature order* is the authoritative order across targets: a payload command executes when the mission counter reaches it, which is where its feature sits in the route. A route whose `sequence` values contradict feature/array order SHALL be rejected by the compiler with an error naming the offending actions.
+
+==== Positions, frames, units and the route-level extension
+
+*REQ 19* -- Under this profile, a route's top-level `properties` SHOULD carry:
+
+[,json]
+----
+"mavlink": {
+  "altitudeReference": "relative-home",
+  "defaultAltitude": 60,
+  "onCompletion": "rtl",
+  "homeMode": "vehicle"
+}
+----
+
+|===
+| Member | Values | Meaning
+
+| `altitudeReference`
+| `amsl`, `relative-home`, `terrain`
+| Selects `MAV_FRAME_GLOBAL` (0), `MAV_FRAME_GLOBAL_RELATIVE_ALT` (3) or `MAV_FRAME_GLOBAL_TERRAIN_ALT` (10) for position-bearing items
+
+| `defaultAltitude`
+| metres
+| Used when a geometry has no third coordinate
+
+| `onCompletion`
+| `none`, `rtl`, `land`
+| Append `MAV_CMD_NAV_RETURN_TO_LAUNCH` (20) or `MAV_CMD_NAV_LAND` (21) as a final item
+
+| `homeMode`
+| `vehicle`, `explicit`
+| Whether the compiler leaves the home item to the vehicle or inserts one (Clause 6)
+|===
+
+*REC 20* -- Coordinate conversion. GeoJSON `coordinates` are `[longitude, latitude, altitude?]` in degrees. In MAVLink `x` is *latitude* and `y` is *longitude*; `MISSION_ITEM_INT` and `COMMAND_INT` carry them as `int32` degrees × 10⁷, rounded to nearest. `z` is a `float` in metres in the selected frame. Implementations SHOULD NOT use the float `MISSION_ITEM` or `COMMAND_LONG` to transmit positions.
+
+*REC 21* -- Altitude datum. RFC 7946 altitude is height above the WGS 84 ellipsoid, whereas `MAV_FRAME_GLOBAL` altitude is above mean sea level, and the other two frames are relative to home or terrain. The route SHOULD state its datum in `altitudeReference`. A compiler converting from ellipsoidal to AMSL SHOULD apply a documented geoid model (for example EGM96 or EGM2008) and SHOULD NOT silently reinterpret ellipsoidal heights as AMSL.
+
+*REC 22* -- Encoding of non-position items. For a command with no location, parameters 5 and 6 are ordinary values: they go in `x` and `y` as *integers* (rounded), not degE7, and parameter 7 goes in `z` as a float. Mission items for such commands SHOULD use `frame = MAV_FRAME_MISSION` (2). For position-bearing commands, `frame` follows REQ 19.
+
+*REC 23* -- Units. Compilers convert `params` values from their declared `x-unit` to what MAVLink expects, as stated in the dialect. Common cases: degrees in `MAV_CMD` yaw parameters, but radians in many _messages_; speeds in m/s; times in seconds unless the command says otherwise.
+
+*REC 24* -- Range checking. Before emitting any wire value the compiler SHOULD check the schema constraints and MAVLink's type limits (`seq` is `uint16`, so a mission holds at most 65 535 items; `command` is `uint16`; `x`, `y` are `int32`). Violations SHOULD be reported as errors naming the action, `sequence` and field.
+
+=== 4.7 Class (b): compiling a route
+
+*REC 25* -- Lowering algorithm. Given a route, a vehicle target V and the route's `mavlink` object, a compiler SHOULD produce an ordered list of `MISSION_ITEM_INT` records:
+
+. Walk the route's features in route order.
+. For each *waypoint* feature, collect its actions' steps that have `delivery` including `mission` (whatever the action's `target`, REC 17/18).
+. If a step has `replacesDefaultNav: true`, emit it (with the waypoint geometry) in place of the default `MAV_CMD_NAV_WAYPOINT`. Otherwise emit a default `NAV_WAYPOINT` (16) at the geometry (param 1 = 0; param 2 = NaN unless the route says otherwise; params 3, 4 = NaN).
+. Emit the remaining mission steps of the feature's actions ordered by (i) array order, (ii) ascending `sequence` within one `target`.
+. For a *segment* feature, emit its actions' steps immediately after the NAV item of its start waypoint. For `persistent` actions, emit the `revert` steps immediately after the NAV item of the segment's end waypoint, before that waypoint's own actions.
+. Append the completion item selected by `onCompletion`.
+. Number items `seq = 0…n-1` (adjusted for the home quirk), set `frame` per REQ 19 and REC 22, `current = 0`, `autocontinue = 1`, `mission_type = MAV_MISSION_TYPE_MISSION`.
+
+*REC 26* -- Guided-only steps. Steps whose `delivery` excludes `mission` cannot be part of an uploaded mission. The compiler SHOULD emit them in a separate `guidedSteps` list with an `anchor` naming the mission item after which they are due (`{"afterSeq": n}`), and their trigger is that item being reached (Clause 4.9). A route containing such steps SHOULD be flagged `requiresGuidedExecution`, so a client that can only upload missions can refuse it up front.
+
+*REC 27* -- Steps with `missionType` `fence` or `rally` SHOULD be compiled into separate lists with `mission_type` `MAV_MISSION_TYPE_FENCE` / `MAV_MISSION_TYPE_RALLY`, each with its own `seq` space. Mapping Routes avoidance areas to fences is not defined by this profile.
+
+*REC 28* -- Compile output SHOULD be exposed for inspection:
+
+----
+GET /routes/{routeId}/definition?profile=mavlink&format=mission
+----
+
+returning `+{ "missionItems": [...], "guidedSteps": [...], "mapping": [...] }+`. Items use MAVLink field names (`seq`, `frame`, `command`, `current`, `autocontinue`, `param1..param4`, `x`, `y`, `z`, `mission_type`). `mapping` gives provenance `{seq, featureIndex, actionType, target, sequence}` per item.
+
+=== 4.8 Classes (c) and (d): binding to a live MAVLink endpoint
+
+*REC 29 (c)* -- Mission upload SHOULD use the MAVLink mission protocol:
+
+. (Optional) `MISSION_CLEAR_ALL` for the mission type.
+. `MISSION_COUNT` (`count`, `mission_type`, `opaque_id` per REC 34) to `(target_system, target_component)`.
+. Answer each `MISSION_REQUEST_INT` (`seq`) with the matching `MISSION_ITEM_INT`. The float `MISSION_REQUEST`/`MISSION_ITEM` SHOULD NOT be used unless the vehicle lacks `MAV_PROTOCOL_CAPABILITY_MISSION_INT`, in which case class (c) is not claimed for that vehicle.
+. Wait for `MISSION_ACK`. Only `MAV_MISSION_ACCEPTED` is success; any other value is reported (REC 32) and the upload is failed.
+
+Timeouts and retries SHOULD follow the current MAVLink mission-protocol guidance (currently on the order of 1.5 s per exchange and five retries). An implementation SHOULD NOT retry indefinitely.
+
+*REC 30 (c)* -- After upload an implementation MAY verify by download (`MISSION_REQUEST_LIST` and items) and compare with the compiled list. Starting execution (`MAV_CMD_MISSION_START`, or a mode change) is a separate, operator-authorized operation (REC 39) and is *not* part of the route.
+
+*REC 31 (d)* -- For steps delivered as guided commands, the implementation SHOULD:
+
+* use `COMMAND_INT` for any command with a location (`hasLocation="true"`) or frame semantics, and `COMMAND_LONG` otherwise;
+* honor `MAV_RESULT_COMMAND_INT_ONLY` / `COMMAND_LONG_ONLY` by resending with the required message;
+* send commands for one target in `sequence` order, and send command _n+1_ only after command _n_ reached a terminal state (Clause 4.9), unless the step is `pipelined`;
+* retransmit `COMMAND_LONG` with `confirmation` incremented, and `COMMAND_INT` following the command protocol.
+
+Guided delivery cannot express "when the vehicle reaches waypoint k". An implementation SHOULD therefore trigger position-dependent guided steps from telemetry or from mission progress (`MISSION_ITEM_REACHED` for the anchor of REC 26), and SHOULD document how arrival is determined. When the route itself is executed in guided mode (no uploaded mission), each position-bearing NAV step SHOULD be issued as `MAV_CMD_DO_REPOSITION`, with arrival detected by distance to target and acceptance radius.
+
+==== Class (e): execution feedback
+
+*REC 32* -- This profile defines a small state vocabulary for an action's execution: `accepted`, `scheduled`, `rejected`, `executing`, `completed`, `failed`, `canceled`. A deployment that reports per-action execution SHOULD derive it as follows.
+
+|===
+| MAVLink signal | State | Notes
+
+| `MISSION_ACK` = `MAV_MISSION_ACCEPTED` (upload)
+| `accepted` for every item; `scheduled` until execution starts
+|
+
+| `MISSION_ACK` ≠ accepted
+| `rejected`
+| Report the `MAV_MISSION_RESULT` name; `INVALID_PARAMn` SHOULD be mapped back to the offending `params` field through the descriptor
+
+| `MISSION_CURRENT.seq` becomes item _i_
+| `executing` for item _i_
+| Also use `mission_state` where sent
+
+| `MISSION_ITEM_REACHED.seq` = _i_
+| `completed` for item _i_
+| Emitted mainly for NAV items
+
+| `MISSION_CURRENT.seq` moves past _i_
+| `completed` for non-NAV item _i_, marked *inferred*
+| DO items may have no reached signal
+
+| `COMMAND_ACK` = `MAV_RESULT_ACCEPTED`
+| `completed` for instant commands; `accepted` for long-running ones
+|
+
+| `MAV_RESULT_IN_PROGRESS`
+| `executing` with `progress` (0--100, 255 = unknown)
+|
+
+| `MAV_RESULT_TEMPORARILY_REJECTED`
+| `rejected`, marked retryable
+| Gateway MAY retry with backoff
+
+| `MAV_RESULT_DENIED`, `UNSUPPORTED`, `COMMAND_UNSUPPORTED_MAV_FRAME`
+| `rejected`
+|
+
+| `MAV_RESULT_FAILED`
+| `failed`
+| Include `result_param2` if provided
+
+| `MAV_RESULT_CANCELLED`
+| `canceled`
+|
+
+| No `COMMAND_ACK` after retries
+| `failed`, reason `timeout`
+|
+
+| Mission replaced by a new upload
+| `canceled` for items not completed
+|
+|===
+
+*REC 33* -- For a composite action, the overall state is `failed`/`rejected` if any step is; `executing` once its first step started and not all completed; `completed` only when its last step is. Per-step state SHOULD be available alongside the overall state.
+
+==== Correlation with the originating route
+
+*REC 34* -- MAVLink has no free-text field, so:
+
+* *Mission delivery.* The gateway SHOULD compute a 32-bit `opaque_id` (for example CRC-32 of `routeId`) and send it in `MISSION_COUNT`. The vehicle echoes it in `MISSION_ACK` and reports it as `mission_id` in `MISSION_CURRENT` where supported. The gateway SHOULD keep the table `(opaque_id, seq) → (routeId, featureIndex, target, sequence)` (the `mapping` of REC 28).
+* *Guided delivery.* `COMMAND_ACK` carries `command` and `(target_system, target_component)` only. The gateway SHOULD ensure at most *one in-flight command per `(target, commandId)`* and correlate on that key.
+
+*REC 35* -- The correlation table SHOULD survive gateway restarts when class (e) is claimed; otherwise planned-vs-executed comparison is lost when a link or process drops.
+
+==== Capabilities, dialects and versioning
+
+*REC 36* -- On connecting to a vehicle, a gateway SHOULD read `AUTOPILOT_VERSION` (via `MAV_CMD_REQUEST_MESSAGE`) and record `capabilities`, in particular `MAV_PROTOCOL_CAPABILITY_MISSION_INT`, `COMMAND_INT` and mission-type support. It SHOULD NOT claim class (c)/(d) for a vehicle lacking the corresponding capability.
+
+*REQ 37* -- Dialect and version.
+
+* The Binding Descriptor SHALL name the dialect (`common`, `ardupilotmega`, `development`, or a vendor dialect).
+* `MAV_CMD` numbers are dialect-scoped. Compilers SHALL always carry both the symbolic `command` name and `commandId` in provenance output.
+* A server SHOULD publish a `dialectVersion` (an immutable identifier such as a git commit of the XML). A route response MAY carry `"bindingVersion"` on each action; a mismatch between plan time and execution time SHALL be reported by the gateway as a warning.
+* Commands marked `wip`, `deprecated` or `superseded` SHALL be flagged in the catalog and, for `superseded`, the replacement SHOULD be named.
+
+==== Safety and security
+
+*REQ 38* -- Hazard classification. Every catalog entry SHALL carry a `hazard`:
+
+|===
+| Value | Meaning | Examples
+
+| `none`
+| Cannot directly endanger the vehicle or people
+| `IMAGE_START_CAPTURE`, `DO_SET_CAM_TRIGG_DIST`, `REQUEST_MESSAGE`
+
+| `flight-critical`
+| Changes flight path, mode, control outputs or landing behavior
+| `NAV_LAND`, `NAV_RETURN_TO_LAUNCH`, `DO_CHANGE_SPEED`, `DO_SET_SERVO`
+
+| `destructive`
+| Can disable or damage the vehicle, or is irreversible
+| `DO_FLIGHTTERMINATION`, `COMPONENT_ARM_DISARM`, `PREFLIGHT_CALIBRATION`, `DO_PARACHUTE`, `STORAGE_FORMAT`
+|===
+
+Annex A gives a *recommended default* classification for every command. A deployment MAY tighten it and SHALL NOT loosen a `destructive` entry.
+
+*REC 39* -- Authorization. Uploading a mission and starting it are separate authorized operations. A gateway SHOULD require an explicit, authenticated client request to start execution (`MAV_CMD_MISSION_START` or a mode change), and SHOULD NOT start execution as a side effect of route retrieval or upload. `flight-critical` guided steps SHOULD be issued only after an equivalent explicit authorization for the route.
+
+*REC 40* -- Link security. MAVLink 2 message signing (`SETUP_SIGNING`) SHOULD be used between gateway and vehicle unless the link is physically isolated. The gateway SHOULD authenticate HTTP clients using mechanisms of the API deployment (OAuth2/OIDC per OGC API security guidance) before exposing any class (c)/(d)/(e) operation, since MAVLink itself has no user authentication.
+
+*REC 41* -- Geofence and preflight. A gateway SHOULD refuse to upload a mission lying outside a vehicle's configured fence, and SHOULD surface the vehicle's own refusal (`MISSION_ACK` error, `STATUSTEXT`) as `rejected`.
+
+==== Common Command Registry commands
+
+*REQ 42 (a)* -- Registry actions. A server SHOULD expose the registry commands as composite actions whose `id` is the registry identifier (`vehicle.hold-position`, `camera.capture-image`). The server does not need to know the vehicle. The Binding Descriptor of each (REQ 12) lists the native actions of Annex B as `steps`, and lists under `unsupported` the registry parameters that no step carries. A registry command that Annex B marks "no ``MAV_CMD``" has an empty `steps` list, except `mission.abort` (REC 46). A server SHOULD state the registry version in `registryVersion` (registry REQ R19).
+
+*REQ 43 (b)* -- Selection and unsupported parameters. Where Annex B lists several native actions for a registry command, the descriptor SHALL state which one applies. A step has an optional `when` member, `{ "field": "<registry parameter>", "present": true|false }` or `{ "field": "<registry parameter>", "equals": "<value>" }`, and the compiler emits only the steps whose condition holds. For example `vehicle.hold-position` uses `mavlink.nav-loiter-time` when `duration` is present and `mavlink.nav-loiter-unlim` otherwise. A registry parameter that no step carries, and a `Category` value that no step can realize, SHALL be listed in `unsupported`. A loader SHOULD drop them and report a warning (registry Clause 2.11), and SHOULD NOT drop them silently.
+
+*REQ 44 (a)* -- Hazard. The `hazard` of a registry action is the highest of the registry default class and the classes of its native actions (Annex B, column "Effective hazard"). A deployment MAY raise it and SHALL NOT lower a `destructive` value. A registry action with an effective hazard of `destructive` is excluded from the default catalog (REQ 7).
+
+*REC 45 (d)* -- Commands outside a route. A registry command whose scope is `none` (for example `mission.start`, `mission.pause`, `mission.resume`, `mission.abort`, `vehicle.set-mode`, `vehicle.set-armed`, `vehicle.reboot`; Annex B lists all of them) is not a route action. It SHOULD NOT appear in the default catalog or in `actions[]`. A gateway MAY execute it as a guided command (REC 31) on an explicit, authenticated client request (REC 39), and MAY list it with `includeAll=true` and `"scope": []`.
+
+*REC 46 (d)* -- `mission.abort`. The registry command `mission.abort` has one required parameter, `action`, with the values `hold`, `return-to-home`, `land`, `surface` and `stop`. A gateway SHOULD perform it as follows:
+
+. Resolve the fallback first. The fallback is the guided realization of the registry command of the same name with default parameters (`hold` → `vehicle.hold-position`, `return-to-home` → `vehicle.return-to-home`, `land` → `vehicle.land`, `stop` → `vehicle.stop`, Annex B). `surface` has no `MAV_CMD`, so it is listed under `unsupported` (REQ 43). A native parameter that is required by the dialect and that the registry command does not carry SHOULD be given a `fixed` value in the descriptor, taken from the dialect's documented default. If the fallback cannot be sent, the gateway SHOULD end `mission.abort` as `rejected`, and SHOULD NOT have changed anything.
+. Abandon the route. The gateway SHOULD stop sending the remaining guided steps and `MAV_CMD_MISSION_START` for that target, and SHOULD report the pending items and steps as `canceled` (REC 32). It SHOULD NOT clear the mission stored on the vehicle (`MISSION_CLEAR_ALL`) unless deployment policy says so.
+. Send the fallback as a guided command (REC 31). `mission.abort` is `completed` when the fallback's `COMMAND_ACK` is `MAV_RESULT_ACCEPTED` (registry `immediate` completion: for mode changes, acceptance). Progress of the fallback itself is not part of `mission.abort`. Any other `COMMAND_ACK` result ends it as `failed`, with the result in `message`.
+
+The effective hazard of `mission.abort` is `flight-critical`.
+
+'''
+
+=== Worked example
+
+*Scenario:* aerial survey. Drone `mavlink:7/1` with camera payload `mavlink:7/100`. Two waypoints with photo capture, one with hover-and-land. Route properties request home-relative altitude 60 m and no completion action, since the route ends in a landing.
+
+==== Discovery
+
+----
+GET /actions?profile=mavlink&target=mavlink:7/1
+----
+
+[,json]
+----
+[
+  { "id": "capture-photo",  "description": "Trigger still image capture", "binding": "mavlink", "hazard": "none",            "scope": ["waypoint", "segment"], "status": "stable" },
+  { "id": "hover-and-land", "description": "Hover, then land",            "binding": "mavlink", "hazard": "flight-critical", "scope": ["waypoint"],            "status": "stable" },
+  { "id": "mavlink.nav-waypoint", "description": "Navigate to waypoint (MAV_CMD_NAV_WAYPOINT)", "binding": "mavlink", "hazard": "flight-critical", "scope": ["waypoint"], "status": "stable" }
+]
+----
+
+----
+GET /actions/capture-photo
+----
+
+[,json]
+----
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/actions/capture-photo",
+  "title": "Capture Photo",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "imageCount": { "type": "integer", "minimum": 1, "maximum": 65535, "default": 1 },
+    "intervalSeconds": { "type": "number", "minimum": 0, "x-unit": "s", "default": 0 }
+  }
+}
+----
+
+----
+GET /actions/capture-photo/binding
+----
+
+[,json]
+----
+{
+  "actionId": "capture-photo",
+  "binding": "mavlink",
+  "dialect": { "name": "common", "definitionsRef": "https://mavlink.io/en/messages/common.html" },
+  "hazard": "none",
+  "scope": ["waypoint", "segment"],
+  "segmentScope": "instant",
+  "steps": [
+    {
+      "kind": "mavCmd",
+      "command": "MAV_CMD_IMAGE_START_CAPTURE",
+      "commandId": 2000,
+      "delivery": ["mission", "guided"],
+      "position": "none",
+      "params": [
+        { "mavParam": 1, "generated": "targetCamera" },
+        { "mavParam": 2, "field": "intervalSeconds", "absent": 0 },
+        { "mavParam": 3, "field": "imageCount", "absent": 1 },
+        { "mavParam": 4, "generated": "counter" }
+      ]
+    }
+  ]
+}
+----
+
+(`counter` supplies the capture sequence number, which the command definition asks to be incremented per single-capture command so that a retransmission cannot cause a double capture. `targetCamera` yields the component ID from the action's `target`.)
+
+==== Route response (`profile=mavlink`)
+
+[,json]
+----
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "routeId": "survey-2026-09-08-a",
+    "mavlink": { "altitudeReference": "relative-home", "defaultAltitude": 60, "onCompletion": "none", "homeMode": "vehicle" }
+  },
+  "features": [
+    { "type": "Feature",
+      "properties": { "type": "waypoint", "actions": [
+        { "actionType": "capture-photo", "target": "mavlink:7/100", "sequence": 1, "params": { "imageCount": 1 } } ] },
+      "geometry": { "type": "Point", "coordinates": [7.63, 45.02] } },
+    { "type": "Feature",
+      "properties": { "type": "waypoint", "actions": [
+        { "actionType": "capture-photo", "target": "mavlink:7/100", "sequence": 2, "params": { "imageCount": 1 } } ] },
+      "geometry": { "type": "Point", "coordinates": [7.64, 45.03] } },
+    { "type": "Feature",
+      "properties": { "type": "waypoint", "actions": [
+        { "actionType": "hover-and-land", "target": "mavlink:7/1", "sequence": 1, "params": { "hoverSeconds": 10 } } ] },
+      "geometry": { "type": "Point", "coordinates": [7.65, 45.04] } }
+  ]
+}
+----
+
+==== Class (b): compiled mission
+
+`GET /routes/survey-2026-09-08-a/definition?profile=mavlink&format=mission`
+
+|===
+| seq | command | frame | param1 | param2 | param3 | param4 | x | y | z | Provenance
+
+| 0
+| 16 `NAV_WAYPOINT`
+| 3
+| 0
+| NaN
+| NaN
+| NaN
+| 450200000
+| 76300000
+| 60
+| feature 0, default nav
+
+| 1
+| 2000 `IMAGE_START_CAPTURE`
+| 2
+| 100
+| 0
+| 1
+| 1
+| 0
+| 0
+| 0
+| feature 0, `7/100` #1
+
+| 2
+| 16 `NAV_WAYPOINT`
+| 3
+| 0
+| NaN
+| NaN
+| NaN
+| 450300000
+| 76400000
+| 60
+| feature 1, default nav
+
+| 3
+| 2000 `IMAGE_START_CAPTURE`
+| 2
+| 100
+| 0
+| 1
+| 2
+| 0
+| 0
+| 0
+| feature 1, `7/100` #2
+
+| 4
+| 19 `NAV_LOITER_TIME`
+| 3
+| 10
+| 0
+| 0
+| 0
+| 450400000
+| 76500000
+| 60
+| feature 2, `7/1` #1 step 1 (replaces default nav)
+
+| 5
+| 21 `NAV_LAND`
+| 3
+| 0
+| 0
+| NaN*
+| NaN
+| 450400000
+| 76500000
+| 0
+| feature 2, `7/1` #1 step 2
+|===
+
+* The XML marks `NAV_LAND` param 3 as empty. Emitting 0 is equally valid; the descriptor decides (REC 13).
+
+All rows have `autocontinue = 1`, `current = 0`, `mission_type = 0`. Three details deserve attention. `x` is latitude although GeoJSON lists longitude first. The photo items use `frame = 2` (`MAV_FRAME_MISSION`) because they carry no position. The landing altitude is 0 in the relative-home frame, not 60.
+
+==== Class (c): upload and tracking
+
+. Gateway resolves `7/1` (autopilot) and `7/100` (camera, driven by the autopilot's mission).
+. It sends `MISSION_COUNT(count=6, mission_type=0, opaque_id=CRC32("survey-2026-09-08-a"))`.
+. The vehicle sends `MISSION_REQUEST_INT(seq=0…5)`; the gateway answers each with `MISSION_ITEM_INT`.
+. The vehicle sends `MISSION_ACK(type=ACCEPTED)`. All six items are `accepted`/`scheduled`.
+. Later, an operator sends an authenticated _start_ request; the gateway issues `MAV_CMD_MISSION_START` as `COMMAND_LONG` and observes `COMMAND_ACK`.
+. As `MISSION_CURRENT.seq` moves 0 → 1 → ..., items become `executing`; `MISSION_ITEM_REACHED(seq=0)` completes item 0; item 1 is inferred `completed` when `seq` moves to 2.
+
+==== What a class (a)+(b) client does
+
+. Reads `/actions`, `+/actions/{id}+`, `+/actions/{id}/binding+` once and caches them keyed by `dialectVersion`.
+. Validates each `params` against its schema.
+. Compiles the mission locally and checks range, frame and unit constraints, with no vehicle connected.
+
+==== What a class (c)--(e) client additionally does
+
+. Reads `AUTOPILOT_VERSION` and confirms the capabilities it needs (REC 36).
+. Uploads the compiled mission with the mission protocol, using the `opaque_id` of REC 34 (REC 29).
+. Starts execution only on an explicit, authenticated operator request (REC 39).
+. Tracks `MISSION_CURRENT`, `MISSION_ITEM_REACHED` and `COMMAND_ACK` as execution state (REC 32) and keeps the correlation table of REC 34--35.
+
+==== Registry actions in the same route
+
+The hover-and-land composite of Clause 5.1 can be written with registry identifiers. Waypoint 2 then carries two actions for `mavlink:7/1`:
+
+|===
+| `actionType` | `sequence` | `params` | Native action
+
+| `vehicle.hold-position`
+| 1
+| `{"duration":10}`
+| `mavlink.nav-loiter-time` (`duration` present)
+
+| `vehicle.land`
+| 2
+| `{}`
+| `mavlink.nav-land`
+|===
+
+and the photo actions are `camera.capture-image` with `{"count":1}` for `mavlink:7/100`. The Binding Descriptor of `vehicle.hold-position` (excerpt):
+
+[,json]
+----
+{
+  "actionId": "vehicle.hold-position",
+  "binding": "mavlink",
+  "registryVersion": "0.1.0",
+  "hazard": "flight-critical",
+  "scope": ["waypoint"],
+  "steps": [
+    { "kind": "mavCmd", "when": { "field": "duration", "present": true },
+       "command": "MAV_CMD_NAV_LOITER_TIME", "commandId": 19, "delivery": ["mission"],
+       "position": "geometry", "replacesDefaultNav": true },
+    { "kind": "mavCmd", "when": { "field": "duration", "present": false },
+       "command": "MAV_CMD_NAV_LOITER_UNLIM", "commandId": 17, "delivery": ["mission"],
+       "position": "geometry", "replacesDefaultNav": true }
+  ]
+}
+----
+
+The `params[]` entries are as in Clause 4.4 and follow the dialect XML. `radius`, `holdMode` and `heading` are carried only if the descriptor maps them (REQ 43).
+
+==== Class (d): abandoning the mission with `mission.abort`
+
+`mission.abort` ("Abandon the mission and perform a fallback action") is a Core registry command with `Completion: immediate`, `Persistence: mode`, `Scope: none` and `Hazard: flight-critical`. It is not a route action (REC 45). During the survey, while the vehicle `mavlink:7/1` is flying the mission, an authorized operator sends `mission.abort` with `{"action": "return-to-home"}`. The descriptor (excerpt):
+
+[,json]
+----
+{
+  "actionId": "mission.abort",
+  "binding": "mavlink",
+  "registryVersion": "0.1.0",
+  "hazard": "flight-critical",
+  "scope": [],
+  "steps": [
+    { "kind": "gateway", "operation": "abandon-route" },
+    { "kind": "mavCmd", "when": { "field": "action", "equals": "return-to-home" },
+       "command": "MAV_CMD_NAV_RETURN_TO_LAUNCH", "commandId": 20, "delivery": ["guided"], "position": "none" },
+    { "kind": "mavCmd", "when": { "field": "action", "equals": "stop" },
+       "command": "MAV_CMD_DO_PAUSE_CONTINUE", "commandId": 193, "delivery": ["guided"], "position": "none",
+       "params": [ { "mavParam": 1, "fixed": 0 } ] }
+  ]
+}
+----
+
+The `hold` and `land` fallbacks follow the same pattern with `MAV_CMD_NAV_LOITER_UNLIM` and `MAV_CMD_NAV_LAND`, and give `fixed` values to the parameters those commands require and the registry does not carry (the loiter `radius`, the `landMode`). The `kind` value `gateway` is defined for this case (REC 46): it names an operation of the gateway rather than a message. The gateway then:
+
+. Confirms that `MAV_CMD_NAV_RETURN_TO_LAUNCH` can be sent to `(7, 1)` (REC 36, REC 46 step 1).
+. Stops sending further steps for the route and reports items 4 and 5 (the hold and the landing) as `canceled`. The mission stored on the vehicle is left in place.
+. Sends `COMMAND_LONG` with `command = 20` to `(7, 1)`. The wire values of the unused parameters follow REC 13.
+. Receives `COMMAND_ACK(command = 20, result = MAV_RESULT_ACCEPTED)` and reports `mission.abort` as `completed`. The vehicle's return flight is a separate matter and is observed through telemetry.
+
+The camera `mavlink:7/100` is another target. `mission.abort` for `7/1` does not change its state.
+
+'''
+
+=== Implementation notes (informative)
+
+These are autopilot behaviors a compiler should expect. They are not requirements, and they change between firmware versions. Verify against the target firmware.
+
+|===
+| Topic | Note
+
+| Home item
+| ArduPilot traditionally treats mission `seq = 0` as home; PX4 does not use a home item. `homeMode` (REQ 19) lets the compiler choose.
+
+| First item
+| Vehicles starting on the ground often need an explicit `NAV_TAKEOFF` as the first NAV item. Add it as a route action or by gateway policy.
+
+| Camera triggering
+| Legacy triggering via `DO_DIGICAM_CONTROL` and `DO_SET_CAM_TRIGG_DIST` remains common; camera protocol v2 commands (`IMAGE_START_CAPTURE`, `SET_CAMERA_MODE`) are newer. A descriptor MAY offer both, selected by capability.
+
+| Reached events
+| `MISSION_ITEM_REACHED` is reliable for NAV items; DO items vary. This is why REC 32 allows inferred completion.
+
+| Mission end
+| Behaviour after the last item (hover, RTL, land) is a vehicle parameter unless the route ends with an explicit completion item. Prefer `onCompletion`.
+
+| Frames
+| Terrain frames in particular are not supported everywhere. Unsupported frames return `MAV_MISSION_UNSUPPORTED_FRAME`.
+
+| Abort fallbacks
+| `hold` and `land` for `mission.abort` act at the current position. How a guided `NAV_LOITER_UNLIM` or `NAV_LAND` is told to use the current position (zero or `NaN` coordinates, or a mode change) depends on the autopilot, and the descriptor's `absent` values for `x` and `y` (REC 13) carry that convention.
+
+| Registry hazard
+| The MAVLink class of a command can be higher than the registry default (for example `COMPONENT_ARM_DISARM`, `PREFLIGHT_CALIBRATION`). REQ 44 takes the highest.
+
+| Command metadata
+| Some firmware publishes MAVLink component metadata (commands metadata). When available, use it to fill `/actions?target=…` and to cross-check generated schemas.
+|===
+
+
+=== Summary table: what each standard owns
+
+|===
+| Concern | Owned by
+
+| Geometry, timing, optimization of the path
+| OGC API -- Routes
+
+| Mode/preference discovery and parameter schemas
+| OGC API -- Routes (`#62`, `#72`)
+
+| Action discovery (`/actions`, `+/actions/{actionId}+`), following the `#72`/`#81` pattern
+| OGC API -- Routes (as profiled here)
+
+| Command names, parameters, semantics and default hazard class of vehicle and sensor commands
+| Common Command Registry, a register of Routes actions (used by this profile, Clause 4.13)
+
+| `MAV_CMD` → JSON Schema derivation, Binding Descriptor, mission lowering, execution-state mapping
+| *This profile*
+
+| Message and command definitions, mission protocol, command protocol, message signing
+| MAVLink (dialect XML and protocol guides)
+
+| Vehicle-side execution, failsafes, arming, mode logic
+| Autopilot firmware (PX4, ArduPilot, ...)
+|===
+
+'''
+
+== References
+
+* OGC API -- Routes, Part 1: Core (`docs.ogc.org/DRAFTS/21-000.html`)
+* MAVLink Developer Guide (`mavlink.io`): message definitions (`common`, `ardupilotmega`, `development` and vendor dialects), Mission Protocol, Command Protocol, Camera Protocol v2, Component Metadata Protocol, message signing
+* MAVLink message definitions: `github.com/mavlink/mavlink`, `message_definitions/v1.0/*.xml`
+* RFC 7946: The GeoJSON Format
+* JSON Schema 2020-12
+* Related SRDs in this series:
+ ** _Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)_
+ ** _A Connected Systems Profile for OGC API -- Routes Actions_
+ ** _A ROS 2 Binding for the Common Command Registry for Uncrewed Systems_
+* Tracking issues:
+ ** `ogcapi-routes#74`: _Extensibility for Actions_
+ ** `ogcapi-routes#72`: _Extending the mode_: `GET /routes/modes` and `+GET /routes/modes/{modeid}+` (a JSON Schema of that mode's parameters)
+ ** `ogcapi-routes#81`: _Reporting Attributes_: the same list/schema pattern for reporting attributes
+ ** `ogcapi-routes#62`: _Extend "mode" and "preferences" with description_
+* https://ogcapi.ogc.org/routes/overview.html[OGC API -- Routes -- Part 1: Core].
+* https://mavlink.io/en/[MAVLink Developer Guide], including the https://mavlink.io/en/messages/common.html[MAVLink Common Message Set] and official dialect definitions.
+* https://mavlink.io/en/services/command.html[MAVLink Command Protocol].
+* https://mavlink.io/en/services/mission.html[MAVLink Mission (Plan) Protocol].
+* https://json-schema.org/draft/2020-12/[JSON Schema Draft 2020-12].
+* https://www.rfc-editor.org/rfc/rfc7946[RFC 7946, The GeoJSON Format].
+
+'''
+

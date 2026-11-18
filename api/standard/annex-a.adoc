@@ -46,30 +46,6 @@ Then:
 * assert that a non-negative integer `n` exists where `/links/n/rel` is "http://www.opengis.net/def/rel/ogc/1.0/routes" and where `/links/n/href` is (after normalization) the URI `{apiURI}/routes`.
 |===
 
-==== Conformance Test {counter:test-id}
-[cols=">20h,<80a",width="100%"]
-|===
-|Test id: | /conf/core/preferences
-|Requirements: | <<req_core_conformance-values,/req/core/conformance-values>> A
-|Test purpose: | Check that the preference values are stated in the conformance declaration
-|Test method: | 
-Given:
-
-* n/a
-
-When:
-
-* the request for the API conformance declaration is executed
-** method: `GET`
-** path: `{apiURI}/conformance`
-** header: `Accept: application/json`
-** authentication, if authentication credentials are provided
-
-Then:
-
-* assert successful execution (status code is "200", `Content-Type` header is "application/json");
-* assert that `pass:[/properties/http:~1~1www.opengis.net~1spec~1ogcapi-routes-1~11.0.0-draft.1~1conf~1core/preferences]` is a string array with at least one element.
-|===
 
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]
@@ -104,7 +80,7 @@ Then:
 [cols=">20h,<80a",width="100%"]
 |===
 |Test id: | /conf/core/compute-route-error-400
-|Requirements: | <<req_core_compute-route-op,/req/core/compute-route-op>> A/B, <<req_core_compute-route-error,/req/core/compute-route-error>> A
+|Requirements: | <<req_core_compute-route-op,/req/core/compute-route-op>> A/B, <<req_core_error,/req/core/error>> A
 |Test purpose: | Check that invalid requests return a 400
 |Test method: | 
 Given:
@@ -129,7 +105,7 @@ Then:
 [cols=">20h,<80a",width="100%"]
 |===
 |Test id: | /conf/core/compute-route-error-422
-|Requirements: | <<req_core_compute-route-op,/req/core/compute-route-op>> A/B, <<req_core_compute-route-error,/req/core/compute-route-error>> B
+|Requirements: | <<req_core_compute-route-op,/req/core/compute-route-op>> A/B, <<req_core_error,/req/core/error>> B
 |Test purpose: | Check that invalid requests return a 422
 |Test method: | 
 Given:
@@ -151,61 +127,7 @@ Then:
 * assert an unprocessable entity response (status code is "422").
 |===
 
-==== Conformance Test {counter:test-id}
-[cols=">20h,<80a",width="100%"]
-|===
-|Test id: | /conf/core/compute-route-preference-success
-|Requirements: | <<req_core_compute-route-op,/req/core/compute-route-op>> A/B, <<req_core_compute-route-success,/req/core/compute-route-success>> A/B, <<req_core_conformance-values,/req/core/conformance-values>> A
-|Test purpose: | Check that routes can be computed for all preference values
-|Test method: | 
-Given:
 
-* test /conf/core/preferences has been passed
-* a list of five positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos5}`)
-* a tolerance value
-
-When:
-
-* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}`, `{pos4}`, `{pos5}` } and for each value `{pref}` from the string array `pass:[/properties/http:~1~1www.opengis.net~1spec~1ogcapi-routes-1~11.0.0-draft.1~1conf~1core/preferences]` in the Conformance Declaration
-** method: `POST`
-** path: `{apiURI}/routes`
-** header: `Content-Type: application/json`, `Accept: application/geo+json`
-** authentication, if authentication credentials are provided
-** content: `{ "name": "foo bar", "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "preference": {pref} } }`
-
-Then:
-
-* assert successful execution (status code is "200", `Content-Type` header is "application/geo+json");
-* assert that the response content conforms to conformance class "Route Exchange Model";
-* assert that the value of `/name` in the response content is "foo bar";
-* assert that the distance between the start of the route and `{posi}` is less than the tolerance value;
-* assert that the distance between the end of the route and `{posj}` is less than the tolerance value.
-|===
-
-==== Conformance Test {counter:test-id}
-[cols=">20h,<80a",width="100%"]
-|===
-|Test id: | /conf/core/compute-route-preference-error-400
-|Requirements: | <<req_core_compute-route-op,/req/core/compute-route-op>> A/B, <<req_core_compute-route-error,/req/core/compute-route-error>> A
-|Test purpose: | Check that invalid preference values return a 400
-|Test method: | 
-Given:
-
-* a list of two positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` and `{pos2}`)
-
-When:
-
-* a request for a route computation is executed
-** method: `POST`
-** path: `{apiURI}/routes`
-** header: `Content-Type: application/json`, `Accept: application/geo+json`
-** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {pos1}, {pos2} ] } }, "preference": "foo___bar" } }`
-
-Then:
-
-* assert a bad request response (status code is "400").
-|===
 
 === Conformance Class "Intermediate waypoints"
 
@@ -253,22 +175,22 @@ Then:
 
 === Conformance Class "Modes"
 
-[[conf_mode]]
+[[conf_modes]]
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/mode
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes
 |Target type |Web API
-|Requirements class |<<rc_mode,Requirements Class "Modes">>
+|Requirements class |<<rc_modes,Requirements Class "Modes">>
 |Dependency |<<conf_core,Conformance Class "Core">>
 |===
 
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]
 |===
-|Test id: | /conf/mode/modes
-|Requirements: | <<req_mode_conformance-values,/req/mode/conformance-values>> A
-|Test purpose: | Check that the mode values are stated in the conformance declaration
+|Test id: | /conf/modes/list-modes
+|Requirements: | <<req_mode_list-modes,/req/core/list-modes>> A/B, <<req_mode-get-mode-schema,/req/core/get-mode-schema>> A, <<req_mode-get-mode-schema-success,/req/core/get-mode-schema-success>> A/B
+|Test purpose: | Check that the modes and their schemas can be fetched
 |Test method: | 
 Given:
 
@@ -276,39 +198,47 @@ Given:
 
 When:
 
-* the request for the API conformance declaration is executed
+* a request to fetch the list of modes is executed
 ** method: `GET`
-** path: `{apiURI}/conformance`
+** path: `{apiURI}/modes`
 ** header: `Accept: application/json`
 ** authentication, if authentication credentials are provided
 
 Then:
 
 * assert successful execution (status code is "200", `Content-Type` header is "application/json");
-* assert that `pass:[/properties/http:~1~1www.opengis.net~1spec~1ogcapi-routes-1~11.0.0-draft.1~1conf~1mode/modes]` is a string array with at least one element.
+* assert that the response content is a JSON array with at least one element and that each element has a non-empty `name` and `description` and a non-empty `domain` array;
+* for each `{modeId}` taken from the `name` of an element in the response content:
+** a request to fetch the schema of the mode is executed
+*** method: `GET`
+*** path: `{apiURI}/modes/{modeId}`
+*** header: `Accept: application/json`
+*** authentication, if authentication credentials are provided
+** assert successful execution (status code is "200") and that the response content is an OpenAPI 3.0 compatible schema
 |===
 
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]
 |===
-|Test id: | /conf/core/compute-route-mode
-|Requirements: | <<req_mode_input,/req/mode/input>> A, <<req_mode_conformance-values,/req/mode/conformance-values>> A
+|Test id: | /conf/modes/compute-route-success
+|Requirements: | <<req_mode_input,/req/mode/input>> A, <<req_mode_list-modes,/req/core/list-modes>> A/B
 |Test purpose: | Check that routes can be computed for all modes
 |Test method: | 
 Given:
 
-* test /conf/mode/modes has been passed
-* a list of five positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos5}`)
+* test /conf/modes/list-modes has been passed
+* `{modes}` is the list of `name` values from the response of test /conf/modes/list-modes
+* a list of three positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos3}`)
 * a tolerance value
 
 When:
 
-* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}`, `{pos4}`, `{pos5}` } and for each value `{mode}` from the string array `pass:[/properties/http:~1~1www.opengis.net~1spec~1ogcapi-routes-1~11.0.0-draft.1~1conf~1mode/modes]` in the Conformance Declaration
+* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}` } and for each `{mode}` from `{modes}`
 ** method: `POST`
 ** path: `{apiURI}/routes`
 ** header: `Content-Type: application/json`, `Accept: application/geo+json`
 ** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "mode": {mode} } }`
+** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "mode": "{mode}" } }`
 
 Then:
 
@@ -318,114 +248,28 @@ Then:
 * assert that the distance between the end of the route and `{posj}` is less than the tolerance value.
 |===
 
-=== Conformance Class "Height restrictions"
+=== Conformance Class "Spatial constraints"
 
-[[conf_height]]
+[[conf_spatial-constraints]]
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/height
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/spatial-constraints
 |Target type |Web API
-|Requirements class |<<rc_height,Requirements Class "Height restrictions">>
+|Requirements class |<<rc_spatial-constraints,Requirements Class "Spatial Constraints">>
 |Dependency |<<conf_core,Conformance Class "Core">>
 |===
 
 ==== Conformance Test {counter:test-id}
 [cols=">20h,<80a",width="100%"]
 |===
-|Test id: | /conf/height/compute-route-success
-|Requirements: | <<req_height_input,/req/height/input>> A, <<req_height_success,/req/height/success>> A
-|Test purpose: | Check that routes with height restrictions can be computed
+|Test id: | /conf/spatial-constraints/compute-route-success
+|Requirements: | <<req_spatial-constraints_input,/req/spatial-constraints/input>> A, <<req_spatial-constraints_success,/req/spatial-constraints/success>> A
+|Test purpose: | Check that routes can be computed avoiding spatial constraints
 |Test method: | 
 Given:
 
 * a list of three positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos3}`)
-* an optional list of vehicle heights, default is: 2, 3, 5
-* a tolerance value
-
-When:
-
-* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}` } and for each `{height}` from the list of vehicle heights
-** method: `POST`
-** path: `{apiURI}/routes`
-** header: `Content-Type: application/json`, `Accept: application/geo+json`
-** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } } }, "height": {height} }`
-
-Then:
-
-* assert successful execution (status code is "200", `Content-Type` header is "application/geo+json");
-* assert that the response content conforms to conformance class "Route Exchange Model";
-* assert that the distance between the start of the route and `{posi}` is less than the tolerance value;
-* assert that the distance between the end of the route and `{posj}` is less than the tolerance value;
-* assert that the route overview has no property `maxHeight_m` or a value that is greater than or equal to `{height}`.
-|===
-
-=== Conformance Class "Weight restrictions"
-
-[[conf_weight]]
-[cols="1,4",width="90%"]
-|===
-2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/weight
-|Target type |Web API
-|Requirements class |<<rc_weight,Requirements Class "Weight restrictions">>
-|Dependency |<<conf_core,Conformance Class "Core">>
-|===
-
-==== Conformance Test {counter:test-id}
-[cols=">20h,<80a",width="100%"]
-|===
-|Test id: | /conf/weight/compute-route-success
-|Requirements: | <<req_weight_input,/req/weight/input>> A, <<req_weight_success,/req/weight/success>> A
-|Test purpose: | Check that routes with weight restrictions can be computed
-|Test method: | 
-Given:
-
-* a list of three positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos3}`)
-* an optional list of vehicle weights in metric tons, default is: 3, 5, 10
-* a tolerance value
-
-When:
-
-* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}` } and for each `{weight}` from the list of vehicle weights
-** method: `POST`
-** path: `{apiURI}/routes`
-** header: `Content-Type: application/json`, `Accept: application/geo+json`
-** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } } }, "weight": {weight} }`
-
-Then:
-
-* assert successful execution (status code is "200", `Content-Type` header is "application/geo+json");
-* assert that the response content conforms to conformance class "Route Exchange Model";
-* assert that the distance between the start of the route and `{posi}` is less than the tolerance value;
-* assert that the distance between the end of the route and `{posj}` is less than the tolerance value;
-* assert that the route overview has no property `maxWeight_t` or a value that is greater than or equal to `{weight}`.
-|===
-
-=== Conformance Class "Obstacles"
-
-[[conf_obstacles]]
-[cols="1,4",width="90%"]
-|===
-2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/obstacles
-|Target type |Web API
-|Requirements class |<<rc_obstacles,Requirements Class "Obstacles">>
-|Dependency |<<conf_core,Conformance Class "Core">>
-|===
-
-==== Conformance Test {counter:test-id}
-[cols=">20h,<80a",width="100%"]
-|===
-|Test id: | /conf/obstacles/compute-route-success
-|Requirements: | <<req_obstacles_input,/req/obstacles/input>> A, <<req_obstacles_success,/req/obstacles/success>> A
-|Test purpose: | Check that routes can be computed avoiding obstacles
-|Test method: | 
-Given:
-
-* a list of five positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos5}`)
 * a tolerance value
 
 When:
@@ -435,9 +279,10 @@ When:
 ** path: `{apiURI}/routes`
 ** header: `Content-Type: application/json`, `Accept: application/geo+json`
 ** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } } }, "obstacles": { "type": "MultiPolygon", "coordinates": [[[ [{lonm},{latm}], [{lonn},{latm}], [{lonn},{latn}], {[{lonm},{latn}], [{lonm},{latm}] ]]] } }` with
+** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "spatial_constraints": { "value": { "type": "MultiPolygon", "coordinates": [[[ [{lonm},{latm}], [{lonn},{latm}], [{lonn},{latn}], [{lonm},{latn}], [{lonm},{latm}] ]]] } } } }` with
 *** `{lonm}` and `{lonn}` as longitudes somewhere between the longitudes of `{posi}` and `{posj}`; `{lonm}` < `{lonn}`
 *** `{latm}` and `{latn}` as latitudes somewhere between the latitudes of `{posi}` and `{posj}`; `{latm}` < `{latn}`
+*** the polygon selected such that the route without the constraint would intersect it
 
 Then:
 
@@ -445,7 +290,7 @@ Then:
 * assert that the response content conforms to conformance class "Route Exchange Model";
 * assert that the distance between the start of the route and `{posi}` is less than the tolerance value;
 * assert that the distance between the end of the route and `{posj}` is less than the tolerance value;
-* assert that the route path does not intersect the obstacle geometry.
+* assert that the route path does not intersect the constraint geometry.
 |===
 
 === Conformance Class "Temporal constraints"
@@ -505,12 +350,12 @@ Given:
 
 When:
 
-* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}` } and for `{type}` from the list: "departure", "arrival".
+* a request for a route computation is executed for each ordered pair `{posi}`/`{posj}` from { `{pos1}`, `{pos2}`, `{pos3}` } and for `{type}`/`{typeConstraint}` from the list: "departure"/"noEarlierThan", "arrival"/"noLaterThan".
 ** method: `POST`
 ** path: `{apiURI}/routes`
 ** header: `Content-Type: application/json`, `Accept: application/geo+json`
 ** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } } }, "when": { "value": { "timestamp": {timestamp}, "type": {type} } } }` with
+** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "temporal_constraint": { "value": { "id": "TC-1", "title": "Requested time", "type": "{typeConstraint}", "timePoint": "{timestamp}" } } } }` with
 *** `{timestamp}` as a RFC 3339 date-time value in UTC ("Z") in 24 hours
 
 Then:
@@ -543,7 +388,7 @@ When:
 ** path: `{apiURI}/routes`
 ** header: `Content-Type: application/json`, `Accept: application/geo+json`
 ** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {pos1}, {pos2} ] } } }, "when": { "value": { "timestamp": {timestamp} } } }`
+** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {pos1}, {pos2} ] } }, "temporal_constraint": { "value": { "id": "TC-1", "title": "Invalid time", "type": "noEarlierThan", "timePoint": "{timestamp}" } } } }`
 
 Then:
 
@@ -580,7 +425,7 @@ When:
 ** path: `{apiURI}/routes`
 ** header: `Content-Type: application/json`, `Accept: application/geo+json`
 ** authentication, if authentication credentials are provided
-** content: `{ "name": "foo bar", "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {pos1}, {pos2} ] } } } }`
+** content: `{ "inputs": { "name": "foo bar", "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {pos1}, {pos2} ] } } } }`
 
 Then:
 
@@ -791,63 +636,8 @@ properties:
                   maxItems: 3
                   items:
                     type: number
-      preference:
-        type: string
       mode:
         type: string
-      height:
-        type: number
-        minimum: 0
-      weight:
-        type: number
-        minimum: 0
-      obstacles:  
-        type: object
-        required:
-          - value
-        properties:
-          value:
-            type: object
-            required:
-              - type
-              - coordinates
-            properties:
-              type:
-                type: string
-                enum:
-                  - MultiPolygon
-              coordinates:
-                type: array
-                items:
-                  type: array
-                  items:
-                    type: array
-                    minItems: 4
-                    items:
-                      type: array
-                      minItems: 2
-                      maxItems: 3
-                      items:
-                        type: number
-      when:
-        type: object
-        required:
-          - value
-        properties:
-          value:
-            type: object
-            required:
-              - timestamp
-            properties:
-              timestamp:
-                type: string
-                format: date-time
-              type:
-                type: string
-                default: departure
-                enum:
-                  - departure
-                  - arrival
 ----
 |===
 
@@ -899,4 +689,214 @@ Then:
 
 * assert successful execution (status code is "200", `Content-Type` header is "application/json");
 * assert that no non-negative integer `n` exists where `/links/n/rel` is "item", where `/links/n/href` is (after URI normalization) equal to `{apiURI}/routes/{routeId}`.
+|===
+
+=== Conformance Class "Attributes"
+
+[[conf_attributes]]
+[cols="1,4",width="90%"]
+|===
+2+|*Conformance Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/attributes
+|Target type |Web API
+|Requirements class |<<rc_attributes,Requirements Class "Attributes">>
+|Dependency |<<conf_core,Conformance Class "Core">>
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/attributes/catalog
+|Requirements: | <<req_attributes_catalog,/req/attributes/catalog>> A/B/C/D/E/F/G
+|Test purpose: | Check that the attribute catalog can be fetched
+|Test method: | 
+Given:
+
+* n/a
+
+When:
+
+* a request to fetch the attribute catalog is executed
+** method: `GET`
+** path: `{apiURI}/attributes`
+** header: `Accept: application/json`
+** authentication, if authentication credentials are provided
+
+Then:
+
+* assert successful execution (status code is "200", `Content-Type` header is "application/json");
+* assert that the response content is a JSON array of attribute definitions;
+* assert that each attribute definition includes the members `id`, `name`, `definition`, `scope`, and `type`;
+* assert that the value of `scope` of each attribute definition is a non-empty array whose members are selected from "route" and "segment".
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/attributes/item
+|Requirements: | <<req_attributes_item,/req/attributes/item>> A/B/C/D
+|Test purpose: | Check that single attribute definitions can be fetched
+|Test method: | 
+Given:
+
+* test /conf/attributes/catalog has been passed
+* `{attributeIds}` is the array of `id` values of the attribute definitions in the response of test /conf/attributes/catalog
+
+When:
+
+* a request to fetch an attribute definition is executed for each `{attributeId}` from `{attributeIds}`
+** method: `GET`
+** path: `{apiURI}/attributes/{attributeId}`
+** header: `Accept: application/json`
+** authentication, if authentication credentials are provided
+
+Then:
+
+* assert successful execution (status code is "200", `Content-Type` header is "application/json");
+* assert that the response content is the attribute definition from the catalog with that `id`;
+* a request to `GET {apiURI}/attributes/foo___bar` with header `Accept: application/json` returns a response with status code "404".
+|===
+
+=== Conformance Class "Contingencies"
+
+[[conf_contingencies]]
+[cols="1,4",width="90%"]
+|===
+2+|*Conformance Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/contingencies
+|Target type |Web API
+|Requirements class |<<rc_contingencies,Requirements Class "Contingencies">>
+|Dependency |<<conf_core,Conformance Class "Core">>
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/contingencies/list-contingencies
+|Requirements: | <<req_core_compute-list-contingencies,/req/core/list-contingencies>> A/B/C/D
+|Test purpose: | Check that the list of contingencies and their schemas can be fetched
+|Test method: | 
+Given:
+
+* n/a
+
+When:
+
+* a request to fetch the list of contingencies is executed
+** method: `GET`
+** path: `{apiURI}/contingencies`
+** header: `Accept: application/json`
+** authentication, if authentication credentials are provided
+
+Then:
+
+* assert successful execution (status code is "200", `Content-Type` header is "application/json");
+* assert that the response content is a JSON array of strings;
+* for each `{contingencyId}` in the response content, a request to `GET {apiURI}/contingencies/{contingencyId}` with header `Accept: application/json` returns a successful execution (status code is "200") and an object describing the schema of the contingency.
+|===
+
+=== Conformance Class "Actions"
+
+[[conf_actions]]
+[cols="1,4",width="90%"]
+|===
+2+|*Conformance Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions
+|Target type |Web API
+|Requirements class |<<rc_actions,Requirements Class "Actions">>
+|Dependency |<<conf_core,Conformance Class "Core">>
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/actions/list-actions
+|Requirements: | <<req_actions-list-actions,/req/core/list-actions>> A/B/C/D
+|Test purpose: | Check that the list of actions and their schemas can be fetched
+|Test method: | 
+Given:
+
+* n/a
+
+When:
+
+* a request to fetch the list of actions is executed
+** method: `GET`
+** path: `{apiURI}/actions`
+** header: `Accept: application/json`
+** authentication, if authentication credentials are provided
+
+Then:
+
+* assert successful execution (status code is "200", `Content-Type` header is "application/json");
+* assert that the response content is a JSON array of strings;
+* for each `{actionId}` in the response content, a request to `GET {apiURI}/actions/{actionId}` with header `Accept: application/json` returns a successful execution (status code is "200") and an object describing the schema of the action.
+|===
+
+=== Conformance Class "Job Control"
+
+[[conf_job-control]]
+[cols="1,4",width="90%"]
+|===
+2+|*Conformance Class*
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/job-control
+|Target type |Web API
+|Requirements class |<<rc_job-control,Requirements Class "Job Control">>
+|Dependency |<<conf_core,Conformance Class "Core">>
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/job-control/async
+|Requirements: | <<req_job-control_async,/req/job-control/async>> A, <<req_job-control_modes,/req/job-control/modes>> A
+|Test purpose: | Check that asynchronous execution can be requested for modes that support it
+|Test method: | 
+Given:
+
+* test /conf/modes/list-modes has been passed
+* `{mode}` is the name of a mode from the response of test /conf/modes/list-modes whose `jobControlOptions` includes "async-execute"
+* a list of two positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` and `{pos2}`)
+
+When:
+
+* a request for an asynchronous route computation is executed
+** method: `POST`
+** path: `{apiURI}/routes`
+** header: `Content-Type: application/json`, `Prefer: respond-async`
+** authentication, if authentication credentials are provided
+** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {pos1}, {pos2} ] } }, "mode": "{mode}" } }`
+
+Then:
+
+* assert a created response (status code is "201");
+* assert that the response includes a `Location` header;
+* assert that the response includes a `Preference-Applied: respond-async` header;
+* assert that the response body is a JSON document with the members `routeId`, `type` with the value "route", and `status` with a value from "accepted", "running", "successful", "failed" or "dismissed".
+|===
+
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/job-control/status
+|Requirements: | <<req_job-control_status,/req/job-control/status>> A
+|Test purpose: | Check that the status of a route computation can be retrieved
+|Test method: | 
+Given:
+
+* test /conf/job-control/async has just been passed
+* `{routeId}` is the route identifier of the computation started in test /conf/job-control/async
+
+When:
+
+* a request to retrieve the status of the route computation is executed
+** method: `GET`
+** path: `{apiURI}/routes/{routeId}`
+** authentication, if authentication credentials are provided
+
+Then:
+
+* if the computation is still in progress, assert a successful execution (status code is "200", `Content-Type` header is "application/json") with a status document whose `status` is "accepted" or "running";
+* if the computation is complete, assert a successful execution (status code is "200", `Content-Type` header is "application/geo+json") and that the response content conforms to conformance class "Route Exchange Model";
+* a request for a route that does not exist returns a response with status code "404".
 |===

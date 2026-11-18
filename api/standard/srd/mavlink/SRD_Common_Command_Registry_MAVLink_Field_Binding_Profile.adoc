@@ -1,0 +1,923 @@
+[appendix]
+:appendix-caption: Annex
+
+== MAVLink Binding for the Common Command Registry for Uncrewed Systems
+
+=== Registry Commands to MAVLink Command Sequences and Field Mappings
+
+==== Purpose
+
+This document defines the MAVLink binding of the *Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)*. MAVLink is a lightweight messaging protocol commonly used for communication between uncrewed vehicles, flight controllers, onboard computers, ground stations, and other vehicle components. It complements the _A MAVLink Binding Profile for OGC API -- Routes Actions_ and makes the registry-to-MAVLink mapping explicit at *command-sequence and field level*.
+
+The registry defines 67 protocol-neutral commands and 150 parameters. The MAVLink Routes profile defines how native MAVLink actions are represented by JSON Schema and Binding Descriptors. This document specializes that mechanism for the registry commands:
+
+* a registry command is represented as a *composite action* whose identifier remains the registry identifier;
+* the composite expands to one or more native `mavlink.*` actions, or to a gateway operation where the registry has no `MAV_CMD`;
+* each carried registry parameter is mapped to a MAVLink `param1..param7`, `x/y/z`, frame, or a generated value;
+* parameters for which the two source documents define no counterpart are explicitly marked *unsupported* or *unresolved*, rather than silently assigned a MAVLink meaning;
+* alternatives are selected with `when` conditions as specified by REQ 43 of the MAVLink profile.
+
+The registry remains the authority for command names, parameters, semantics, applicability and default hazards. The MAVLink profile remains authoritative for MAVLink command definitions, delivery, frames, defaults and wire representation.
+
+The source documents identify 51 registry commands with one or more related MAVLink native actions, one composite `mission.abort`, and 15 registry commands with no `MAV_CMD` mapping. The field mappings below refine those source mappings; they do not introduce a new protocol semantic where the sources do not define one.
+
+==== Non-goals
+
+* Does not define new registry commands.
+* Does not define autopilot-specific behavior.
+* Does not define a universal mapping for vendor-specific camera, sensor or docking protocols.
+* Does not turn a semantic approximation into an exact equivalence.
+* Does not define continuous setpoint streams.
+* Does not replace the MAVLink dialect XML; where the source documents defer to MAVLink XML, the XML is authoritative.
+
+=== Binding conventions
+
+==== Mapping notation
+
+The `Field mapping` column uses the following notation:
+
+* `registry.field → pN` -- direct mapping to MAVLink `paramN`.
+* `registry.field → x/y/z` -- position or non-position wire coordinate mapping according to the MAVLink profile.
+* `registry.field → geometry` -- route geometry supplies the destination/location.
+* `registry.field → pN [transform]` -- a unit or value transformation is required.
+* `+registry.field → generated(...)+` -- the value is not supplied by the registry command and must come from the binding/target context.
+* `registry.field → unsupported` -- the source documents do not define a counterpart.
+* `+registry.field → conditional(...)+` -- the mapping depends on another registry field.
+* `+sequence(...)+` -- the command expands into multiple MAVLink steps.
+
+For position-bearing commands, GeoJSON `[longitude, latitude, altitude]` is converted to MAVLink `+x=latitude×10^7+`, `+y=longitude×10^7+`, and `z=altitude` in the selected MAVLink frame. Position context is not repeated as a parameter mapping for every native step where the native action is a destination command.
+
+==== Optional fields
+
+An absent optional registry field requests the platform/binding default. The MAVLink profile encodes absent parameters using the dialect-defined empty value, normally `NaN` where the MAVLink definition gives NaN default/ignore semantics, otherwise `0`; a descriptor may override this with `absent`.
+
+==== Alternatives
+
+Where more than one native action is listed, the binding SHALL select the applicable native action with a `when` condition. Examples:
+
+* `vehicle.hold-position`: `duration` present → `mavlink.nav-loiter-time`; otherwise → `mavlink.nav-loiter-unlim`.
+* `camera.capture-image`: prefer `mavlink.image-start-capture`; legacy `mavlink.do-digicam-control` is an alternative.
+* `gimbal.point`: prefer `mavlink.do-gimbal-manager-pitchyaw`; `mavlink.do-mount-control` is superseded.
+* `vehicle.takeoff` and `vehicle.land`: select the ordinary or VTOL native action according to the vehicle capability.
+* `payload.release`: select gripper or servo realization according to the payload implementation.
+
+==== Delivery
+
+`mission` means the native action can be emitted as a `MISSION_ITEM_INT`. `guided` means it is emitted through `COMMAND_INT`/`COMMAND_LONG` according to the MAVLink profile. A registry command with scope `none` is not a Routes action by default, even if a guided MAVLink command exists.
+
+=== Composite Binding Descriptor shape
+
+A registry action SHOULD expose a Binding Descriptor of the following form:
+
+[,json]
+----
+{
+  "actionId": "vehicle.goto",
+  "binding": "mavlink",
+  "registryVersion": "<registry version>",
+  "steps": [
+    {
+      "kind": "mavCmd",
+      "action": "mavlink.nav-waypoint",
+      "delivery": ["mission"],
+      "position": "geometry",
+      "params": [
+        { "mavParam": 1, "field": "holdTime" },
+        { "mavParam": 2, "field": "acceptanceRadius" },
+        { "mavParam": 4, "field": "heading" }
+      ]
+    }
+  ],
+  "unsupported": ["speed", "passThrough"]
+}
+----
+
+The `action` member names a native action from the MAVLink profile. A conforming implementation may expand it directly to the underlying `MAV_CMD`, command id, delivery, frame and parameter slots.
+
+=== Registry command mapping
+
+==== Vehicle commands
+
+|===
+| Registry command | Scope | MAVLink sequence | Delivery | Field mapping | Unsupported / unresolved
+
+| `vehicle.goto`
+| waypoint
+| `NAV_WAYPOINT` (16); guided `DO_REPOSITION` (192)
+| mission / guided
+| `location → geometry`; `holdTime → p1`; `acceptanceRadius → p2`; `heading → p4`; guided: `speed → p1`; guided `location → x/y/z`
+| `speed` has no `NAV_WAYPOINT` counterpart; `passThrough` has no exact counterpart; `holdTime`/`acceptanceRadius` do not have exact `DO_REPOSITION` equivalents
+
+| `vehicle.follow-path`
+| both
+| sequence of `NAV_SPLINE_WAYPOINT` (82) or `NAV_WAYPOINT` (16)
+| mission
+| each `path[i] → geometry` of one NAV item; `interpolation=spline → NAV_SPLINE_WAYPOINT`; `interpolation=linear → NAV_WAYPOINT`
+| `speed`, `acceptanceRadius`, `closed` not defined in the source MAVLink mapping
+
+| `vehicle.hold-position`
+| waypoint
+| `NAV_LOITER_TIME` (19) or `NAV_LOITER_UNLIM` (17)
+| mission / guided
+| `duration present → NAV_LOITER_TIME.p1`; `location → geometry`; `radius → p3`; `duration absent → NAV_LOITER_UNLIM`; `radius → p3`; `location → geometry`
+| `heading` has no exact field in these mappings; `holdMode` only partially corresponds to loiter/circle semantics
+
+| `vehicle.orbit`
+| waypoint
+| guided `DO_ORBIT` (34) or mission `NAV_LOITER_TURNS` (18)
+| guided / mission
+| `center → geometry`; `radius → DO_ORBIT.p1` or `NAV_LOITER_TURNS.p3`; `speed → DO_ORBIT.p2`; `turns → NAV_LOITER_TURNS.p1`; direction/facing require semantic selection
+| `duration`, `direction`, `facing` have no complete field mapping in the source documents
+
+| `vehicle.set-heading`
+| both
+| `CONDITION_YAW` (115) or `NAV_SET_YAW_SPEED` (213)
+| mission / guided
+| `heading → CONDITION_YAW.p1` / `NAV_SET_YAW_SPEED.p1`; `rate → p2`; `direction → CONDITION_YAW.p3`; `reference=relative → CONDITION_YAW.p4=true`
+| `true-north` vs `magnetic-north` is not represented; `lock` has no native field
+
+| `vehicle.move-relative`
+| both
+| `DO_REPOSITION` (192)
+| guided
+| `speed → p1`; bearing/distance require derivation of target position; vertical change requires derivation of target `z`; target position → `x/y/z`
+| `distance`, `bearing`, `bearingReference`, `verticalDistance` are not direct MAVLink parameters; derived target calculation is not specified by the source
+
+| `vehicle.return-to-home`
+| waypoint
+| `NAV_RETURN_TO_LAUNCH` (20), optionally `NAV_VTOL_LAND` (85)
+| mission / guided
+| `destination=home/launch-point → NAV_RETURN_TO_LAUNCH`; VTOL realization may use `NAV_VTOL_LAND`; `vertical` may map to VTOL approach altitude where applicable
+| `rally-point`, `dock`, `finalAction`, and generic `vertical` are not fully represented
+
+| `vehicle.stop`
+| both
+| `DO_PAUSE_CONTINUE` (193) or gateway/mode operation
+| mission / guided
+| `mode=controlled → DO_PAUSE_CONTINUE`; `continue=false → p1=false`
+| `mode=immediate` has no exact MAV_CMD counterpart
+
+| `vehicle.set-vertical-position`
+| both
+| `DO_CHANGE_ALTITUDE` (186)
+| guided
+| `target.value → p1`; `target.reference → p2` as MAV_FRAME where supported; `rate` unsupported
+| UUV `depth` semantics require negative relative altitude; the profile states there is no dedicated MAVLink depth frame; `rate` has no native field
+
+| `vehicle.takeoff`
+| waypoint
+| `NAV_TAKEOFF` (22) or `NAV_VTOL_TAKEOFF` (84)
+| mission / guided
+| `location → geometry`; `heading → NAV_TAKEOFF.p4` or VTOL p4; `target.value → z`/altitude according to selected frame; VTOL transition heading → p2
+| `climbRate` has no field in the ordinary `NAV_TAKEOFF` mapping; vertical reference conversion is profile/frame dependent
+
+| `vehicle.land`
+| waypoint
+| `NAV_LAND` (21) or `NAV_VTOL_LAND` (85)
+| mission / guided
+| `location → geometry`; `heading → NAV_LAND.p4` / VTOL p4; VTOL approach altitude → p3
+| `descentRate`, `precision`, `disarmAfter` have no complete source-defined field mapping; `NAV_LAND.landMode` is not directly equivalent to registry `precision`
+
+| `vehicle.transition`
+| waypoint
+| `DO_VTOL_TRANSITION` (3000)
+| mission / guided
+| `state → p1` (`MAV_VTOL_STATE`); `immediate` is generated/default if required
+| Registry `state` values must be translated to MAVLink VTOL state enum; no separate registry field for `immediate`
+
+| `vehicle.surface`
+| waypoint
+| no `MAV_CMD`
+| --
+| --
+| `rate`, `holdTime`, `waitForFix` unsupported; empty binding
+
+| `vehicle.dock`
+| waypoint
+| no `MAV_CMD`
+| --
+| --
+| `action`, `station`, `location`, `heading` unsupported; empty binding
+
+| `vehicle.set-speed`
+| both
+| `DO_CHANGE_SPEED` (178)
+| mission / guided
+| `speedType → p1`; `speed → p2`; `throttle → p3`; absent optional values → `-1` per source mapping
+| None beyond enum conversion between registry and MAVLink `SPEED_TYPE`
+
+| `vehicle.set-mode`
+| none
+| `DO_SET_MODE` (176) or `DO_SET_STANDARD_MODE` (262)
+| guided
+| `platformMode → DO_SET_MODE` custom-mode representation; generic `mode → DO_SET_STANDARD_MODE.p1` where a standard-mode enum realizes it
+| Exact generic-to-MAVLink mode values are target/firmware dependent; `mode` is not a universal custom-mode number
+
+| `vehicle.set-armed`
+| none
+| `COMPONENT_ARM_DISARM` (400)
+| guided
+| `armed → p1`; `force → p2` magic-number/force semantics
+| Exact force wire value is defined by MAVLink, not by the registry
+
+| `vehicle.set-home`
+| both
+| `DO_SET_HOME` (179)
+| mission / guided
+| `location present → p1=false, location → x/y/z`; `location absent → p1=true`
+| Native `roll`/`pitch` required fields are generated/fixed according to dialect defaults; registry has no corresponding fields
+
+| `vehicle.reboot`
+| none
+| `PREFLIGHT_REBOOT_SHUTDOWN` (246)
+| guided
+| `target=vehicle-controller → p1`; `target=onboard-computer → p2`; `target=payload → componentAction/componentID` requires target context; `shutdown → shutdown action enum`
+| Exact component-action enum and component id for payload are target-specific
+
+| `mission.start`
+| none
+| `MISSION_START` (300)
+| guided
+| `firstItem → p1`; `lastItem → p2`
+| None
+
+| `mission.pause`
+| none
+| `DO_PAUSE_CONTINUE` (193)
+| guided
+| `behavior=hold-position → p1=false`; `continue-to-waypoint → p1=true`
+| Exact meaning of `continue-to-waypoint` is autopilot behavior
+
+| `mission.resume`
+| none
+| `DO_PAUSE_CONTINUE` (193)
+| guided
+| resume → `p1=true`
+| None
+
+| `mission.abort`
+| none
+| gateway `abandon-route`, then fallback sequence
+| guided
+| `action=hold → vehicle.hold-position`; `return-to-home → vehicle.return-to-home`; `land → vehicle.land`; `stop → vehicle.stop`; gateway operation cancels remaining route execution
+| `surface` unsupported; fallback-specific parameters use their defaults; no single MAV_CMD
+
+| `mission.wait`
+| waypoint
+| `NAV_DELAY` (93) or `CONDITION_DELAY` (112)
+| mission
+| `duration → CONDITION_DELAY.p1` or `NAV_DELAY.p1`; `until → NAV_DELAY.p2/p3/p4` (hour/minute/second)
+| Absolute-date/day semantics beyond the MAVLink fields are not defined; exactly-one selection is required
+
+| `vehicle.emergency-stop`
+| none
+| no `MAV_CMD`
+| --
+| --
+| `reason` unsupported; empty binding
+
+| `vehicle.terminate`
+| none
+| `DO_FLIGHTTERMINATION` (185) or `DO_PARACHUTE` (208)
+| mission / guided
+| `method=deploy-parachute → DO_PARACHUTE.p1`; `method` other values require another realization
+| `cut-power`, `drop-ballast`, `other` have no source-defined exact mapping
+|===
+
+==== Sensor and recording commands
+
+|===
+| Registry command | Scope | MAVLink sequence | Delivery | Field mapping | Unsupported / unresolved
+
+| `sensor.set-power`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `state` unsupported
+
+| `sensor.start-acquisition`
+| both
+| `SET_MESSAGE_INTERVAL` (511)
+| guided
+| `rate → p2` after conversion from Hz to µs/message (`1,000,000/rate`); `messageID → generated(target sensor/message mapping)`
+| No registry field identifies the MAVLink message id; `duration` and `sampleCount` have no native fields
+
+| `sensor.stop-acquisition`
+| both
+| `SET_MESSAGE_INTERVAL` (511)
+| guided
+| `messageID → generated(target sensor/message mapping)`; stop requires the MAVLink interval value defined by the target/profile
+| No registry field identifies message id; exact stop value is not defined by the registry
+
+| `sensor.trigger`
+| waypoint
+| `IMAGE_START_CAPTURE` (2000) or `DO_DIGICAM_CONTROL` (203)
+| mission / guided
+| `count → IMAGE_START_CAPTURE.p3`; `interval → p2`; `message/image target camera id → generated target context`
+| Generic sensor measurement semantics do not map exactly to camera-only MAVLink commands; target sensor selection is unresolved
+
+| `sensor.set-sampling-rate`
+| both
+| `SET_MESSAGE_INTERVAL` (511)
+| guided
+| `rate → p2` with `1,000,000/rate`; `messageID → generated(target sensor/message mapping)`
+| No registry field identifies the MAVLink message id
+
+| `sensor.apply-configuration`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `configuration` unsupported
+
+| `sensor.calibrate`
+| none
+| `PREFLIGHT_CALIBRATION` (241)
+| guided
+| `type` selects which calibration flag/parameter is asserted; mapping is conditional on the calibration type
+| Exact mapping of all five registry categories to p1..p7 is not defined by the source documents
+
+| `sensor.self-test`
+| none
+| no `MAV_CMD`
+| --
+| --
+| `level` unsupported
+
+| `sensor.reset`
+| none
+| `PREFLIGHT_REBOOT_SHUTDOWN` (246)
+| guided
+| `scope` requires conditional component-action selection
+| Exact mapping of `measurement-state`, `configuration`, and `hardware` to MAVLink reboot/shutdown actions is not defined
+
+| `sensor.get-status`
+| none
+| `REQUEST_MESSAGE` (512)
+| guided
+| `messageID → generated(target status message)`
+| Registry has no message-id field; status message and request parameters are target-specific
+
+| `data.start-recording`
+| both
+| `LOGGING_START` (2510)
+| mission / guided
+| `format → p1` only if a target logging format is supplied/generated
+| `label`, `storage`, `maxDuration` have no fields in `LOGGING_START`; automatic duration requires a separate command/gateway timer
+
+| `data.stop-recording`
+| both
+| `LOGGING_STOP` (2511)
+| mission / guided
+| no registry parameters
+| None
+
+| `data.mark-event`
+| waypoint
+| no `MAV_CMD`
+| --
+| --
+| `label`, `description` unsupported
+|===
+
+==== Camera commands
+
+|===
+| Registry command | Scope | MAVLink sequence | Delivery | Field mapping | Unsupported / unresolved
+
+| `camera.capture-image`
+| waypoint
+| `IMAGE_START_CAPTURE` (2000), legacy `DO_DIGICAM_CONTROL` (203)
+| mission / guided
+| `count → p3`; `interval → p2`; camera component → generated target camera id / p1; sequence number → generated p4
+| Legacy `DO_DIGICAM_CONTROL` field mapping is not equivalent to the registry schema; prefer `IMAGE_START_CAPTURE`
+
+| `camera.stop-image-capture`
+| both
+| `IMAGE_STOP_CAPTURE` (2001)
+| mission / guided
+| camera target → generated `p1`
+| None
+
+| `camera.start-video`
+| both
+| `VIDEO_START_CAPTURE` (2500)
+| mission / guided
+| camera target → generated `p3`; stream id → generated/target context `p1`
+| `maxDuration`, `label` unsupported
+
+| `camera.stop-video`
+| both
+| `VIDEO_STOP_CAPTURE` (2501)
+| mission / guided
+| stream id → generated/target context `p1`; camera target → generated `p2`
+| None
+
+| `camera.set-mode`
+| both
+| `SET_CAMERA_MODE` (530)
+| mission / guided
+| `mode=still/video → p2`; camera target → generated `p1`
+| Registry enum must be translated to `CAMERA_MODE`; exact numeric enum is MAVLink-defined
+
+| `camera.configure-image`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `width`, `height`, `format`, `quality` unsupported
+
+| `camera.set-exposure`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `mode`, `shutterSpeed`, `iso`, `aperture`, `exposureCompensation` unsupported
+
+| `camera.set-zoom`
+| both
+| `SET_CAMERA_ZOOM` (531)
+| mission / guided
+| `zoomLevel → p2` with `zoomType` selected as absolute zoom; `horizontalFov → p2` with FOV zoom type; `rate → p2` with continuous zoom type; camera target → p3
+| Registry `zoomLevel`, `horizontalFov`, and `rate` are alternatives to one MAVLink value; exact enum selection is MAVLink-defined
+
+| `camera.set-focus`
+| both
+| `SET_CAMERA_FOCUS` (532)
+| mission / guided
+| `distance → p2` with manual focus type; `mode → p1` where MAVLink focus enum can realize it; camera target → p3
+| `continuous-auto` and `infinity` require enum/value interpretation not defined by the registry
+
+| `camera.select-source`
+| both
+| `SET_CAMERA_SOURCE` (534)
+| mission / guided
+| `source → p2` (`primarySource`); camera/device target → p1
+| Registry has one source; MAVLink has primary and secondary source fields; secondary is generated/unchanged
+
+| `camera.set-trigger-distance`
+| segment
+| `DO_SET_CAM_TRIGG_DIST` (206)
+| mission / guided
+| `distance → p1`; `triggerNow → p3`; camera target → p4; shutter → p2 is generated/default if required
+| No registry field maps to `shutter`
+|===
+
+==== Gimbal commands
+
+|===
+| Registry command | Scope | MAVLink sequence | Delivery | Field mapping | Unsupported / unresolved
+
+| `gimbal.point`
+| both
+| `DO_GIMBAL_MANAGER_PITCHYAW` (1000), superseded `DO_MOUNT_CONTROL` (205)
+| mission / guided
+| `pitch → p1`; `yaw → p2`; `pitchRate → p3`; `yawRate → p4`; gimbal device → generated `p7`; frame → gimbal manager flags/target context
+| `roll` has no field in the preferred v2 command; exact `frame` flag mapping is MAVLink-defined
+
+| `gimbal.point-at`
+| both
+| `DO_SET_ROI_LOCATION` (195) preferred; `DO_SET_ROI` (201) superseded
+| mission / guided
+| `location → geometry/location`; gimbal device → generated `p1`
+| Exact target-device behavior for ROI is target dependent
+
+| `gimbal.clear-target`
+| both
+| `DO_SET_ROI_NONE` (197)
+| mission / guided
+| gimbal device → generated `p1`
+| None
+
+| `gimbal.set-mode`
+| both
+| `DO_GIMBAL_MANAGER_CONFIGURE` (1001)
+| guided
+| `mode` requires gimbal manager control-state mapping
+| Registry `follow`, `lock`, `stow` has no direct one-to-one MAVLink field in the source mapping
+
+| `gimbal.track-image-point`
+| both
+| `CAMERA_TRACK_POINT` (2004), or `CAMERA_STOP_TRACKING` (2010)
+| guided
+| `x → p1`; `y → p2`; target camera → generated `p4`; tracking stop is selected by a separate stop action
+| No registry radius field; stopping is represented by the separate native command
+|===
+
+==== Ranging, sampling and payload actuation
+
+|===
+| Registry command | Scope | MAVLink sequence | Delivery | Field mapping | Unsupported / unresolved
+
+| `ranging.set-range`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `maxRange`, `minRange` unsupported
+
+| `ranging.set-gain`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `mode`, `gain` unsupported
+
+| `ranging.set-frequency`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `frequency` unsupported
+
+| `ranging.set-scan-sector`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `startAngle`, `endAngle`, `angularResolution` unsupported
+
+| `ranging.set-transmit`
+| both
+| no `MAV_CMD`
+| --
+| --
+| `enabled` unsupported
+
+| `sample.collect`
+| waypoint
+| no `MAV_CMD`
+| --
+| --
+| `container`, `kind`, `volume`, `location` unsupported
+
+| `payload.gripper`
+| waypoint
+| `DO_GRIPPER` (211)
+| mission / guided
+| `action → p2`; gripper target → generated `p1`; `force` has no native field
+| `force` unsupported
+
+| `payload.release`
+| waypoint
+| `DO_GRIPPER` (211) or `DO_SET_SERVO` (183)
+| mission / guided
+| gripper realization: `mode/action` selects release action → p2; servo realization: `slot → p1`, release output → p2 generated from payload configuration
+| `location` is not represented by these native actuation commands; `mode=deploy` is target-specific
+
+| `payload.winch`
+| waypoint
+| `DO_WINCH` (42600)
+| mission / guided
+| `action → p2`; `length → p3`; `rate → p4`; winch instance → generated `p1`
+| None if the target supplies the instance
+
+| `payload.set-lights`
+| both
+| `ILLUMINATOR_ON_OFF` (405)
+| mission / guided
+| `state=on → p1=true`; `state=off → p1=false`
+| `strobe`, `intensity`, `lightId` unsupported
+
+| `payload.set-switch`
+| both
+| `DO_SET_RELAY` (181)
+| mission / guided
+| `channel → p1`; `on=true → p2=1`; `on=false → p2=0`
+| None
+
+| `payload.set-actuator`
+| both
+| `DO_SET_SERVO` (183) or `DO_SET_ACTUATOR` (187)
+| mission / guided
+| servo realization: `channel → p1`; `value → p2` after target-specific normalization to PWM; actuator realization: `channel → p7` and `value → p1..p6` according to target actuator index
+| Exact normalized-value-to-PWM transform and actuator indexing are not defined by the source documents
+|===
+
+=== Commands with no direct MAVLink realization
+
+The following registry commands are explicitly identified by the source documents as having no `MAV_CMD`:
+
+* `vehicle.surface`
+* `vehicle.dock`
+* `vehicle.emergency-stop`
+* `sensor.set-power`
+* `sensor.apply-configuration`
+* `sensor.self-test`
+* `data.mark-event`
+* `camera.configure-image`
+* `camera.set-exposure`
+* `ranging.set-range`
+* `ranging.set-gain`
+* `ranging.set-frequency`
+* `ranging.set-scan-sector`
+* `ranging.set-transmit`
+* `sample.collect`
+
+`mission.abort` is the exception: it has no single `MAV_CMD`, but is a composite gateway action defined by REC 46 of the MAVLink profile.
+
+A conforming implementation SHALL NOT substitute an unrelated MAVLink command merely to avoid an empty binding. Such commands should instead be reported as unsupported for the target, or implemented through a future vendor/component-specific binding.
+
+=== Field-level implementation rules
+
+==== Position fields
+
+Registry `Position` parameters are context parameters when the action is attached to a Routes waypoint or segment. The MAVLink profile therefore emits them as `x/y/z` rather than `param5..param7` for destination commands. For non-destination commands with a `location` property, the Binding Descriptor uses `position: "location"`.
+
+==== Unit conversions
+
+The following conversions are binding operations where the native MAVLink command requires them:
+
+|===
+| Registry field | MAVLink field | Conversion
+
+| `Position.latitude`
+| `x`
+| degrees → integer degrees × 10{caret}7
+
+| `Position.longitude`
+| `y`
+| degrees → integer degrees × 10{caret}7
+
+| altitude/height/depth
+| `z`
+| metres in selected MAVLink frame; datum/frame conversion per profile
+
+| `vehicle.set-heading.heading`
+| `CONDITION_YAW.p1`
+| degrees
+
+| `vehicle.set-heading.rate`
+| `CONDITION_YAW.p2`
+| deg/s
+
+| `camera.*` time intervals
+| MAVLink interval fields
+| seconds remain seconds unless the native field is explicitly in µs
+
+| `sensor.*.rate`
+| `SET_MESSAGE_INTERVAL.p2`
+| Hz → microseconds/message: `1,000,000 / rate`
+
+| normalized actuator `value`
+| servo PWM
+| target-specific transform; not defined by the source documents
+|===
+
+==== Generated values
+
+The following values are commonly required by the native MAVLink commands but are not registry fields:
+
+* camera id / target camera id;
+* gimbal device id;
+* message id for generic sensor acquisition/status;
+* mission/capture sequence counters;
+* MAVLink mode enum values;
+* required native parameters for `DO_SET_HOME`, calibration and reboot/shutdown where the registry has no field.
+
+These SHALL be declared as `generated` or `fixed` in the Binding Descriptor. They SHALL NOT be silently inferred from an unrelated registry field.
+
+==== Unsupported parameters
+
+REQ 43 of the MAVLink profile requires a registry parameter that no native step carries to appear in `unsupported`. This is important for interoperability: the route producer can determine whether a command is fully expressible before loading it.
+
+=== Execution and error handling
+
+The registry's terminal outcomes are `COMPLETED`, `FAILED`, `REJECTED` and `CANCELED`. The MAVLink profile maps these from `COMMAND_ACK`, mission acknowledgements and mission progress.
+
+For a composite registry action:
+
+. Validate all registry parameters.
+. Select native steps using `when`.
+. Validate that every required registry parameter is either carried, generated by a declared binding rule, or explicitly unsupported.
+. Reject a command if a required parameter is unsupported and the deployment cannot provide an alternative.
+. Execute native steps in the descriptor order.
+. For mission delivery, preserve route feature order as specified by the MAVLink profile.
+. For guided delivery, obey target and `sequence` ordering.
+. Report the native MAVLink failure/result and identify the registry field when an `INVALID_PARAMn` result can be mapped through the descriptor.
+
+=== Traceability
+
+|===
+| Source | Binding responsibility
+
+| Common Command Registry, Clause 2
+| Registry identifiers, semantics, parameters, applicability, completion and persistence
+
+| Common Command Registry, Clauses 3--4
+| The 67 command definitions and parameter schemas
+
+| Common Command Registry, Annex A
+| Registry-to-MAVLink command cross-reference
+
+| MAVLink Binding Profile, Clause 4.3
+| Native action schema derivation
+
+| MAVLink Binding Profile, Clause 4.4
+| Binding Descriptor and field-to-wire mapping
+
+| MAVLink Binding Profile, Clause 4.7
+| Mission lowering
+
+| MAVLink Binding Profile, Clause 4.8
+| Guided command delivery
+
+| MAVLink Binding Profile, Clause 4.13 / Annex B
+| Registry command composite mapping, unsupported fields and alternatives
+|===
+
+=== Conformance considerations
+
+A registry/MAVLink implementation claiming this binding SHOULD expose, for each registry command:
+
+* the registry `actionId`;
+* the registry version;
+* the selected native MAVLink command sequence;
+* delivery (`mission`, `guided`);
+* `param1..param7` mappings;
+* `x/y/z` and frame mappings where applicable;
+* unit/value transforms;
+* generated/fixed values;
+* `unsupported` registry parameters;
+* any target-specific conditions required to select an alternative.
+
+A target-specific catalog MAY remove commands or mappings that the target cannot support. It SHALL NOT claim a registry field is carried when the binding has no defined counterpart.
+
+'''
+
+=== Compact command-to-field matrix
+
+The tables in Clause 4 are the normative registry-level field mapping. This annex provides the principal native command ids for implementation convenience.
+
+|===
+| Registry command | Native MAVLink command(s)
+
+| `vehicle.goto`
+| `MAV_CMD_NAV_WAYPOINT` (16); `MAV_CMD_DO_REPOSITION` (192)
+
+| `vehicle.follow-path`
+| `MAV_CMD_NAV_SPLINE_WAYPOINT` (82); `MAV_CMD_NAV_WAYPOINT` (16)
+
+| `vehicle.hold-position`
+| `MAV_CMD_NAV_LOITER_TIME` (19); `MAV_CMD_NAV_LOITER_UNLIM` (17)
+
+| `vehicle.orbit`
+| `MAV_CMD_DO_ORBIT` (34); `MAV_CMD_NAV_LOITER_TURNS` (18)
+
+| `vehicle.set-heading`
+| `MAV_CMD_CONDITION_YAW` (115); `MAV_CMD_NAV_SET_YAW_SPEED` (213)
+
+| `vehicle.move-relative`
+| `MAV_CMD_DO_REPOSITION` (192)
+
+| `vehicle.return-to-home`
+| `MAV_CMD_NAV_RETURN_TO_LAUNCH` (20); `MAV_CMD_NAV_VTOL_LAND` (85)
+
+| `vehicle.stop`
+| `MAV_CMD_DO_PAUSE_CONTINUE` (193)
+
+| `vehicle.set-vertical-position`
+| `MAV_CMD_DO_CHANGE_ALTITUDE` (186)
+
+| `vehicle.takeoff`
+| `MAV_CMD_NAV_TAKEOFF` (22); `MAV_CMD_NAV_VTOL_TAKEOFF` (84)
+
+| `vehicle.land`
+| `MAV_CMD_NAV_LAND` (21); `MAV_CMD_NAV_VTOL_LAND` (85)
+
+| `vehicle.transition`
+| `MAV_CMD_DO_VTOL_TRANSITION` (3000)
+
+| `vehicle.set-speed`
+| `MAV_CMD_DO_CHANGE_SPEED` (178)
+
+| `vehicle.set-mode`
+| `MAV_CMD_DO_SET_MODE` (176); `MAV_CMD_DO_SET_STANDARD_MODE` (262)
+
+| `vehicle.set-armed`
+| `MAV_CMD_COMPONENT_ARM_DISARM` (400)
+
+| `vehicle.set-home`
+| `MAV_CMD_DO_SET_HOME` (179)
+
+| `vehicle.reboot`
+| `MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN` (246)
+
+| `mission.start`
+| `MAV_CMD_MISSION_START` (300)
+
+| `mission.pause` / `mission.resume`
+| `MAV_CMD_DO_PAUSE_CONTINUE` (193)
+
+| `mission.abort`
+| gateway `abandon-route` + fallback composite
+
+| `mission.wait`
+| `MAV_CMD_NAV_DELAY` (93); `MAV_CMD_CONDITION_DELAY` (112)
+
+| `vehicle.terminate`
+| `MAV_CMD_DO_FLIGHTTERMINATION` (185); `MAV_CMD_DO_PARACHUTE` (208)
+
+| `sensor.start-acquisition` / `stop-acquisition` / `set-sampling-rate`
+| `MAV_CMD_SET_MESSAGE_INTERVAL` (511)
+
+| `sensor.trigger` / `camera.capture-image`
+| `MAV_CMD_IMAGE_START_CAPTURE` (2000); `MAV_CMD_DO_DIGICAM_CONTROL` (203)
+
+| `sensor.calibrate`
+| `MAV_CMD_PREFLIGHT_CALIBRATION` (241)
+
+| `sensor.reset`
+| `MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN` (246)
+
+| `sensor.get-status`
+| `MAV_CMD_REQUEST_MESSAGE` (512)
+
+| `data.start-recording` / `stop-recording`
+| `MAV_CMD_LOGGING_START` (2510); `MAV_CMD_LOGGING_STOP` (2511)
+
+| `camera.stop-image-capture`
+| `MAV_CMD_IMAGE_STOP_CAPTURE` (2001)
+
+| `camera.start-video` / `stop-video`
+| `MAV_CMD_VIDEO_START_CAPTURE` (2500); `MAV_CMD_VIDEO_STOP_CAPTURE` (2501)
+
+| `camera.set-mode`
+| `MAV_CMD_SET_CAMERA_MODE` (530)
+
+| `camera.set-zoom`
+| `MAV_CMD_SET_CAMERA_ZOOM` (531)
+
+| `camera.set-focus`
+| `MAV_CMD_SET_CAMERA_FOCUS` (532)
+
+| `camera.select-source`
+| `MAV_CMD_SET_CAMERA_SOURCE` (534)
+
+| `camera.set-trigger-distance`
+| `MAV_CMD_DO_SET_CAM_TRIGG_DIST` (206)
+
+| `gimbal.point`
+| `MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW` (1000); superseded `MAV_CMD_DO_MOUNT_CONTROL` (205)
+
+| `gimbal.point-at`
+| `MAV_CMD_DO_SET_ROI_LOCATION` (195); superseded `MAV_CMD_DO_SET_ROI` (201)
+
+| `gimbal.clear-target`
+| `MAV_CMD_DO_SET_ROI_NONE` (197)
+
+| `gimbal.set-mode`
+| `MAV_CMD_DO_GIMBAL_MANAGER_CONFIGURE` (1001)
+
+| `gimbal.track-image-point`
+| `MAV_CMD_CAMERA_TRACK_POINT` (2004); `MAV_CMD_CAMERA_STOP_TRACKING` (2010)
+
+| `payload.gripper`
+| `MAV_CMD_DO_GRIPPER` (211)
+
+| `payload.release`
+| `MAV_CMD_DO_GRIPPER` (211); `MAV_CMD_DO_SET_SERVO` (183)
+
+| `payload.winch`
+| `MAV_CMD_DO_WINCH` (42600)
+
+| `payload.set-lights`
+| `MAV_CMD_ILLUMINATOR_ON_OFF` (405)
+
+| `payload.set-switch`
+| `MAV_CMD_DO_SET_RELAY` (181)
+
+| `payload.set-actuator`
+| `MAV_CMD_DO_SET_SERVO` (183); `MAV_CMD_DO_SET_ACTUATOR` (187)
+|===
+
+'''
+
+=== Known gaps requiring target-specific or future bindings
+
+The source documents leave several important semantic gaps intentionally open. The most significant are:
+
+. Generic sensor acquisition is represented through `SET_MESSAGE_INTERVAL`, but the registry does not identify a MAVLink message id for a sensor.
+. Generic sensor calibration is broader than the fixed fields of `PREFLIGHT_CALIBRATION`.
+. Generic docking, surfacing, emergency stop, sample collection and ranging configuration have no common `MAV_CMD` in the source mapping.
+. Camera exposure and image-format configuration are outside the listed common `MAV_CMD` mapping.
+. Gimbal mode semantics do not have a complete one-to-one mapping to `DO_GIMBAL_MANAGER_CONFIGURE`.
+. Normalized actuator output needs a target-specific conversion to servo PWM or actuator slots.
+. Underwater depth semantics are not represented by a dedicated MAVLink frame in this binding.
+. Generic operating modes must be reconciled with firmware-specific custom modes.
+
+These gaps are deliberate interoperability boundaries. An implementation may add vendor/component-specific composite steps, but those steps SHALL be clearly identified as deployment-specific rather than presented as part of this common binding.
+
+'''
+
+=== References
+
+* _Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)_, Draft 0.1.
+* _A MAVLink Binding Profile for OGC API -- Routes Actions_, Draft 0.1.
+* https://ogcapi.ogc.org/routes/overview.html[OGC API -- Routes -- Part 1: Core].
+* https://mavlink.io/en/[MAVLink Developer Guide], including the https://mavlink.io/en/messages/common.html[MAVLink Common Message Set] and official dialect definitions.
+* https://mavlink.io/en/services/command.html[MAVLink Command Protocol].
+* https://mavlink.io/en/services/mission.html[MAVLink Mission (Plan) Protocol].
+* https://json-schema.org/draft/2020-12/[JSON Schema Draft 2020-12].
+* https://www.rfc-editor.org/rfc/rfc7946[RFC 7946, The GeoJSON Format].

@@ -1,0 +1,3127 @@
+[appendix]
+:appendix-caption: Annex
+
+== Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)
+
+=== Vehicle Commands and Sensor Commands
+
+==== Purpose
+
+Uncrewed systems on air (UAV), ground (UGV), surface water (USV) and underwater (UUV) are commanded through many different vocabularies. OGC API -- Routes lets a route carry *actions* at waypoints and segments, and via its _Extensibility for Actions_ provides a mechanism to add actions without modifying the standard: a list of well-known actions, each with a properly defined schema, where `+GET /actions/{actionId}+` returns the schema or a URN or URI that points to a definition elsewhere. What is missing is the content of that list for uncrewed systems. Without shared definitions, a client cannot write "go to this position" once and have it work across vehicles.
+
+This document defines a *Common Command Registry*: a register of well-known actions for OGC API -- Routes. It is a small, curated set of protocol-neutral command definitions that
+
+* covers the movements and state changes common to UAV, UGV, USV and UUV (*vehicle commands*, Clause 3);
+* covers the operations common to sensors and payloads carried by those vehicles (*sensor commands*, Clause 4);
+* defines for each command an identifier (the Routes `actionId`), a parameter schema in SWE Common with a derived JSON Schema form for `+/actions/{actionId}+` (Clause 2.10), execution semantics, an applicability matrix by domain, and a default hazard class;
+* is used as the action identifier in Routes (Clause 2.9, Clause 6.2), and can be carried by other standards: implemented by a control stream (OGC API -- Connected Systems, CS API), and mapped onto a native vehicle protocol (Annex A shows MAVLink).
+
+The CS API can carry any command through a `ControlStream`, but it defines no shared command set. The registry gives it one without making the registry part of the CS API: the CS profile in this series maps registry actions onto control streams.
+
+The registry contains *67 commands*: 26 vehicle commands and 41 sensor and payload commands, with 150 parameters between them. 38 commands are *Core* and 29 are *Extended*. Annex C relates the registry to the 28 well-known actions proposed in issue #74.
+
+==== Non-goals
+
+* Does not define a transport, a wire protocol or an autopilot behavior. It defines _what is asked_, not how a platform achieves it.
+* Does not define autonomy behaviors such as collision avoidance, rules of the road, obstacle handling, or mission planning. Those are properties of the platform or of the planner.
+* Does not cover swarm or multi-vehicle coordination commands, communication payload control (radios, acoustic modems) or vehicle-specific low-level control (thruster allocation, individual motor outputs).
+* Does not change the Routes resources. `/actions` and `+/actions/{actionId}+` are defined by OGC API -- Routes; the registry supplies the definitions they serve.
+* Does not replace vendor commands. Anything not in the registry remains available as a vendor-defined action (Clause 6.8).
+* Does not define how a command is scheduled, queued or authorized. Those belong to the Routes server, to the binding in use (for example the CS API) and to the deployment.
+* Does not define how a vehicle loads or executes a route, or what it does with a parameter it cannot honor. That is vehicle specific and outside OGC API -- Routes (registry Clause 2.11). The REC clauses describe a typical approach.
+
+==== Requirements and recommendations
+
+This document labels its statements in two ways. *REQ* marks a proposed requirement on the Routes side: what a routing server lists, serves, validates and generates. *REC* marks a recommendation for the loading side: what a component that loads a route onto a vehicle, or the vehicle itself, typically does. Loading is vehicle specific and outside OGC API -- Routes, so a REC uses SHOULD. It records the reasoning behind this document, and an implementation may depart from it. Like every SRD in this series, the document is non-binding.
+
+'''
+
+=== Concepts and conventions
+
+==== Structure of a registry entry
+
+Each command is a Routes action and has the following members. Clauses 3 and 4 present them as a table and headline line; the companion JSON has the same names.
+
+|===
+| Member | Meaning
+
+| `id`
+| Identifier, unique within the registry (for example `vehicle.goto`)
+
+| `uri`
+| Registry URI: base URI + `id`
+
+| `title`, `description`
+| Human-readable name and one-sentence definition
+
+| `group`
+| Grouping within the clause (for example Navigation, Imaging)
+
+| `applicability`
+| For each domain UAV, UGV, USV, UUV: `applicable` (●), `limited` (○) or `not-applicable` (--)
+
+| `level`
+| `Core` (SHOULD be implemented by every system of an applicable domain that has the capability) or `Extended`
+
+| `completion`
+| When the command completes (2.4)
+
+| `persistence`
+| How long its effect lasts (2.4)
+
+| `scope`
+| Where it may appear in a route: `waypoint`, `segment`, `both`, or `none` (not a route action)
+
+| `positionSource`
+| `param` if a position parameter is filled from route geometry, otherwise `none`
+
+| `hazard`
+| Default hazard class: `none`, `flight-critical` (changes motion, mode, outputs) or `destructive` (irreversible or can disable the platform)
+
+| `parametersSchema`
+| SWE Common `DataRecord`; each field is Required (R) or Optional (O)
+
+| `resultSchema`
+| Optional schema for inline results
+
+| `mavlink`
+| Informative: related MAVLink commands
+|===
+
+==== Identifiers and URIs
+
+Identifiers are lower-case, dot-separated, with hyphenated words. The first segment names the family:
+
+|===
+| Family | Use
+
+| `vehicle.*`
+| Commands acting on the platform (motion, state, safety)
+
+| `mission.*`
+| Commands acting on mission execution
+
+| `sensor.*`
+| Lifecycle commands valid for any sensor
+
+| `data.*`
+| Recording and annotation
+
+| `camera.*`, `gimbal.*`, `ranging.*`, `sample.*`, `payload.*`
+| Sensor and payload families
+|===
+
+In Routes the registry `id` is the `actionId`. The URI of a command is `+http://www.opengis.net/def/uxs-command/{id}+`, and it is the definition that `+GET /actions/{actionId}+` can link to (Clause 2.9). This base URI is a placeholder pending registration. Shared types have URIs under `+.../type/+`, and route-context parameters use `+http://www.opengis.net/def/routes/context/+`.
+
+==== Domains and applicability
+
+|===
+| Symbol | Meaning
+
+| ●
+| Applicable as defined.
+
+| ○
+| Applicable with restrictions, or only for some platform types (for example `vehicle.transition` only for hybrid aircraft).
+
+| --
+| Not applicable. A system SHALL NOT declare the command for that domain without documenting its interpretation.
+|===
+
+Domains: *UAV* uncrewed aerial vehicle, *UGV* uncrewed ground vehicle, *USV* uncrewed surface vehicle, *UUV* uncrewed underwater vehicle.
+
+==== Execution semantics
+
+The terminal outcomes used in this document are `COMPLETED`, `FAILED`, `REJECTED` and `CANCELED`, with the meanings of the CS API `CommandStatus`. Bindings that report status in another vocabulary map them (see the MAVLink and ROS 2 bindings).
+
+*Completion* says when the command is complete, and so reaches `COMPLETED`:
+
+|===
+| Value | Meaning
+
+| `immediate`
+| Completes once the state change has been applied (or the command has been accepted, for mode changes and settings).
+
+| `until-goal`
+| Remains `EXECUTING` until the goal is reached within tolerance, then `COMPLETED`. `FAILED` if it cannot be reached.
+
+| `until-duration`
+| `COMPLETED` when the duration has elapsed (or the time has been reached).
+|===
+
+*Persistence* says how long its effect lasts:
+
+|===
+| Value | Meaning
+
+| `none`
+| The effect ends when the command completes.
+
+| `latched`
+| A setting that stays in force for later commands until changed (for example speed, zoom). Used on a route _segment_, a latched setting is reverted at the segment end by the Routes mapping.
+
+| `mode`
+| Enters a state that persists until another command ends it (for example armed, recording, paused).
+
+| `conditional`
+| `latched` only if a parameter says so (see the command).
+|===
+
+==== Shared types
+
+*Position* (`+.../type/Position+`) is a `DataRecord`:
+
+|===
+| Field | Type | Unit | Req | Description
+
+| `latitude`
+| Quantity
+| deg
+| R
+| WGS 84 latitude, −90 to 90
+
+| `longitude`
+| Quantity
+| deg
+| R
+| WGS 84 longitude, −180 to 180
+
+| `vertical`
+| Quantity
+| m
+| O
+| Vertical position; meaning given by `verticalReference`
+
+| `verticalReference`
+| Category
+| --
+| O
+| `ellipsoid`, `msl`, `terrain`, `home`, `depth`, `seabed`
+|===
+
+*VerticalTarget* (`+.../type/VerticalTarget+`) has the fields `value` (Quantity, m, required) and `reference` (Category, same values, required).
+
+*Position[]* (`+.../type/PositionArray+`) is a `DataArray` of Position.
+
+When a command is used as a Routes action, a parameter that carries `waypoint-location` (a `Position`) or `segment-geometry` (a `Position[]`) as its `definition` is a *context parameter*, filled from the route geometry rather than by the route author.
+
+==== Vertical reference by domain
+
+|===
+| Reference | Meaning | Sign | UAV | UGV | USV | UUV
+
+| `ellipsoid`
+| Height above the WGS 84 ellipsoid
+| up
+| ●
+| ○
+| --
+| --
+
+| `msl`
+| Altitude above mean sea level (geoid)
+| up
+| ●
+| ○
+| --
+| ○
+
+| `terrain`
+| Height above the ground or terrain below
+| up
+| ●
+| --
+| --
+| --
+
+| `home`
+| Height relative to the home / launch altitude
+| up
+| ●
+| --
+| --
+| --
+
+| `depth`
+| Depth below the water surface
+| *down*
+| --
+| --
+| --
+| ●
+
+| `seabed`
+| Height above the seabed
+| up
+| --
+| --
+| --
+| ●
+|===
+
+Ground and surface vehicles normally ignore `vertical`; their vertical position follows the terrain or the water surface. All references are positive *up* except `depth`, which is positive *down*.
+
+==== Units and angles
+
+* Units are UCUM codes (`m`, `m/s`, `deg`, `deg/s`, `s`, `Hz`, `kHz`, `dB`, `%`, `mL`, `px`, `1` for dimensionless).
+* *Heading* is degrees clockwise from the reference direction (true north by default), 0 to 360.
+* *Gimbal angles* with `frame = vehicle`: pitch 0 is level and positive up, yaw 0 is the vehicle's forward direction and positive clockwise. With `frame = earth`: yaw is relative to true north.
+* *Time* is ISO 8601 in UTC.
+* *Normalized values* are dimensionless (`1`) with a stated range.
+
+==== Optional parameters, defaults and constraints
+
+An optional parameter that is absent means "use the platform default". Where a description says "exactly one of" or "at least one of", the constraint applies to the group and is checked by the receiving system; a violation ends the command in `REJECTED`.
+
+==== Registry commands as Routes actions (issue #74)
+
+OGC API -- Routes proposes an extensibility mechanism for actions: well-known actions with a defined schema, and a response to `+GET /actions/{actionId}+` that can be a URN or a URI to a definition elsewhere. The registry is a register of such actions. A registry entry corresponds to the members that the action registry lists for a well-known action:
+
+|===
+| Routes | Registry
+
+| Well-known action
+| Command
+
+| Short name, action id
+| `id` (for example `vehicle.land`)
+
+| Action name
+| `title`
+
+| Definition
+| `description`
+
+| Applicability
+| `applicability` by domain (2.3)
+
+| Duration unit
+| A `duration` parameter in `s`, where the command has a duration (`vehicle.hold-position`, `vehicle.orbit`, `mission.wait`). Other commands end as their `completion` value says (2.4)
+
+| Schema
+| `parametersSchema` (2.10)
+
+| URN or URI of a definition elsewhere
+| `uri` (2.2)
+|===
+
+A Routes server uses the registry as follows (Clause 6.2):
+
+. It lists the commands it supports in `GET /actions`, with the registry `id`.
+. `+GET /actions/{actionId}+` returns the schema, or a link to the registry URI.
+. A route carries the action in `actions[]` with `actionType` set to the registry `id`.
+
+Actions that are not in the registry are added in the same way, with a vendor identifier (Clause 6.8), and need no change to the Routes standard.
+
+==== Schema forms
+
+The registry defines parameters in SWE Common, the form the CS API serves at `+/controlstreams/{id}/schema+`. A Routes server MAY serve the same definition as JSON Schema, which is the form used for `+GET /actions/{actionId}+` (issue #72). The derivation is:
+
+|===
+| SWE Common | JSON Schema
+
+| `DataRecord`
+| `object`, with `properties` from its fields and `required` listing the fields marked R
+
+| `DataArray`
+| `array`, with `items` from the element type
+
+| `Quantity`
+| `number`, with `minimum` and `maximum` from the interval constraint, and the UCUM unit in `x-ucum`
+
+| `Count`
+| `integer`, with the same constraints
+
+| `Boolean`
+| `boolean`
+
+| `Category`
+| `string`, with `enum` from the allowed values
+
+| `Text`
+| `string`
+
+| `Time`
+| `string` with `format: date-time`
+
+| Default value
+| `default`
+
+| `definition` URI of a component
+| `x-definition`
+
+| Shared type (2.5)
+| A `$ref` to the type URI
+|===
+
+This derivation is proposed (Clause 9, question 14). Clause 7.1 shows the result for `vehicle.goto`.
+
+==== Loading a route (informative)
+
+A routing server generates a plan. It does not need to know which vehicle will execute it, so `target` is optional in an `actions[]` entry. A vehicle characteristics model (maximum altitude, maximum depth, transit speed, and which optional capabilities the vehicle supports) is an optional input to generation, used to plan sensibly. When a route is loaded onto a vehicle, targets that were not given are resolved, and the route is translated into the vehicle's own commands. How that is done is vehicle specific and outside OGC API -- Routes. The bindings of this series describe a typical approach as recommendations.
+
+A typical loader treats the parameters of an action as follows:
+
+* If the binding has a counterpart and the vehicle's characteristics allow it, the parameter is carried, after any conversion.
+* If the binding has no counterpart, or the vehicle's characteristics do not declare the capability, an optional parameter is dropped and a warning is reported.
+* A required parameter that cannot be carried makes the action unloadable.
+
+A warning names the action (`actionType`), its `sequence`, the parameter, and a reason: `no-counterpart` or `not-declared`. The warning format and the characteristics model are not defined here.
+
+'''
+
+=== Vehicle commands
+
+Vehicle commands apply to a platform (a vehicle System) and to its motion, state and safety. Position-bearing commands take a `Position`, so the same command serves air, ground, surface and underwater platforms; only the vertical reference differs (2.6).
+
+==== Index
+
+|===
+| ID | Title | UAV | UGV | USV | UUV | Level | Completion | Persistence | Scope | Hazard
+
+| `vehicle.goto`
+| Go to position
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.follow-path`
+| Follow path
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| both
+| flight-critical
+
+| `vehicle.hold-position`
+| Hold position
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-duration
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.orbit`
+| Orbit a point
+| ●
+| ○
+| ●
+| ○
+| Extended
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.set-heading`
+| Set heading
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| conditional
+| both
+| flight-critical
+
+| `vehicle.move-relative`
+| Move relative to current position
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| both
+| flight-critical
+
+| `vehicle.return-to-home`
+| Return to home
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.stop`
+| Stop
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| both
+| flight-critical
+
+| `vehicle.set-vertical-position`
+| Set vertical position
+| ●
+| --
+| ○
+| ●
+| Core
+| until-goal
+| latched
+| both
+| flight-critical
+
+| `vehicle.takeoff`
+| Take off
+| ●
+| --
+| --
+| --
+| Core
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.land`
+| Land
+| ●
+| --
+| --
+| --
+| Core
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.transition`
+| Transition flight mode
+| ○
+| --
+| --
+| --
+| Extended
+| until-goal
+| mode
+| waypoint
+| flight-critical
+
+| `vehicle.surface`
+| Surface
+| --
+| --
+| ○
+| ●
+| Core
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.dock`
+| Dock or undock
+| ○
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `vehicle.set-speed`
+| Set speed
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| latched
+| both
+| flight-critical
+
+| `vehicle.set-mode`
+| Set operating mode
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| flight-critical
+
+| `vehicle.set-armed`
+| Arm or disarm
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| flight-critical
+
+| `vehicle.set-home`
+| Set home position
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| latched
+| both
+| flight-critical
+
+| `vehicle.reboot`
+| Restart
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| none
+| none
+| destructive
+
+| `mission.start`
+| Start mission
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| flight-critical
+
+| `mission.pause`
+| Pause mission
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| flight-critical
+
+| `mission.resume`
+| Resume mission
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| flight-critical
+
+| `mission.abort`
+| Abort mission
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| flight-critical
+
+| `mission.wait`
+| Wait
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-duration
+| none
+| waypoint
+| none
+
+| `vehicle.emergency-stop`
+| Emergency stop
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| none
+| destructive
+
+| `vehicle.terminate`
+| Terminate
+| ●
+| ○
+| ○
+| ○
+| Extended
+| immediate
+| mode
+| none
+| destructive
+|===
+
+====  Navigation
+
+===== `vehicle.goto`: Go to position
+
+Move to a position, then stop or continue to the next instruction.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `location`
+| Position
+| --
+| R
+| --
+| Target position.
+
+| `speed`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).
+
+| `acceptanceRadius`
+| Quantity
+| m
+| O
+| ≥ 0
+| Distance from the target at which the target counts as reached.
+
+| `holdTime`
+| Quantity
+| s
+| O
+| ≥ 0
+| Time to remain at the position after arrival before completing.
+
+| `heading`
+| Quantity
+| deg
+| O
+| 0..360
+| Heading to hold on arrival.
+
+| `passThrough`
+| Boolean
+| --
+| O
+| default `false`
+| If true the vehicle does not stop at the position and may pass within `acceptanceRadius`.
+|===
+
+NOTE: For Routes waypoints, `location` is a context parameter filled from the waypoint geometry.
+
+===== `vehicle.follow-path`: Follow path
+
+Follow an ordered list of positions.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* both · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `path`
+| Position[]
+| --
+| R
+| --
+| Ordered positions to visit (at least two).
+
+| `speed`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).
+
+| `acceptanceRadius`
+| Quantity
+| m
+| O
+| ≥ 0
+| Distance from the target at which the target counts as reached.
+
+| `interpolation`
+| Category
+| --
+| O
+| `linear` · `spline`; default `linear`
+| How to interpolate between positions.
+
+| `closed`
+| Boolean
+| --
+| O
+| default `false`
+| If true, return to the first position at the end.
+|===
+
+NOTE: For Routes segments, `path` is a context parameter filled from the segment geometry.
+
+===== `vehicle.hold-position`: Hold position
+
+Hold position: hover (UAV), stand still (UGV), station-keep (USV, UUV).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `duration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Time to hold. If absent, hold until another command replaces this one.
+
+| `location`
+| Position
+| --
+| O
+| --
+| Position to hold. If absent, the current position.
+
+| `holdMode`
+| Category
+| --
+| O
+| `station-keep` · `circle`; default `station-keep`
+| Holding pattern. `circle` is for platforms that cannot hover.
+
+| `radius`
+| Quantity
+| m
+| O
+| --
+| Circle radius when `holdMode` is `circle`. Sign: positive clockwise, negative counter-clockwise.
+
+| `heading`
+| Quantity
+| deg
+| O
+| 0..360
+| Heading to hold.
+|===
+
+===== `vehicle.orbit`: Orbit a point
+
+Circle around a center point.
+
+*Domains:* UAV ● UGV ○ USV ● UUV ○ · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `center`
+| Position
+| --
+| R
+| --
+| Centre of the orbit.
+
+| `radius`
+| Quantity
+| m
+| R
+| ≥ 0
+| Orbit radius.
+
+| `direction`
+| Category
+| --
+| O
+| `clockwise` · `counter-clockwise`; default `clockwise`
+| Direction of travel.
+
+| `turns`
+| Quantity
+| 1
+| O
+| ≥ 0
+| Number of turns. If both `turns` and `duration` are absent, orbit until replaced.
+
+| `duration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Maximum time.
+
+| `speed`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).
+
+| `facing`
+| Category
+| --
+| O
+| `tangent` · `center` · `fixed`; default `tangent`
+| Direction the vehicle faces.
+|===
+
+===== `vehicle.set-heading`: Set heading
+
+Rotate to a heading (yaw in place, or turn on the spot for a ground vehicle).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* conditional · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `heading`
+| Quantity
+| deg
+| R
+| 0..360
+| Target heading.
+
+| `reference`
+| Category
+| --
+| O
+| `true-north` · `magnetic-north` · `relative`; default `true-north`
+| Reference direction for `heading`.
+
+| `rate`
+| Quantity
+| deg/s
+| O
+| ≥ 0
+| Maximum turn rate.
+
+| `direction`
+| Category
+| --
+| O
+| `shortest` · `clockwise` · `counter-clockwise`; default `shortest`
+| Direction of the turn.
+
+| `lock`
+| Boolean
+| --
+| O
+| default `false`
+| If true, keep this heading during later navigation until changed (persistence becomes `latched`).
+|===
+
+===== `vehicle.move-relative`: Move relative to current position
+
+Move a given distance along a bearing (drive forward, back up, sidestep, climb).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `distance`
+| Quantity
+| m
+| R
+| ≥ 0
+| Horizontal distance.
+
+| `bearing`
+| Quantity
+| deg
+| O
+| 0..360; default `0`
+| Direction of travel.
+
+| `bearingReference`
+| Category
+| --
+| O
+| `vehicle-heading` · `true-north`; default `vehicle-heading`
+| What `bearing` is measured from.
+
+| `verticalDistance`
+| Quantity
+| m
+| O
+| --
+| Vertical change, positive up. Ignored by ground and surface vehicles.
+
+| `speed`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Desired speed. Reference given by the platform default (ground speed for UGV, water-relative for USV/UUV, air or ground speed for UAV).
+|===
+
+===== `vehicle.return-to-home`: Return to home
+
+Return to a recovery point and perform a final action.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `destination`
+| Category
+| --
+| O
+| `home` · `launch-point` · `rally-point` · `dock`; default `home`
+| Which recovery point to use.
+
+| `finalAction`
+| Category
+| --
+| O
+| `hold` · `land` · `dock` · `surface` · `default`; default `default`
+| What to do on arrival.
+
+| `vertical`
+| VerticalTarget
+| --
+| O
+| --
+| Height, altitude or depth to use for the return leg.
+|===
+
+===== `vehicle.stop`: Stop
+
+Stop movement and hold the current position.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| O
+| `controlled` · `immediate`; default `controlled`
+| `controlled` decelerates within platform limits, `immediate` stops as fast as safely possible.
+|===
+
+==== Vertical
+
+===== `vehicle.set-vertical-position`: Set vertical position
+
+Change altitude, height or depth, keeping the horizontal position.
+
+*Domains:* UAV ● UGV -- USV ○ UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `target`
+| VerticalTarget
+| --
+| R
+| --
+| Target vertical position.
+
+| `rate`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Vertical speed limit.
+|===
+
+NOTE: Later `vehicle.goto` commands without a vertical value use this setting.
+
+===== `vehicle.takeoff`: Take off
+
+Take off and climb to a height.
+
+*Domains:* UAV ● UGV -- USV -- UUV -- · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `target`
+| VerticalTarget
+| --
+| R
+| --
+| Height or altitude to reach.
+
+| `location`
+| Position
+| --
+| O
+| --
+| Position to take off from and then hold. If absent, the current position.
+
+| `heading`
+| Quantity
+| deg
+| O
+| 0..360
+| Heading during and after the climb.
+
+| `climbRate`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Vertical speed limit.
+|===
+
+===== `vehicle.land`: Land
+
+Descend and land.
+
+*Domains:* UAV ● UGV -- USV -- UUV -- · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `location`
+| Position
+| --
+| O
+| --
+| Landing position. If absent, the current position.
+
+| `descentRate`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Vertical speed limit.
+
+| `heading`
+| Quantity
+| deg
+| O
+| 0..360
+| Heading during landing.
+
+| `precision`
+| Category
+| --
+| O
+| `none` · `opportunistic` · `required`; default `none`
+| Precision landing behavior.
+
+| `disarmAfter`
+| Boolean
+| --
+| O
+| default `true`
+| If true, disarm after touchdown.
+|===
+
+===== `vehicle.transition`: Transition flight mode
+
+Transition a hybrid aircraft between hover and forward flight.
+
+*Domains:* UAV ○ UGV -- USV -- UUV -- · *Level:* Extended · *Completion:* until-goal · *Persistence:* mode · *Scope:* waypoint · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `state`
+| Category
+| --
+| R
+| `hover` · `forward-flight`
+| Target configuration.
+|===
+
+===== `vehicle.surface`: Surface
+
+Ascend to the water surface (submerged vehicles).
+
+*Domains:* UAV -- UGV -- USV ○ UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `rate`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Ascent rate limit.
+
+| `holdTime`
+| Quantity
+| s
+| O
+| ≥ 0
+| Time to stay at the surface (for example to acquire a position fix or communicate).
+
+| `waitForFix`
+| Boolean
+| --
+| O
+| default `false`
+| If true, stay at the surface until a position fix is obtained or `holdTime` expires.
+|===
+
+===== `vehicle.dock`: Dock or undock
+
+Dock with, or leave, a docking or charging station.
+
+*Domains:* UAV ○ UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `action`
+| Category
+| --
+| R
+| `dock` · `undock`
+| Dock or undock.
+
+| `station`
+| Text
+| --
+| O
+| --
+| Identifier of the station (URI or local id). If absent, the nearest known station.
+
+| `location`
+| Position
+| --
+| O
+| --
+| Approach position, if the station does not define one.
+
+| `heading`
+| Quantity
+| deg
+| O
+| 0..360
+| Approach heading.
+|===
+
+====  Motion attributes
+
+===== `vehicle.set-speed`: Set speed
+
+Set the speed used by later movement commands.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `speed`
+| Quantity
+| m/s
+| R
+| ≥ 0
+| Speed.
+
+| `speedType`
+| Category
+| --
+| O
+| `ground` · `air` · `water`; default `ground`
+| What the speed is relative to.
+
+| `throttle`
+| Quantity
+| %
+| O
+| 0..100
+| Throttle or thrust limit.
+|===
+
+====  Mode and state
+
+===== `vehicle.set-mode`: Set operating mode
+
+Change the operating mode.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| R
+| `manual` · `assisted` · `autonomous` · `hold` · `return` · `standby`
+| Generic mode.
+
+| `platformMode`
+| Text
+| --
+| O
+| --
+| Platform-specific mode name, used when `mode` does not identify it.
+|===
+
+===== `vehicle.set-armed`: Arm or disarm
+
+Enable or disable actuators (motors, thrusters, drive).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `armed`
+| Boolean
+| --
+| R
+| --
+| True to arm, false to disarm.
+
+| `force`
+| Boolean
+| --
+| O
+| default `false`
+| Bypass safety checks. A command with `force=true` SHALL be treated as `destructive`.
+|===
+
+===== `vehicle.set-home`: Set home position
+
+Set the home (recovery) position.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `location`
+| Position
+| --
+| O
+| --
+| New home position. If absent, the current position.
+|===
+
+===== `vehicle.reboot`: Restart
+
+Restart or shut down a vehicle subsystem.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* none · *Scope:* none · *Position:* none · *Hazard:* destructive
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `target`
+| Category
+| --
+| R
+| `vehicle-controller` · `onboard-computer` · `payload`
+| What to restart.
+
+| `shutdown`
+| Boolean
+| --
+| O
+| default `false`
+| If true, shut down instead of restarting.
+|===
+
+====  Mission control
+
+===== `mission.start`: Start mission
+
+Start executing an uploaded or queued mission.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `firstItem`
+| Count
+| --
+| O
+| ≥ 0
+| Index of the first item to execute.
+
+| `lastItem`
+| Count
+| --
+| O
+| ≥ 0
+| Index of the last item to execute.
+|===
+
+===== `mission.pause`: Pause mission
+
+Pause mission execution.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `behavior`
+| Category
+| --
+| O
+| `hold-position` · `continue-to-waypoint`; default `hold-position`
+| What to do while paused.
+|===
+
+===== `mission.resume`: Resume mission
+
+Resume a paused mission.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* flight-critical
+
+_No parameters._
+
+===== `mission.abort`: Abort mission
+
+Abandon the mission and perform a fallback action.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `action`
+| Category
+| --
+| R
+| `hold` · `return-to-home` · `land` · `surface` · `stop`
+| Fallback action.
+|===
+
+===== `mission.wait`: Wait
+
+Wait for a duration or until a time.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-duration · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `duration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Time to wait.
+
+| `until`
+| Time
+| --
+| O
+| --
+| Absolute time to wait until. Exactly one of `duration` and `until` is required.
+|===
+
+====  Safety
+
+===== `vehicle.emergency-stop`: Emergency stop
+
+Stop actuators as fast as possible. May cause an uncontrolled descent or drift.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* destructive
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `reason`
+| Text
+| --
+| O
+| --
+| Reason, for the log.
+|===
+
+===== `vehicle.terminate`: Terminate
+
+End operation irreversibly (flight termination, scuttling, deploying a recovery device).
+
+*Domains:* UAV ● UGV ○ USV ○ UUV ○ · *Level:* Extended · *Completion:* immediate · *Persistence:* mode · *Scope:* none · *Position:* none · *Hazard:* destructive
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `method`
+| Category
+| --
+| R
+| `cut-power` · `deploy-parachute` · `drop-ballast` · `other`
+| How to terminate.
+|===
+
+'''
+
+=== Sensor and payload commands
+
+Sensor commands apply to a sensor or payload System, which may be a subsystem of a vehicle. The `sensor.*` and `data.*` commands are valid for any sensor. The `camera.*`, `gimbal.*`, `ranging.*` (lidar, radar, sonar), `sample.*` and `payload.*` families apply to those kinds of payload.
+
+==== Index
+
+|===
+| ID | Title | UAV | UGV | USV | UUV | Level | Completion | Persistence | Scope | Hazard
+
+| `sensor.set-power`
+| Set power state
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `sensor.start-acquisition`
+| Start acquisition
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `sensor.stop-acquisition`
+| Stop acquisition
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `sensor.trigger`
+| Trigger a measurement
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| waypoint
+| none
+
+| `sensor.set-sampling-rate`
+| Set sampling rate
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| latched
+| both
+| none
+
+| `sensor.apply-configuration`
+| Apply configuration
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `sensor.calibrate`
+| Calibrate
+| ●
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| none
+| none
+
+| `sensor.self-test`
+| Self-test
+| ●
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| none
+| none
+
+| `sensor.reset`
+| Reset
+| ●
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| none
+| none
+
+| `sensor.get-status`
+| Get status
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| none
+| none
+| none
+
+| `data.start-recording`
+| Start recording
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `data.stop-recording`
+| Stop recording
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `data.mark-event`
+| Mark event
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| none
+| waypoint
+| none
+
+| `camera.capture-image`
+| Capture image
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| none
+| waypoint
+| none
+
+| `camera.stop-image-capture`
+| Stop image capture
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `camera.start-video`
+| Start video
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `camera.stop-video`
+| Stop video
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `camera.set-mode`
+| Set camera mode
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `camera.configure-image`
+| Configure image
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `camera.set-exposure`
+| Set exposure
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `camera.set-zoom`
+| Set zoom
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `camera.set-focus`
+| Set focus
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `camera.select-source`
+| Select image source
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `camera.set-trigger-distance`
+| Set trigger distance
+| ●
+| ●
+| ○
+| --
+| Extended
+| immediate
+| latched
+| segment
+| none
+
+| `gimbal.point`
+| Point gimbal
+| ●
+| ●
+| ●
+| ●
+| Core
+| until-goal
+| latched
+| both
+| none
+
+| `gimbal.point-at`
+| Point at location
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| latched
+| both
+| none
+
+| `gimbal.clear-target`
+| Clear pointing target
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| mode
+| both
+| none
+
+| `gimbal.set-mode`
+| Set gimbal mode
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| mode
+| both
+| none
+
+| `gimbal.track-image-point`
+| Track image point
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| mode
+| both
+| none
+
+| `ranging.set-range`
+| Set range
+| ●
+| ●
+| ●
+| ●
+| Core
+| immediate
+| latched
+| both
+| none
+
+| `ranging.set-gain`
+| Set gain
+| ○
+| ○
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `ranging.set-frequency`
+| Set operating frequency
+| ○
+| ○
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `ranging.set-scan-sector`
+| Set scan sector
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| none
+
+| `ranging.set-transmit`
+| Enable or disable transmission
+| ○
+| ○
+| ●
+| ●
+| Extended
+| immediate
+| mode
+| both
+| none
+
+| `sample.collect`
+| Collect sample
+| ○
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| waypoint
+| none
+
+| `payload.gripper`
+| Operate gripper
+| ●
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `payload.release`
+| Release payload
+| ●
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `payload.winch`
+| Operate winch
+| ●
+| ●
+| ●
+| ●
+| Extended
+| until-goal
+| none
+| waypoint
+| flight-critical
+
+| `payload.set-lights`
+| Set lights
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| mode
+| both
+| none
+
+| `payload.set-switch`
+| Set switch
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| mode
+| both
+| flight-critical
+
+| `payload.set-actuator`
+| Set actuator output
+| ●
+| ●
+| ●
+| ●
+| Extended
+| immediate
+| latched
+| both
+| flight-critical
+|===
+
+==== Lifecycle
+
+===== `sensor.set-power`: Set power state
+
+Power a sensor on, off, or to standby.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `state`
+| Category
+| --
+| R
+| `on` · `off` · `standby`
+| Target power state.
+|===
+
+NOTE: A deployment SHALL classify this command `flight-critical` for sensors the vehicle depends on for navigation.
+
+===== `sensor.start-acquisition`: Start acquisition
+
+Start producing observations.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `duration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Stop automatically after this time.
+
+| `sampleCount`
+| Count
+| --
+| O
+| ≥ 1
+| Stop automatically after this many samples.
+
+| `rate`
+| Quantity
+| Hz
+| O
+| ≥ 0
+| Sampling rate.
+|===
+
+===== `sensor.stop-acquisition`: Stop acquisition
+
+Stop producing observations.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+_No parameters._
+
+===== `sensor.trigger`: Trigger a measurement
+
+Take one measurement or a short series (image, ping, spectrum).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `count`
+| Count
+| --
+| O
+| ≥ 1; default `1`
+| Number of measurements.
+
+| `interval`
+| Quantity
+| s
+| O
+| ≥ 0
+| Time between measurements when `count` > 1.
+|===
+
+*Result:* Links to the produced Observation(s).
+
+===== `sensor.set-sampling-rate`: Set sampling rate
+
+Set the rate at which observations are produced.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `rate`
+| Quantity
+| Hz
+| R
+| ≥ 0
+| Sampling rate.
+|===
+
+===== `sensor.apply-configuration`: Apply configuration
+
+Apply a named, previously stored configuration.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `configuration`
+| Text
+| --
+| R
+| --
+| Identifier of the configuration.
+|===
+
+===== `sensor.calibrate`: Calibrate
+
+Run a calibration.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* none · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `type`
+| Category
+| --
+| R
+| `zero-offset` · `gain` · `full` · `dark-frame` · `reference-target`
+| Calibration type.
+|===
+
+NOTE: A deployment SHALL classify this command `flight-critical` for vehicle-state sensors (inertial, heading, depth, GNSS).
+
+===== `sensor.self-test`: Self-test
+
+Run a built-in self-test.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* none · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `level`
+| Category
+| --
+| O
+| `quick` · `full`; default `quick`
+| Depth of the test.
+|===
+
+*Result:* Record `{passed: Boolean, message: Text}`.
+
+===== `sensor.reset`: Reset
+
+Reset the sensor.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* none · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `scope`
+| Category
+| --
+| O
+| `measurement-state` · `configuration` · `hardware`; default `measurement-state`
+| What to reset.
+|===
+
+===== `sensor.get-status`: Get status
+
+Return the state and health of the sensor.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* none · *Scope:* none · *Position:* none · *Hazard:* none
+
+_No parameters._
+
+*Result:* Record `{state: Category, health: Category(ok, degraded, failed), message: Text}`.
+
+==== Recording
+
+===== `data.start-recording`: Start recording
+
+Start recording data to onboard storage.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `label`
+| Text
+| --
+| O
+| --
+| Name for the recording.
+
+| `storage`
+| Text
+| --
+| O
+| --
+| Storage identifier.
+
+| `maxDuration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Stop automatically after this time.
+|===
+
+===== `data.stop-recording`: Stop recording
+
+Stop recording.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+_No parameters._
+
+===== `data.mark-event`: Mark event
+
+Insert a labeled marker into the recorded data.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `label`
+| Text
+| --
+| R
+| --
+| Marker label.
+
+| `description`
+| Text
+| --
+| O
+| --
+| Longer description.
+|===
+
+*Result:* Record `{markId: Text}`.
+
+==== Imaging
+
+===== `camera.capture-image`: Capture image
+
+Capture still images.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `count`
+| Count
+| --
+| O
+| ≥ 0; default `1`
+| Number of images. 0 means continue until `camera.stop-image-capture`.
+
+| `interval`
+| Quantity
+| s
+| O
+| ≥ 0
+| Time between images.
+|===
+
+*Result:* Links to the produced image Observation(s).
+
+===== `camera.stop-image-capture`: Stop image capture
+
+Stop an ongoing image sequence.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+_No parameters._
+
+===== `camera.start-video`: Start video
+
+Start video recording.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `maxDuration`
+| Quantity
+| s
+| O
+| ≥ 0
+| Stop automatically after this time.
+
+| `label`
+| Text
+| --
+| O
+| --
+| Name for the recording.
+|===
+
+*Result:* Link to the video DataStream or Observation.
+
+===== `camera.stop-video`: Stop video
+
+Stop video recording.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+_No parameters._
+
+===== `camera.set-mode`: Set camera mode
+
+Switch between still and video operation.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| R
+| `still` · `video`
+| Camera mode.
+|===
+
+===== `camera.configure-image`: Configure image
+
+Set image size, format and quality.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `width`
+| Count
+| px
+| O
+| ≥ 1
+| Image width.
+
+| `height`
+| Count
+| px
+| O
+| ≥ 1
+| Image height.
+
+| `format`
+| Category
+| --
+| O
+| `jpeg` · `png` · `tiff` · `raw`
+| File format.
+
+| `quality`
+| Quantity
+| %
+| O
+| 0..100
+| Compression quality.
+|===
+
+===== `camera.set-exposure`: Set exposure
+
+Set exposure control.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| R
+| `auto` · `manual` · `shutter-priority` · `aperture-priority`
+| Exposure mode.
+
+| `shutterSpeed`
+| Quantity
+| s
+| O
+| ≥ 0
+| Exposure time (manual and shutter-priority).
+
+| `iso`
+| Count
+| --
+| O
+| ≥ 1
+| Sensitivity.
+
+| `aperture`
+| Quantity
+| 1
+| O
+| ≥ 0
+| F-number (manual and aperture-priority).
+
+| `exposureCompensation`
+| Quantity
+| 1
+| O
+| --
+| Exposure compensation, in EV.
+|===
+
+===== `camera.set-zoom`: Set zoom
+
+Set zoom. Exactly one of the three parameters is required.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `zoomLevel`
+| Quantity
+| 1
+| O
+| ≥ 1
+| Magnification factor.
+
+| `horizontalFov`
+| Quantity
+| deg
+| O
+| 0..360
+| Horizontal field of view.
+
+| `rate`
+| Quantity
+| 1
+| O
+| -1..1
+| Continuous zoom rate, from -1 (out, fastest) to 1 (in, fastest). 0 stops.
+|===
+
+===== `camera.set-focus`: Set focus
+
+Set focus.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| R
+| `auto` · `continuous-auto` · `manual` · `infinity`
+| Focus mode.
+
+| `distance`
+| Quantity
+| m
+| O
+| ≥ 0
+| Focus distance for `manual`.
+|===
+
+===== `camera.select-source`: Select image source
+
+Select which imaging sensor of a multi-sensor camera is used.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `source`
+| Category
+| --
+| R
+| `visible` · `thermal` · `near-infrared` · `multispectral` · `low-light` · `sonar`
+| Source.
+|===
+
+===== `camera.set-trigger-distance`: Set trigger distance
+
+Capture an image every given distance traveled (survey mode). A value of 0 disables it.
+
+*Domains:* UAV ● UGV ● USV ○ UUV -- · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* segment · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `distance`
+| Quantity
+| m
+| R
+| ≥ 0
+| Distance between images. 0 disables.
+
+| `triggerNow`
+| Boolean
+| --
+| O
+| default `false`
+| Capture an image immediately as well.
+|===
+
+NOTE: Persistent. On a segment, the mapping issues a `distance = 0` revert at the segment end.
+
+==== Pointing
+
+===== `gimbal.point`: Point gimbal
+
+Point a gimbal or pan-tilt unit by angle or rate. At least one angle or one rate is required.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* until-goal · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `pitch`
+| Quantity
+| deg
+| O
+| -180..180
+| Pitch, positive up.
+
+| `roll`
+| Quantity
+| deg
+| O
+| -180..180
+| Roll.
+
+| `yaw`
+| Quantity
+| deg
+| O
+| -180..360
+| Yaw, positive clockwise.
+
+| `pitchRate`
+| Quantity
+| deg/s
+| O
+| --
+| Pitch rate.
+
+| `yawRate`
+| Quantity
+| deg/s
+| O
+| --
+| Yaw rate.
+
+| `frame`
+| Category
+| --
+| O
+| `vehicle` · `earth`; default `vehicle`
+| Angle reference.
+|===
+
+===== `gimbal.point-at`: Point at location
+
+Keep a sensor pointed at a geographic location (region of interest).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* from a position parameter · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `location`
+| Position
+| --
+| R
+| --
+| Location to point at.
+|===
+
+===== `gimbal.clear-target`: Clear pointing target
+
+Release the region of interest and return to the neutral or previous pointing.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+_No parameters._
+
+===== `gimbal.set-mode`: Set gimbal mode
+
+Set the stabilization mode.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| R
+| `follow` · `lock` · `stow`
+| Mode.
+|===
+
+===== `gimbal.track-image-point`: Track image point
+
+Track a point in the image. Stopped by `gimbal.clear-target`.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `x`
+| Quantity
+| 1
+| R
+| 0..1
+| Horizontal position in the image, from 0 (left) to 1 (right).
+
+| `y`
+| Quantity
+| 1
+| R
+| 0..1
+| Vertical position in the image, from 0 (top) to 1 (bottom).
+|===
+
+==== Ranging
+
+===== `ranging.set-range`: Set range
+
+Set the range scale of a lidar, radar or sonar.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Core · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `maxRange`
+| Quantity
+| m
+| R
+| ≥ 0
+| Maximum range.
+
+| `minRange`
+| Quantity
+| m
+| O
+| ≥ 0
+| Minimum range.
+|===
+
+===== `ranging.set-gain`: Set gain
+
+Set receiver gain.
+
+*Domains:* UAV ○ UGV ○ USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `mode`
+| Category
+| --
+| R
+| `auto` · `manual`
+| Gain mode.
+
+| `gain`
+| Quantity
+| dB
+| O
+| --
+| Gain for `manual`.
+|===
+
+===== `ranging.set-frequency`: Set operating frequency
+
+Select the operating frequency of a radar or sonar.
+
+*Domains:* UAV ○ UGV ○ USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `frequency`
+| Quantity
+| kHz
+| R
+| ≥ 0
+| Frequency.
+|===
+
+===== `ranging.set-scan-sector`: Set scan sector
+
+Limit scanning to a sector.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `startAngle`
+| Quantity
+| deg
+| R
+| -180..180
+| Sector start, relative to the vehicle heading.
+
+| `endAngle`
+| Quantity
+| deg
+| R
+| -180..180
+| Sector end, relative to the vehicle heading.
+
+| `angularResolution`
+| Quantity
+| deg
+| O
+| ≥ 0
+| Angular step.
+|===
+
+===== `ranging.set-transmit`: Enable or disable transmission
+
+Switch an active sensor between transmitting and silent.
+
+*Domains:* UAV ○ UGV ○ USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `enabled`
+| Boolean
+| --
+| R
+| --
+| True to transmit.
+|===
+
+==== Sampling
+
+===== `sample.collect`: Collect sample
+
+Collect a physical sample (water, soil, air, sediment).
+
+*Domains:* UAV ○ UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `container`
+| Count
+| --
+| R
+| ≥ 0
+| Container or slot index.
+
+| `kind`
+| Category
+| --
+| O
+| `water` · `soil` · `air` · `sediment` · `biological`
+| Sample kind.
+
+| `volume`
+| Quantity
+| mL
+| O
+| ≥ 0
+| Volume to collect.
+
+| `location`
+| Position
+| --
+| O
+| --
+| Location to collect at. If absent, the current position.
+|===
+
+*Result:* Record `{sampleId: Text}`.
+
+==== Payload actuation
+
+===== `payload.gripper`: Operate gripper
+
+Open or close a gripper.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `action`
+| Category
+| --
+| R
+| `open` · `close`
+| Action.
+
+| `force`
+| Quantity
+| %
+| O
+| 0..100
+| Grip force.
+|===
+
+===== `payload.release`: Release payload
+
+Drop or deploy an item.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* from a position parameter · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `slot`
+| Count
+| --
+| O
+| ≥ 0
+| Payload slot.
+
+| `mode`
+| Category
+| --
+| O
+| `drop` · `deploy`; default `drop`
+| How to release.
+
+| `location`
+| Position
+| --
+| O
+| --
+| Release position. If absent, the current position.
+|===
+
+===== `payload.winch`: Operate winch
+
+Deploy, retract or hold a winch.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* until-goal · *Persistence:* none · *Scope:* waypoint · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `action`
+| Category
+| --
+| R
+| `deploy` · `retract` · `hold` · `release-load`
+| Action.
+
+| `length`
+| Quantity
+| m
+| O
+| ≥ 0
+| Cable length to pay out or retract.
+
+| `rate`
+| Quantity
+| m/s
+| O
+| ≥ 0
+| Cable speed.
+|===
+
+===== `payload.set-lights`: Set lights
+
+Control lights or illuminators.
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* none
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `state`
+| Category
+| --
+| R
+| `off` · `on` · `strobe`
+| State.
+
+| `intensity`
+| Quantity
+| %
+| O
+| 0..100
+| Brightness.
+
+| `lightId`
+| Count
+| --
+| O
+| ≥ 0
+| Which light. If absent, all.
+|===
+
+===== `payload.set-switch`: Set switch
+
+Switch a discrete output (relay).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* mode · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `channel`
+| Count
+| --
+| R
+| ≥ 0
+| Output channel.
+
+| `on`
+| Boolean
+| --
+| R
+| --
+| True for on.
+|===
+
+===== `payload.set-actuator`: Set actuator output
+
+Set a continuous output (servo, motor).
+
+*Domains:* UAV ● UGV ● USV ● UUV ● · *Level:* Extended · *Completion:* immediate · *Persistence:* latched · *Scope:* both · *Position:* none · *Hazard:* flight-critical
+
+|===
+| Parameter | Type | Unit | Req | Constraint | Description
+
+| `channel`
+| Count
+| --
+| R
+| ≥ 0
+| Output channel.
+
+| `value`
+| Quantity
+| 1
+| R
+| -1..1
+| Normalized output, from -1 to 1.
+|===
+
+'''
+
+=== Conformance classes and platform profiles
+
+|===
+| Class | Kind | URI (suggested) | Depends on | Needs a live system? | Scope
+
+| (a) Registry Definitions
+| Requirement class
+| `+.../conf/registry-definitions+`
+| --
+| No
+| The registry document and its companion JSON are internally valid (REQ R1--R2, R19).
+
+| (b) Routes Action Catalog
+| Requirement class
+| `+.../conf/registry-routes-actions+`
+| (a), OGC API -- Routes
+| No
+| A Routes server lists and serves the registry actions it supports as REQ R3--R6 require.
+
+| (c) Vehicle Command Implementation
+| Recommended level
+| `+.../conf/registry-vehicle-commands+`
+| (a), a binding
+| Yes
+| A vehicle System follows the recommendations of Clauses 6.3 to 6.7 for the vehicle commands it declares.
+
+| (d) Sensor Command Implementation
+| Recommended level
+| `+.../conf/registry-sensor-commands+`
+| (a), a binding
+| Yes
+| A sensor or payload System follows the recommendations of Clauses 6.3 to 6.7 for the sensor commands it declares.
+|===
+
+Class (a) can be checked without any system, and class (b) against a Routes server alone. Classes (c) and (d) are recommended levels: loading is vehicle specific (Clause 2.11). They apply to a System through whichever binding it uses (CS API, MAVLink, ROS 2), and one System may claim both. Platform profiles list the *Core* vehicle commands applicable (●) to each domain. A vehicle claims a profile when it implements all its listed commands that its capabilities allow. Extended commands are listed for information.
+
+|===
+| Profile | Core vehicle commands | Extended (applicable or limited)
+
+| UAV
+| `vehicle.goto`, `vehicle.follow-path`, `vehicle.hold-position`, `vehicle.set-heading`, `vehicle.move-relative`, `vehicle.return-to-home`, `vehicle.stop`, `vehicle.set-vertical-position`, `vehicle.takeoff`, `vehicle.land`, `vehicle.set-speed`, `vehicle.set-mode`, `vehicle.set-armed`, `vehicle.set-home`, `mission.start`, `mission.pause`, `mission.resume`, `mission.abort`, `mission.wait`, `vehicle.emergency-stop`
+| `vehicle.orbit`, `vehicle.transition`, `vehicle.dock`, `vehicle.reboot`, `vehicle.terminate`
+
+| UGV
+| `vehicle.goto`, `vehicle.follow-path`, `vehicle.hold-position`, `vehicle.set-heading`, `vehicle.move-relative`, `vehicle.return-to-home`, `vehicle.stop`, `vehicle.set-speed`, `vehicle.set-mode`, `vehicle.set-armed`, `vehicle.set-home`, `mission.start`, `mission.pause`, `mission.resume`, `mission.abort`, `mission.wait`, `vehicle.emergency-stop`
+| `vehicle.orbit`, `vehicle.dock`, `vehicle.reboot`, `vehicle.terminate`
+
+| USV
+| `vehicle.goto`, `vehicle.follow-path`, `vehicle.hold-position`, `vehicle.set-heading`, `vehicle.move-relative`, `vehicle.return-to-home`, `vehicle.stop`, `vehicle.set-speed`, `vehicle.set-mode`, `vehicle.set-armed`, `vehicle.set-home`, `mission.start`, `mission.pause`, `mission.resume`, `mission.abort`, `mission.wait`, `vehicle.emergency-stop`; limited: `vehicle.set-vertical-position`, `vehicle.surface`
+| `vehicle.orbit`, `vehicle.dock`, `vehicle.reboot`, `vehicle.terminate`
+
+| UUV
+| `vehicle.goto`, `vehicle.follow-path`, `vehicle.hold-position`, `vehicle.set-heading`, `vehicle.move-relative`, `vehicle.return-to-home`, `vehicle.stop`, `vehicle.set-vertical-position`, `vehicle.surface`, `vehicle.set-speed`, `vehicle.set-mode`, `vehicle.set-armed`, `vehicle.set-home`, `mission.start`, `mission.pause`, `mission.resume`, `mission.abort`, `mission.wait`, `vehicle.emergency-stop`
+| `vehicle.orbit`, `vehicle.dock`, `vehicle.reboot`, `vehicle.terminate`
+|===
+
+==== Sensor profiles
+
+|===
+| Profile | Core commands
+
+| Sensor
+| `sensor.set-power`, `sensor.start-acquisition`, `sensor.stop-acquisition`, `sensor.trigger`, `sensor.set-sampling-rate`, `sensor.get-status`, `data.start-recording`, `data.stop-recording`
+
+| Camera
+| Sensor profile plus `camera.capture-image`, `camera.stop-image-capture`, `camera.start-video`, `camera.stop-video`, `camera.set-mode`
+
+| Gimbal
+| `gimbal.point`, `gimbal.point-at`, `gimbal.clear-target`
+
+| Ranging (lidar, radar, sonar)
+| Sensor profile plus `ranging.set-range`
+
+| Payload
+| Extended commands only (`payload.*`, `sample.collect`)
+|===
+
+'''
+
+=== Requirements and recommendations
+
+==== Registry entries
+
+*REQ R1* -- A registry entry SHALL have the members of Clause 2.1, and its `parametersSchema` SHALL be a SWE Common component tree that can be converted to JSON Schema by Clause 2.10. It SHALL also be valid for the CS API Command Schema (`parametersSchema` member).
+
+*REQ R2* -- Identifiers SHALL be unique and immutable. A command that is withdrawn SHALL be marked `deprecated` and its identifier SHALL NOT be reused.
+
+==== Routes actions
+
+*REQ R3* -- Listing. A Routes server that supports a registry command SHALL list it in `GET /actions` with `id` equal to the registry `id` (for example `vehicle.land`), and SHOULD give the registry URI as its definition. A server MAY also accept the short names of Annex C (for example `land`) as aliases, and SHALL then return the registry `id` in every response.
+
+*REQ R4* -- Definition. `+GET /actions/{actionId}+` for a registry command SHALL return either (a) the parameter schema of the command in one of the forms of Clause 2.10, or (b) a link, as a URI or URN, to the registry definition of the command (issue #74). A server SHOULD return form (a), because a client can then validate an action without a second request.
+
+*REQ R5* -- Schema content. The schema served for a registry command SHALL contain every parameter of the command, with the registry name, component type, unit and default. A server given a vehicle characteristics model MAY use it to bound values while it generates a route (for example a maximum altitude), and SHALL NOT remove registry parameters from the schema because of it. A binding profile MAY add parameters to a command (Clause 6.8). An added parameter SHALL be optional, SHALL have a default, and SHALL be named with the profile name as a prefix (`mavlink.rate`). A route that omits an optional parameter uses its default.
+
+*REQ R6* -- Action instances. An `actions[]` entry whose `actionType` is a registry `id` SHALL carry `params` that validate against the schema served for the action, and SHALL appear only where the `scope` of the command allows it (Clause 2.1). A command with scope `none` is not a route action. Context parameters (Clause 2.5) are filled from the route geometry and are not set by the route author. The entry MAY omit `target`, because a routing server does not need to know the vehicle. When it is omitted, the target is resolved when the route is loaded, or is given by a mapping supplied with the generation request. How a vehicle loads a route, including what it does with a parameter it cannot honor, is vehicle specific and outside OGC API -- Routes (Clause 2.11).
+
+==== Control streams (CS API binding)
+
+These recommendations apply where a registry command is implemented by a CS API control stream, which is one binding of a registry action. They concern the vehicle side. The CS profile in this series describes how a loader matches actions to such streams.
+
+*REC R7* -- A control stream that implements a registry command SHOULD declare it with the members:
+
+[,json]
+----
+"commandType": "http://www.opengis.net/def/uxs-command/vehicle.goto",
+"commandOptions": ["speed", "acceptanceRadius", "holdTime"]
+----
+
+`commandType` is the registry URI. `commandOptions` lists the optional registry parameters that the stream supports. (Both members are proposed extensions to the CS API `ControlStream` resource.)
+
+*REC R8* -- The control stream's `parametersSchema` SHOULD contain every *required* registry parameter with the registry name, component type and unit. It MAY narrow constraints (intervals, values) to platform limits. It MAY contain additional optional parameters whose names begin with `x-`.
+
+*REC R9* -- A control stream SHOULD implement every parameter listed in `commandOptions`. A command carrying a parameter that the stream does not implement is handled as Clause 2.11 describes: the parameter is dropped with a warning, or the command ends in `REJECTED` with an explanatory `message`. Which of the two is vehicle specific.
+
+==== Units and positions
+
+*REQ R10* -- Units SHALL be as in Clause 2.7. A vehicle that uses other internal units SHOULD convert; the schema SHALL state the registry unit.
+
+*REQ R11* -- Positions SHALL use WGS 84 latitude and longitude in degrees. A vehicle SHOULD support the vertical references marked ● for its domain in Clause 2.6 that its sensors allow, and SHOULD treat a position whose `verticalReference` it cannot use as unsupported (Clause 2.11). A vehicle SHOULD NOT reinterpret one vertical reference as another without an exact conversion.
+
+==== Execution
+
+*REC R12* -- A command SHOULD follow the `completion` value in its entry (Clause 2.4). A command with `until-goal` completion SHOULD report progress through `EXECUTING` status reports where the platform can, and SHOULD end in `FAILED` with a `message` if the goal cannot be reached.
+
+*REC R13* -- Movement supersession. A new movement command (`vehicle.goto`, `follow-path`, `orbit`, `move-relative`, `return-to-home`, `hold-position`, `stop`, `takeoff`, `land`, `surface`, `dock`) for a System replaces a movement command still in progress for that System. The replaced command SHOULD end in a terminal state, `CANCELED` with a `message` naming the replacing command, unless the platform processes commands strictly in order (queueing), in which case it does not replace.
+
+*REC R14* -- Persistence. The effect of a `latched` or `mode` command SHOULD last until it is changed by another command or by a platform reset. A system SHOULD document what happens at the end of a mission and after a restart.
+
+==== Safety
+
+*REQ R15* -- Hazard classes in the registry are *minimum* classes. A deployment MAY raise a command's class, and SHALL NOT lower a `destructive` command. A `vehicle.set-armed` command with `force = true` SHALL be treated as `destructive`. `sensor.set-power` and `sensor.calibrate` SHALL be classed at least `flight-critical` for sensors the vehicle depends on for navigation or control.
+
+*REQ R16* -- Route safety. A `destructive` command SHALL NOT be issued as part of an automatically executed route sequence. It requires an explicit, separately authorized request.
+
+==== Results, applicability and versioning
+
+*REC R17* -- Results. A command with a result SHOULD provide the `resultSchema` given in its entry for inline results, and, where the binding is the CS API, SHOULD report produced observations and data streams as `CommandResult` links.
+
+*REC R18* -- A system declaring a registry command for a domain marked -- in its entry SHOULD document its interpretation. Declaring an Extended command is optional; when declared, it SHOULD conform to this document.
+
+*REQ R19* -- Versioning. The registry SHALL carry a version (major.minor.patch). Adding commands or optional parameters is a minor change. Removing a command, or changing the meaning, type, unit or requiredness of a parameter, is a major change. A Routes server and a control stream SHOULD state the registry version they implement.
+
+=== Extension and governance
+
+* *Vendor commands.* Identifiers begin with `+x-{vendor}.+`, for example `x-acme.deploy-net`. They have no registry URI and are not covered by this document. A Routes server lists them in `/actions` like any other action, and `+GET /actions/{actionId}+` returns their schema or a link to the vendor's own definition (issue #74). The Routes standard does not change.
+* *Profile parameters.* A binding profile (MAVLink, ROS 2, ...) may add optional parameters to a registry command. Their names begin with the profile name (`mavlink.rate`, `ros2.timeAllowance`), and each has a default, so a route that omits it is valid (REQ R5). The profile describes them and serves them in the schema; they are not part of the registry entry. A parameter that several profiles add can be proposed for the registry.
+* *Proposing a command.* A proposal contains the entry members of Clause 2.1, the applicability matrix, at least two independent implementations (or one implementation and a written mapping to a native protocol), and an example. Additions are minor versions (REQ R19).
+* *Deprecation.* A deprecated command remains in the registry for at least one major version and names its replacement.
+* *Hosting.* The registry is expected to live on an OGC-hosted register (a definitions server), one URI per command, with the JSON form and this document as human-readable views.
+
+'''
+
+* OGC API -- Connected Systems, Part 1: Feature Resources (`docs.ogc.org/DRAFTS/23-001r0.html`)
+* OGC API -- Connected Systems, Part 2: Dynamic Data (`docs.ogc.org/DRAFTS/23-002r0.html`): ControlStream, Command, CommandStatus, CommandResult, Feasibility (a binding of the registry)
+* OGC SWE Common Data Model 3.0 (components, constraints, encodings)
+* UCUM: The Unified Code for Units of Measure
+* MAVLink message definitions: `github.com/mavlink/mavlink`, `message_definitions/v1.0/*.xml` (Annex A)
+* Related SRDs in this series:
+ ** _A Connected Systems Profile for OGC API -- Routes Actions_
+
+=== References
+
+* OGC API -- Routes, Part 1: Core (`docs.ogc.org/DRAFTS/21-000.html`)
+* OGC API -- Routes, issue #74, _Extensibility for Actions_ (`github.com/opengeospatial/ogcapi-routes/issues/74`)
+ ** _A MAVLink Binding Profile for OGC API -- Routes Actions_
+ ** _A ROS 2 Binding for the Common Command Registry for Uncrewed Systems_
+
+'''
