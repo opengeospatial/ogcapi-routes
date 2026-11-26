@@ -11,8 +11,8 @@ The OGC API - Routes - Part 1: Core Standard defines the following ten requireme
 ** <<rc_intermediate-waypoints,**Intermediate waypoints**>>: Pass through additional points along the route.
 ** <<rc_spatial-constraints,**Spatial constraints**>>: Avoid areas specified as GeoJSON MultiPolygons when computing the route.
 ** <<rc_time,**Temporal constraints**>>: Specify departure/arrival time.
-** <<rc_actions,**Actions**>>: Include actions executed during the traversal of the route, such as activating a sensor or releasing a payload.
-** <<rc_contingencies,**Contingencies**>>: Define fallback plans that are executed when trigger conditions occur during the route.
+** <<rc_actions,**Actions**>>: Support routes that include actions — operations executed during the traversal of the route by a vehicle, sensor, camera, gimbal or payload — and declare the actions supported by the server.
+** <<rc_contingencies,**Contingencies**>>: Support routes that include contingencies — fallback plans executed when trigger conditions occur during the route — and declare the contingencies supported by the server.
 * Additional representation capabilities:
 ** <<rc_attributes,**Attributes**>>: Enrich route and segment representations with attributes from a discoverable attribute catalog.
 * Additional execution capabilities:
@@ -33,14 +33,14 @@ NOTE: All implementations must implement the Core conformance class.
 [cols="40,60",options="header"]
 !===
 |Conformance class |URI
-|<<conf_core,Core>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core`
-|<<conf_manage-routes,Manage routes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes`
-|<<conf_modes,Modes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes`
-|<<conf_intermediate-waypoints,Intermediate waypoints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints`
-|<<conf_spatial-constraints,Spatial constraints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/spatial-constraints`
-|<<conf_time,Temporal constraints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time`
-|<<conf_actions,Actions>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions`
-|<<conf_contingencies,Contingencies>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/contingencies`
-|<<conf_attributes,Attributes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/attributes`
-|<<conf_job-control,Job Control>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/job-control`
+|<<conf_core,Core>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/core`
+|<<conf_manage-routes,Manage routes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/manage-routes`
+|<<conf_modes,Modes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/modes`
+|<<conf_intermediate-waypoints,Intermediate waypoints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/intermediate-waypoints`
+|<<conf_spatial-constraints,Spatial constraints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/spatial-constraints`
+|<<conf_time,Temporal constraints>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/time`
+|<<conf_actions,Actions>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/actions`
+|<<conf_contingencies,Contingencies>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/contingencies`
+|<<conf_attributes,Attributes>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/attributes`
+|<<conf_job-control,Job Control>> |`\http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/job-control`
 !===

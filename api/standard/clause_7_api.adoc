@@ -27,7 +27,7 @@ The API building blocks support the resources and operations listed in <<tldr>>.
 |GET |n/a |`application/json` |<<get_routes>>
 .2+|Route .2+|`/routes/{routeId}` |GET |n/a |`application/geo+json` |<<get_route>>
 |DELETE |n/a |n/a |<<delete_route>>
-|Route definition |`/routes/{routeId} /definition` |GET |n/a |`application/json` |<<get_route_definition>>
+|Route definition |`/routes/{routeId}/definition` |GET |n/a |`application/json` |<<get_route_definition>>
 |Modes |`/modes` |GET |n/a |`application/json` |<<get_list_of_modes>>
 |Mode |`/modes/{modeId}` |GET |n/a |`application/json` |<<get_mode_schema>>
 |Actions |`/actions` |GET |n/a |`application/json` |<<get_list_of_actions>>
@@ -45,7 +45,7 @@ APIs implementing this Standard will support them. The following five operations
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/core
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/core
 |Target type |Web API
 |Dependency |<<CommonCore,OGC API - Common - Part 1: Core, Requirements Classes "Core", "Landing Page", "JSON">>
 |Indirect Dependency |<<GeoJSON,GeoJSON>>
@@ -125,19 +125,19 @@ Requirements classes can support options and parsing the API definition may be u
 ----
 {
   "conformsTo": [
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/spatial-constraints",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/contingencies",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/attributes",
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/job-control"
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/core",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/manage-routes",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/modes",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/intermediate-waypoints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/spatial-constraints",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/time",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/actions",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/contingencies",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/attributes",
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/job-control"
   ],
   "properties": {
-    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes": {
+    "http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/manage-routes": {
       "defaultRoutesPageSize": 100,
       "maximumRoutesPageSize": 10000
     }
@@ -215,14 +215,27 @@ properties:
                   items:
                     type: number
       mode:
-        type: string
+        oneOf:
+          - type: string
+          - type: object
+            required:
+              - value
+            properties:
+              value:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
 ----
 |===
 
 Additional members in the route definition can be ignored.
 
-NOTE: The content model of the route definition object has been designed so that it can also be the content of a process execution request according to the OGC API - Processes - Part 1: Core Standard. The motivation for this is the following: The computation of a route is a process that operates on geospatial data that typically includes a routing dataset, which is a networked dataset that has a set of connected vertices and edges that have topological properties on which analysis can be done. This standard specifies the OGC API building blocks for Routes as API resources. An alternate implementation option for a routing API could be to implement routing as a Process resource using the building blocks specified in the OGC API - Processes - Part 1: Core Standard. The current design allows that the same request can be sent to both API options to compute a new route. 
-The decision to align the payload with OGC API Processes adds additional members "inputs" and "value" that would otherwise be unnecessary. 
+NOTE: The route definition is limited to the inputs of the route computation: an optional `name`, the `waypoints`, an optional `mode`, and optional spatial and temporal constraints. Actions and contingencies are not members of the route definition. They are created by the server and appear only in the route representation returned by the server, which is based on the <<REM,OGC Route Exchange Model>> (see <<rc_actions>> and <<rc_contingencies>>).
+
+NOTE: The route definition object is also a valid process execution request according to the <<OGCAPIProcesses,OGC API - Processes - Part 1: Core>> Standard, so the same payload can be sent either to this API or to a generic OGC API - Processes implementation that exposes routing as a process. This alignment is the only reason the payload includes the "inputs" member and the "value" members, which would otherwise be unnecessary; see <<alignment-processes,Alignment with OGC API - Processes>>.
 
 [[req_core_compute-route-success]]
 [width="90%",cols="2,6a"]
@@ -396,7 +409,7 @@ in Washington, D.C.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/manage-routes
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/manage-routes
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -833,7 +846,7 @@ when computing the route.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/intermediate-waypoints
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/intermediate-waypoints
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -865,7 +878,7 @@ Modes is a restriction based on the route operation or type of transport desired
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/modes
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/modes
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -878,8 +891,22 @@ Modes is a restriction based on the route operation or type of transport desired
 
 [source,YAML]
 ----
-type: string
+oneOf:
+  - type: string
+  - type: object
+    required:
+      - value
+    properties:
+      value:
+        type: object
+        required:
+          - id
+        properties:
+          id:
+            type: string
 ----
+^|B |In the object form, the `id` member of the `value` member SHALL match the `id` of a mode listed in the Modes resource at `/modes`. A string value is a shorthand for the object form `{ "value": { "id": <string> } }`.
+^|C |Members of the `value` member other than `id` are mode-specific parameters. If the server serves a schema for the mode at `/modes/{modeId}`, the server SHALL validate these parameters against that schema, and a request with parameters that do not validate SHALL be reported as a response with status code `400`.
 |===
 
 [[example_route_definition_mode]]
@@ -908,13 +935,54 @@ in Washington, D.C.
         ]
       }
     },
-    "mode": "cycling-fastest"
+    "mode": {
+      "value": {
+        "id": "cycling-fastest"
+      }
+    }
   }
 }
 ----
 =================
 
-The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. If no mode is specified in the route definition then the first value listed in the array is considered to be the default mode.
+The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route. If no mode is specified in the route definition, the mode listed first in the Modes resource at `/modes` (its `id`) is considered to be the default mode.
+
+[[example_route_definition_mode_parameters]]
+.Route definition with mode-specific parameters
+=================
+The following is an example request that selects the mode `survey` and specifies mode-specific parameters, which are validated against the schema served for the mode at `/modes/survey`.
+
+[source,JSON]
+----
+{
+  "inputs": {
+    "name": "Bathymetric survey",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [
+            12.48,
+            41.90
+          ],
+          [
+            12.49,
+            41.91
+          ]
+        ]
+      }
+    },
+    "mode": {
+      "value": {
+        "id": "survey",
+        "resolution": 25,
+        "angle": 110
+      }
+    }
+  }
+}
+----
+=================
 
 [[modes]]
 ==== Modes
@@ -937,10 +1005,10 @@ type: array
 items:
   type: object
   properties:
-    name:
+    id:
       type: string
       minLength: 1
-      description: Name of the mode the server will expect in the request for a route
+      description: Unique identifier of the mode. Clients reference the mode in a route definition either directly as a string, or as the `id` member of the `value` member of a mode object
     description:
       type: string
       minLength: 1
@@ -978,7 +1046,7 @@ items:
         enum: ["sync-execute", "async-execute"]
       default: ["sync-execute"]
       description: If omitted, clients assume ["sync-execute"]
-  required: ["name", "description", "domain"]
+  required: ["id", "description", "domain"]
   additionalProperties: true
 ----
 |===
@@ -1010,7 +1078,7 @@ The following are some examples of the list of modes of a routing API that imple
 ----
 [
   {
-    "name": "drone",
+    "id": "drone",
     "description": "Routing for unmanned aerial vehicles",
     "supported_regions": [
       {
@@ -1034,7 +1102,7 @@ The following are some examples of the list of modes of a routing API that imple
 ----
 [
   {
-    "name": "drone",
+    "id": "drone",
     "description": "Routing for unmanned aerial vehicles",
     "supported_regions": [
       {
@@ -1048,7 +1116,7 @@ The following are some examples of the list of modes of a routing API that imple
     "domain": ["air"]
   },
   {
-    "name": "bike",
+    "id": "bike",
     "description": "Cycling routes in urban and rural areas",
     "supported_regions": [
       {
@@ -1059,7 +1127,7 @@ The following are some examples of the list of modes of a routing API that imple
     "domain": ["ground"]
   },
   {
-    "name": "metro",
+    "id": "metro",
     "description": "Subway systems within major cities",
     "domain": ["ground"]
   }
@@ -1088,7 +1156,7 @@ for each mode referenced from the Modes resource at `/modes`.
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/get-mode-schema-success*
 ^|A |A successful execution of the operation SHALL be reported as a response with a HTTP status code `200`.
-^|B |The content of that response SHALL be an OpenAPI 3.0 compatible schema.
+^|B |The content of that response SHALL be an OpenAPI 3.0 compatible schema that validates the mode-specific parameters, that is, the members of the `value` member of the object form of `/inputs/mode` other than `id`.
 |===
 
 The following is an example of modes supported in an implementation, together with the specific schemas of each mode.
@@ -1100,13 +1168,15 @@ The following is an example of modes supported in an implementation, together wi
 ----
 [
   {
-    "name": "inspection",
+    "id": "inspection",
     "description": "Generates a plan for a pipeline inspection",
-    "title": "Pipeline Inspection"
+    "title": "Pipeline Inspection",
+    "domain": ["air"]
   }, {
-    "name": "survey",
+    "id": "survey",
     "description": "Generates a plan for a bathymetric survey using multi-beam sonar",
-    "title": "Survey Plan"
+    "title": "Survey Plan",
+    "domain": ["maritime"]
   }
 ]
 ----
@@ -1259,12 +1329,12 @@ The following is an example of modes supported in an implementation, together wi
 [[rc_actions]]
 === Requirements Class "Actions"
 
-This requirement enables the API request to trigger a new action based on a sensor input. Each action can have its own schema, allowing the fine tuning of action behaviour through parameter values.
+This requirements class specifies how a server declares the actions that it supports. Actions are **not** specified by the client in the route definition: they are included in the route by the server — for example, based on an asset catalog, the capabilities of the allocated vehicle, or operator procedures — and are executed during the traversal of the route by a vehicle, sensor, camera, gimbal, or payload. Each action can have its own schema, allowing the fine tuning of action behaviour through parameter values.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/actions
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/actions
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -1290,7 +1360,7 @@ type: array
 items:
   type: string
 ----
-^|C |The server SHALL support the HTTP GET operation at the path `/actions/{actionid}` for each available action.
+^|C |The server SHALL support the HTTP GET operation at the path `/actions/{actionId}` for each available action.
 ^|D |The content of that response SHALL be an object describing the schema of the action. The definition of the schema is outside the scope of the API.
 |===
 
@@ -1375,7 +1445,7 @@ items:
 |payload.set-switch |Set switch |Switch a discrete output (relay). |N/A |All
 |payload.set-actuator |Set actuator output |Set a continuous output (servo, motor). |N/A |All
 !===
-A complete definition of each action as well as a machine readable JSON can be found here [XXXXXXXXXXXXXXXXXXxx]
+A complete definition of each action as well as a machine readable JSON can be found in the link:srd/uxs-command-registry.json[Common Command Registry for Uncrewed Systems] (`srd/uxs-command-registry.json` in this document repository).
 
 [[tourist_action_names_table]]
 [#tldr-tourist,reftext='{table-caption} {counter:table-num}']
@@ -1404,7 +1474,7 @@ A complete definition of each action as well as a machine readable JSON can be f
 |tour.weather-alert |Weather alert |Warn of weather that affects the next part of the route. |N/A |All
 !===
 
-A complete definition of each action as well as a machine readable JSON can be found here [XXXXXXXXXXXXXXXXXXxx]
+A complete definition of each action as well as a machine readable JSON can be found in the link:srd/tourist-action-registry.json[Tourist Route Action Registry] (`srd/tourist-action-registry.json` in this document repository).
 
 [[delivery_action_names_table]]
 [#tldr-delivery,reftext='{table-caption} {counter:table-num}']
@@ -1437,7 +1507,7 @@ A complete definition of each action as well as a machine readable JSON can be f
 !===
 
 
-A complete definition of each action as well as a machine readable JSON can be found here [XXXXXXXXXXXXXXXXXXxx]
+A complete definition of each action as well as a machine readable JSON can be found in the link:srd/delivery-action-registry.json[Delivery Vehicle Action Registry] (`srd/delivery-action-registry.json` in this document repository).
 
 The following are some examples of the list of actions of a routing API that implements this Standard.
 
@@ -1468,8 +1538,8 @@ This operation returns the schema of the action with id `actionId`.
 [width="90%",cols="2,6a"]
 |===
 ^|*Requirement {counter:req-id}* |*/req/core/get-action-schema*
-^|A |The server SHALL support the HTTP GET operation at the path `/action/{actionId}`
-for each mode referenced from the Actions resource at `/actions`.
+^|A |The server SHALL support the HTTP GET operation at the path `/actions/{actionId}`
+for each action referenced from the Actions resource at `/actions`.
 |===
 
 [[req_action-get-action-schema-success]]
@@ -1500,31 +1570,36 @@ Response of HTTP GET operation at the path `/actions/vehicle.land`.
     },
     {
       "type": "object",
-      "required": ["name", "point"],
+      "required": ["actionType", "params"],
       "properties": {
-        "name": {
+        "actionType": {
           "type": "string",
-          "const": "land"
+          "const": "vehicle.land"
         },
-        "point": {
+        "params": {
           "type": "object",
-          "required": ["type", "coordinates"],
+          "required": ["point"],
           "properties": {
-            "type": {
-              "type": "string",
-              "const": "Point"
-            },
-            "coordinates": {
-              "type": "array",
-              "items": {
-                "type": "number"
+            "point": {
+              "type": "object",
+              "required": ["type", "coordinates"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "const": "Point"
+                },
+                "coordinates": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "description": "Longitude and latitude as [lon, lat]"
+                }
               },
-              "minItems": 2,
-              "maxItems": 2,
-              "description": "Longitude and latitude as [lon, lat]"
+              "additionalProperties": false
             }
-          },
-          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -1545,10 +1620,12 @@ Encoding of a valid land action
 {
   "id": "8a56e7bc-218f-4c48-8e71-02c00a5a67de",
   "description": "Initiate automated landing at main base",
-  "name": "vehicle.land",
-  "point": {
-    "type": "Point",
-    "coordinates": [34.0522, -118.2437]
+  "actionType": "vehicle.land",
+  "params": {
+    "point": {
+      "type": "Point",
+      "coordinates": [34.0522, -118.2437]
+    }
   }
 }
 ----
@@ -1572,30 +1649,37 @@ Response of HTTP GET operation at the path `/actions/vehicle.loiter`.
     },
     {
       "type": "object",
-      "required": ["name", "radius", "altitude", "duration", "pattern"],
+      "required": ["actionType", "params"],
       "properties": {
-        "name": {
+        "actionType": {
           "type": "string",
-          "const": "loiter"
+          "const": "vehicle.loiter"
         },
-        "radius": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Radius in meters of the loiter circle"
-        },
-        "altitude": {
-          "type": "number",
-          "description": "Altitude in meters above sea level"
-        },
-        "duration": {
-          "type": "number",
-          "minimum": 0,
-          "description": "Duration in seconds to loiter"
-        },
-        "pattern": {
-          "type": "string",
-          "enum": ["circular", "racetrack", "figure-eight", "hover", "spiral"],
-          "description": "Flight pattern used for loitering"
+        "params": {
+          "type": "object",
+          "required": ["radius", "altitude", "duration", "pattern"],
+          "properties": {
+            "radius": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Radius in meters of the loiter circle"
+            },
+            "altitude": {
+              "type": "number",
+              "description": "Altitude in meters above sea level"
+            },
+            "duration": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Duration in seconds to loiter"
+            },
+            "pattern": {
+              "type": "string",
+              "enum": ["circular", "racetrack", "figure-eight", "hover", "spiral"],
+              "description": "Flight pattern used for loitering"
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -1616,11 +1700,75 @@ Encoding of a valid loiter action
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "description": "Loiter over the west ridge for 10 minutes",
-  "name": "vehicle.loiter",
-  "radius": 250,
-  "altitude": 100,
-  "duration": 600,
-  "pattern": "circular"
+  "actionType": "vehicle.loiter",
+  "params": {
+    "radius": 250,
+    "altitude": 100,
+    "duration": 600,
+    "pattern": "circular"
+  }
+}
+----
+=================
+
+===== Actions in the route representation
+
+Action instances are created by the server (see <<rc_actions>>) and appear in the route representation returned by the server. They are encoded as objects with an `actionType` member that identifies the action, a `params` member with the action parameters, and optional `id`, `description`, `target` and `sequence` members. Depending on when they are executed, action instances appear:
+
+* in the `actions` member of the route feature collection (executed when the route starts, and their reverts when the route ends);
+* in the `actions` member of the `properties` of a `start`, `segment` or `end` feature (executed at that position);
+* in the `segment_actions` member of the `properties` of a `segment` feature (executed along the stretch that ends at the segment's position).
+
+[[req_actions_encoding]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/actions/encoding*
+^|A |An action instance in a route representation SHALL include an `actionType` member whose value is the identifier of an action listed in the Actions resource at `/actions`.
+^|B |An action instance SHALL include a `params` member. The value of `params` SHALL validate against the schema served for the action at `/actions/{actionId}`.
+^|C |An action instance MAY include an `id` member with an identifier for the instance, a `description` member with human-readable text, a `target` member with a URI that identifies the vehicle, sensor, camera, gimbal or payload the action is executed on, and a `sequence` member with a number that orders the action among the actions of the same target.
+|===
+
+The following example is the schema that all action instances reference through `$ref` in the action schemas below. It defines the common members of an action instance; the schema served for a specific action constrains `actionType` and `params`.
+
+[[example_action_schema]]
+.Common schema of an action instance
+
+=================
+[source,JSON]
+----
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/action.schema.json",
+  "title": "Action",
+  "type": "object",
+  "required": ["actionType", "params"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Identifier of the action instance"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of the action instance"
+    },
+    "actionType": {
+      "type": "string",
+      "description": "Identifier of the action, as listed at /actions"
+    },
+    "target": {
+      "type": "string",
+      "format": "uri",
+      "description": "URI that identifies the vehicle, sensor, camera, gimbal or payload the action is executed on"
+    },
+    "sequence": {
+      "type": "number",
+      "description": "Orders the action among the actions of the same target"
+    },
+    "params": {
+      "type": "object",
+      "description": "Action parameters, validated against the schema of the action"
+    }
+  }
 }
 ----
 =================
@@ -1637,7 +1785,7 @@ relevant, their unit of measure or permitted categorical values.
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|[http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/attributes](http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/attributes)
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/attributes
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -1670,7 +1818,7 @@ relevant, their unit of measure or permitted categorical values.
 |===
 ^|*Requirement {counter:req-id}* |*/req/attributes/values*
 ^|A |An attribute value included in a route overview or route segment representation SHALL use the `id` of the corresponding attribute definition as its property name.
-^|B |The value SHALL conform to the `type`, `format`, `unit`, and `enum` constraints declared for that attribute, where those constraints are present.
+^|B |The value SHALL conform to the schema declared for that attribute and, where present, its `unit` member.
 ^|C |A server SHALL NOT include an attribute value in a route overview representation unless `route` is a member of the attribute's `scope`.
 ^|D |A server SHALL NOT include an attribute value in a route segment representation unless `segment` is a member of the attribute's `scope`.
 |===
@@ -2001,17 +2149,17 @@ representation does not imply that it is mandatory for all implementations.
 |`payloadType`|Payload type|Type of payload (sensor, cargo, survey, etc.).|Categorical string
 !===
 
-A machine readable attribute registry can be found here [XXXXXXXXXXXXXXXXXXxx]
+A machine readable attribute registry can be found in the link:srd/attributes-registry.json[Common Attributes Registry] (`srd/attributes-registry.json` in this document repository).
 
 [[rc_contingencies]]
 === Requirements Class "Contingencies"
 
-This requirement enables the API request to define contingencies and fallback plans during a route.
+This requirements class specifies how a server declares the contingencies that it supports. Like actions, contingencies are **not** part of the route definition sent by the client. The server associates contingencies with the computed route, and they are executed when their trigger conditions occur during the traversal of the route.
 
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/contingencies
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/contingencies
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -2037,7 +2185,7 @@ type: array
 items:
   type: string
 ----
-^|C |The server SHALL support the HTTP GET operation at the path `/contingencies/{contingencies}` for each available contingency.
+^|C |The server SHALL support the HTTP GET operation at the path `/contingencies/{contingencyId}` for each available contingency.
 ^|D |The content of that response SHALL be an object describing the schema of the contingency. The definition of the schema is outside the scope of the API.
 |===
 
@@ -2046,7 +2194,7 @@ The following are some examples of the list of contingencies of a routing API th
 [[example_contingencies]]
 .List of contingencies
 
-Response of HTTP GET operation at the path `/contingecies`.
+Response of HTTP GET operation at the path `/contingencies`.
 
 =================
 [source,JSON]
@@ -2059,7 +2207,7 @@ Response of HTTP GET operation at the path `/contingecies`.
 ----
 =================
 
-Response of HTTP GET operation at the path `/actions/reroute`.
+Response of HTTP GET operation at the path `/contingencies/reroute`.
 
 =================
 [source,JSON]
@@ -2069,32 +2217,54 @@ Response of HTTP GET operation at the path `/actions/reroute`.
   "$id": "https://example.com/schemas/reroute.schema.json",
   "title": "Reroute",
   "type": "object",
-  "required": ["name", "trigger_conditions", "alternative_route"],
+  "required": ["condition", "action"],
   "properties": {
-    "name": {
+    "condition": {
       "type": "string",
-      "const": "reroute"
+      "description": "Trigger condition of the contingency, e.g., traffic_jam, communication_loss"
     },
-    "trigger_conditions": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "description": "Conditions that trigger the contingency, e.g., traffic_jam, communication_loss"
-      }
+    "timeout_s": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Number of seconds the condition must hold before the contingency is executed"
     },
-    "alternative_route": {
-      "type": "object",
-      "description": "Definition of an alternative route to follow",
-      "properties": {
-        "routeId": {
-          "type": "string",
-          "description": "Identifier of the alternative route"
-        }
-      },
-      "required": ["routeId"]
+    "action": {
+      "$ref": "https://example.com/schemas/action.schema.json"
     }
   },
   "additionalProperties": false
+}
+----
+=================
+
+===== Contingencies in the route representation
+
+Contingencies are created by the server (see <<rc_contingencies>>) and appear in the route representation returned by the server as a `contingencies` member of the route feature collection.
+
+[[req_contingencies_encoding]]
+[width="90%",cols="2,6a"]
+|===
+^|*Requirement {counter:req-id}* |*/req/contingencies/encoding*
+^|A |A contingency instance in a route representation SHALL include a `condition` member describing the trigger condition, and an `action` member with an action instance that conforms to <<req_actions_encoding>>.
+^|B |A contingency instance MAY include a `timeout_s` member with the number of seconds the condition must hold before the contingency is executed.
+|===
+
+The following is an example of a contingency instance as it appears in the `contingencies` member of a route representation:
+
+=================
+[source,JSON]
+----
+{
+  "condition": "link-lost",
+  "timeout_s": 15,
+  "action": {
+    "actionType": "vehicle.return-to-home",
+    "target": "https://example.org/api/systems/uav-07",
+    "params": {
+      "destination": "home",
+      "finalAction": "land"
+    }
+  }
 }
 ----
 =================
@@ -2107,7 +2277,7 @@ This requirement enables the API request to specify one or more polygons describ
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/spatial-constraints
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/spatial-constraints
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -2226,7 +2396,7 @@ This requirement enable the API request to specify the time of departure or arri
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/time
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/time
 |Target type |Web API
 |Dependency |<<rc_core>>
 |===
@@ -2335,7 +2505,7 @@ This requirement class enables the API to support asynchronous execution of rout
 [cols="1,4",width="90%"]
 |===
 2+|*Requirements Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/req/job-control
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/req/job-control
 |Target type |Web API
 |Dependency |<<rc_core>>
 |Dependency |<<OGCAPIProcesses,OGC API - Processes - Part 1: Core>>

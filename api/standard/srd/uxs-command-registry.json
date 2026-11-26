@@ -1,6 +1,6 @@
 {
   "registry": "Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)",
-  "version": "0.1.0",
+  "version": "0.1.0-draft",
   "baseUri": "http://www.opengis.net/def/uxs-command/",
   "sharedTypes": {
     "Position": {

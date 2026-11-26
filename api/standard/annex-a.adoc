@@ -12,7 +12,7 @@ Given input to all tests is a Routing API with its landing page at `{apiURI}` an
 [cols="1,4a",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/core
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/core
 |Target type |Web API
 |Requirements class |<<rc_core,Requirements Class "Core">>
 |Dependency |link:https://docs.ogc.org/is/19-072/19-072.html#_conformance_class_json[OGC API - Common - Part 1: Core, Conformance Class "JSON"]
@@ -135,7 +135,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/intermediate-waypoints
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/intermediate-waypoints
 |Target type |Web API
 |Requirements class |<<rc_intermediate-waypoints,Requirements Class "Intermediate waypoints">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -179,7 +179,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/modes
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/modes
 |Target type |Web API
 |Requirements class |<<rc_modes,Requirements Class "Modes">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -208,7 +208,7 @@ Then:
 
 * assert successful execution (status code is "200", `Content-Type` header is "application/json");
 * assert that the response content is a JSON array with at least one element and that each element has a non-empty `name` and `description` and a non-empty `domain` array;
-* for each `{modeId}` taken from the `name` of an element in the response content:
+* for each `{modeId}` taken from the `id` of an element in the response content:
 ** a request to fetch the schema of the mode is executed
 *** method: `GET`
 *** path: `{apiURI}/modes/{modeId}`
@@ -227,7 +227,7 @@ Then:
 Given:
 
 * test /conf/modes/list-modes has been passed
-* `{modes}` is the list of `name` values from the response of test /conf/modes/list-modes
+* `{modes}` is the list of `id` values from the response of test /conf/modes/list-modes
 * a list of three positions (each a JSON array with longitude/latitude) that can be used as waypoints (`{pos1}` to `{pos3}`)
 * a tolerance value
 
@@ -238,7 +238,7 @@ When:
 ** path: `{apiURI}/routes`
 ** header: `Content-Type: application/json`, `Accept: application/geo+json`
 ** authentication, if authentication credentials are provided
-** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "mode": "{mode}" } }`
+** content: `{ "inputs": { "waypoints": { "value": { "type": "MultiPoint", "coordinates": [ {posi}, {posj} ] } }, "mode": { "value": { "id": "{mode}" } } } }`
 
 Then:
 
@@ -254,7 +254,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/spatial-constraints
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/spatial-constraints
 |Target type |Web API
 |Requirements class |<<rc_spatial-constraints,Requirements Class "Spatial Constraints">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -299,7 +299,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/time
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/time
 |Target type |Web API
 |Requirements class |<<rc_time,Requirements Class "Temporal constraints">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -401,7 +401,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/manage-routes
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/manage-routes
 |Target type |Web API
 |Requirements class |<<rc_manage-routes,Requirements Class "Manage routes">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -574,7 +574,7 @@ Then:
 [cols=">20h,<80a",width="100%"]
 |===
 |Test id: | /conf/manage-routes/get-route-definition-success
-|Requirements: | <<req_manage-routes_get-route-definition-op,/req/manage-routes/get-route-definition-op>> A, <<req_manage-routes_get-route-definition-success,/req/manage-routes/get-route-definition-success>> A/B
+|Requirements: | <<req_manage-routes_route-definition-op,/req/manage-routes/route-definition-op>> A, <<req_manage-routes_route-definition-success,/req/manage-routes/route-definition-success>> A/B
 |Test purpose: | Check that route definitions can be fetched
 |Test method: | 
 Given:
@@ -637,7 +637,19 @@ properties:
                   items:
                     type: number
       mode:
-        type: string
+        oneOf:
+          - type: string
+          - type: object
+            required:
+              - value
+            properties:
+              value:
+                type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: string
 ----
 |===
 
@@ -697,7 +709,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/attributes
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/attributes
 |Target type |Web API
 |Requirements class |<<rc_attributes,Requirements Class "Attributes">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -763,7 +775,7 @@ Then:
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/contingencies
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/contingencies
 |Target type |Web API
 |Requirements class |<<rc_contingencies,Requirements Class "Contingencies">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -795,13 +807,36 @@ Then:
 * for each `{contingencyId}` in the response content, a request to `GET {apiURI}/contingencies/{contingencyId}` with header `Accept: application/json` returns a successful execution (status code is "200") and an object describing the schema of the contingency.
 |===
 
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/contingencies/encoding
+|Requirements: | <<req_contingencies_encoding,/req/contingencies/encoding>> A/B
+|Test purpose: | Check that contingency instances in a route representation conform to the specified encoding
+|Test method: |
+Given:
+
+* the server implements conformance class <<conf_contingencies,"Contingencies">>;
+* a route has been computed that includes at least one contingency instance in its `contingencies` member
+
+When:
+
+* the route representation is inspected
+
+Then:
+
+* assert that each contingency instance includes a `condition` member and an `action` member;
+* assert that the `action` member is an action instance that conforms to the requirements of test /conf/actions/encoding;
+* assert that, where a `timeout_s` member is present, its value is a number not less than 0.
+|===
+
 === Conformance Class "Actions"
 
 [[conf_actions]]
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/actions
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/actions
 |Target type |Web API
 |Requirements class |<<rc_actions,Requirements Class "Actions">>
 |Dependency |<<conf_core,Conformance Class "Core">>
@@ -833,13 +868,36 @@ Then:
 * for each `{actionId}` in the response content, a request to `GET {apiURI}/actions/{actionId}` with header `Accept: application/json` returns a successful execution (status code is "200") and an object describing the schema of the action.
 |===
 
+==== Conformance Test {counter:test-id}
+[cols=">20h,<80a",width="100%"]
+|===
+|Test id: | /conf/actions/encoding
+|Requirements: | <<req_actions_encoding,/req/actions/encoding>> A/B/C
+|Test purpose: | Check that action instances in a route representation conform to the specified encoding
+|Test method: |
+Given:
+
+* the server implements conformance class <<conf_actions,"Actions">>;
+* a route has been computed that includes at least one action instance (in the `actions` member of the route feature collection, or in the `actions` or `segment_actions` members of the `properties` of a feature)
+
+When:
+
+* the route representation is inspected
+
+Then:
+
+* assert that each action instance includes an `actionType` member whose value is one of the action identifiers listed at `{apiURI}/actions`;
+* assert that each action instance includes a `params` member whose value validates against the schema served for the action at `GET {apiURI}/actions/{actionId}`;
+* assert that, beyond `actionType` and `params`, an action instance only includes members among `id`, `description`, `target` and `sequence`.
+|===
+
 === Conformance Class "Job Control"
 
 [[conf_job-control]]
 [cols="1,4",width="90%"]
 |===
 2+|*Conformance Class*
-2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.1/conf/job-control
+2+|http://www.opengis.net/spec/ogcapi-routes-1/1.0.0-draft.2/conf/job-control
 |Target type |Web API
 |Requirements class |<<rc_job-control,Requirements Class "Job Control">>
 |Dependency |<<conf_core,Conformance Class "Core">>

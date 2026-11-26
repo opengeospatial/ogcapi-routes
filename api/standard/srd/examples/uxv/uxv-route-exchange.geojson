@@ -4,194 +4,115 @@
   "title": "Tower inspection with sensor drop",
   "description": "A multirotor inspects two towers, drops a sensor with a winch and lands.",
   "describedBy": {
-    "start": {
-      "id": "start",
-      "title": "Pad A",
-      "location": {
-        "type": "Point",
-        "coordinates": [
-          7.88,
-          45.19
-        ]
-      }
-    },
-    "intermediateWaypoints": [
-      {
-        "id": "tower-t1",
-        "title": "Tower T1",
-        "location": {
-          "type": "Point",
+    "inputs": {
+      "name": "Tower inspection with sensor drop",
+      "waypoints": {
+        "value": {
+          "type": "MultiPoint",
           "coordinates": [
-            7.8902,
-            45.1941
+            [
+              7.88,
+              45.19
+            ],
+            [
+              7.8902,
+              45.1941
+            ],
+            [
+              7.8975,
+              45.196
+            ],
+            [
+              7.902,
+              45.1988
+            ],
+            [
+              7.88,
+              45.19
+            ]
           ]
         }
       },
-      {
-        "id": "tower-t2",
-        "title": "Tower T2",
-        "location": {
-          "type": "Point",
-          "coordinates": [
-            7.8975,
-            45.196
-          ]
+      "mode": {
+        "value": {
+          "id": "uav-multirotor"
         }
       },
-      {
-        "id": "sensor-site",
-        "title": "Sensor drop site",
-        "location": {
-          "type": "Point",
-          "coordinates": [
-            7.902,
-            45.1988
-          ]
-        }
-      }
-    ],
-    "end": {
-      "id": "end",
-      "title": "Pad A",
-      "location": {
-        "type": "Point",
-        "coordinates": [
-          7.88,
-          45.19
-        ]
-      }
-    },
-    "mode": {
-      "id": "uav-multirotor",
-      "title": "Multirotor UAV",
-      "domain": [
-        "air"
-      ],
-      "supportedRegions": [
-        {
-          "id": "reg-po",
-          "title": "Po valley test area",
-          "bbox": [
-            7.8,
-            45.1,
-            8.0,
-            45.3
-          ]
-        }
-      ]
-    },
-    "spatialConstraints": [
-      {
-        "id": "sc-fence",
-        "title": "Operating area",
-        "type": "doNotLeave",
-        "area": {
-          "type": "Polygon",
+      "spatial_constraints": {
+        "value": {
+          "type": "MultiPolygon",
           "coordinates": [
             [
               [
-                7.87,
-                45.185
-              ],
-              [
-                7.912,
-                45.185
-              ],
-              [
-                7.912,
-                45.205
-              ],
-              [
-                7.87,
-                45.205
-              ],
-              [
-                7.87,
-                45.185
+                [
+                  7.893,
+                  45.193
+                ],
+                [
+                  7.894,
+                  45.193
+                ],
+                [
+                  7.894,
+                  45.1938
+                ],
+                [
+                  7.893,
+                  45.1938
+                ],
+                [
+                  7.893,
+                  45.193
+                ]
               ]
             ]
           ]
-        },
-        "lower_vertical_limit": 150,
-        "upper_vertical_limit": 320
+        }
       },
-      {
-        "id": "sc-nfz",
-        "title": "Temporary no-fly zone",
-        "type": "doNotEnter",
-        "area": {
-          "type": "Polygon",
-          "coordinates": [
-            [
-              [
-                7.893,
-                45.193
-              ],
-              [
-                7.894,
-                45.193
-              ],
-              [
-                7.894,
-                45.1938
-              ],
-              [
-                7.893,
-                45.1938
-              ],
-              [
-                7.893,
-                45.193
-              ]
-            ]
-          ]
-        },
-        "buffer": 10
+      "temporal_constraint": {
+        "value": {
+          "id": "tc-day",
+          "title": "Daylight window",
+          "type": "interval",
+          "timePoint": "2026-10-12T07:00:00Z",
+          "delta": 36000
+        }
       }
-    ],
-    "temporalConstraints": [
-      {
-        "id": "tc-day",
-        "title": "Daylight window",
-        "type": "interval",
-        "timePoint": "2026-10-12T07:00:00Z",
-        "delta": 36000
-      }
-    ]
+    }
   },
   "actions": [
     {
-      "actionType": "sensor.set-power",
       "target": "https://example.org/api/systems/camera-01",
       "sequence": 1,
       "params": {
         "state": "on"
-      }
+      },
+      "actionType": "sensor.set-power"
     },
     {
-      "actionType": "camera.select-source",
       "target": "https://example.org/api/systems/camera-01",
       "sequence": 2,
       "params": {
         "source": "visible"
-      }
+      },
+      "actionType": "camera.select-source"
     },
     {
-      "actionType": "data.start-recording",
       "target": "https://example.org/api/systems/camera-01",
       "sequence": 3,
       "params": {
         "label": "insp-2026-10-12-a"
-      }
+      },
+      "actionType": "data.start-recording"
     },
     {
-      "actionType": "vehicle.set-speed",
       "target": "https://example.org/api/systems/uav-07",
       "sequence": 1,
       "params": {
         "speed": 8,
         "speedType": "ground"
-      }
+      },
+      "actionType": "vehicle.set-speed"
     }
   ],
   "vehicleClass": "UAV",
@@ -251,12 +172,12 @@
       "condition": "link-lost",
       "timeout_s": 15,
       "action": {
-        "actionType": "vehicle.return-to-home",
         "target": "https://example.org/api/systems/uav-07",
         "params": {
           "destination": "home",
           "finalAction": "land"
-        }
+        },
+        "actionType": "vehicle.return-to-home"
       }
     },
     {
@@ -266,33 +187,33 @@
         "unit": "%"
       },
       "action": {
-        "actionType": "vehicle.return-to-home",
         "target": "https://example.org/api/systems/uav-07",
         "params": {
           "destination": "home",
           "finalAction": "land"
-        }
+        },
+        "actionType": "vehicle.return-to-home"
       }
     },
     {
       "condition": "geofence-breach",
       "action": {
-        "actionType": "vehicle.stop",
         "target": "https://example.org/api/systems/uav-07",
         "params": {
           "mode": "controlled"
-        }
+        },
+        "actionType": "vehicle.stop"
       }
     },
     {
       "condition": "winch-fault",
       "target": "https://example.org/api/systems/winch-01",
       "action": {
-        "actionType": "payload.winch",
         "target": "https://example.org/api/systems/winch-01",
         "params": {
           "action": "hold"
-        }
+        },
+        "actionType": "payload.winch"
       }
     }
   ],
@@ -304,13 +225,12 @@
         "featureType": "overview",
         "length": 4013,
         "duration_s": 469,
-        "totalDuration_s": 809,
         "processingTime": "2026-10-12T07:00:00Z",
         "constraints": [
-          "sc-fence (doNotLeave, 150-320 m MSL) respected",
-          "sc-nfz (doNotEnter, buffer 10 m) avoided",
+          "sc-nfz avoided",
           "tc-day (interval 07:00-17:00 UTC) satisfied"
-        ]
+        ],
+        "totalDuration_s": 809
       },
       "geometry": {
         "type": "LineString",
@@ -452,7 +372,6 @@
         "timestamp": "2026-10-12T08:00:00Z",
         "actions": [
           {
-            "actionType": "vehicle.takeoff",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 2,
             "params": {
@@ -461,7 +380,8 @@
                 "reference": "home"
               },
               "climbRate": 3.0
-            }
+            },
+            "actionType": "vehicle.takeoff"
           }
         ]
       },
@@ -479,34 +399,34 @@
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Ingress",
         "previousEnd": "start",
         "length": 515,
         "duration_s": 52,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:01:52Z",
         "segment_actions": [
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 3,
             "params": {
               "speed": 12,
               "speedType": "ground"
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "actions": [
           {
-            "actionType": "gimbal.point",
             "target": "https://example.org/api/systems/gimbal-01",
             "sequence": 1,
             "params": {
               "pitch": -30,
               "frame": "vehicle"
-            }
+            },
+            "actionType": "gimbal.point"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:01:52Z",
+        "title": "Ingress"
       },
       "geometry": {
         "type": "Point",
@@ -522,43 +442,40 @@
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Tower T1",
         "previousEnd": "seg1",
         "waypointId": "tower-t1",
         "length": 411,
         "duration_s": 68,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:03:00Z",
         "segment_actions": [
           {
-            "actionType": "camera.set-trigger-distance",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 4,
             "params": {
               "distance": 20
-            }
+            },
+            "actionType": "camera.set-trigger-distance"
           },
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 4,
             "params": {
               "speed": 6
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "actions": [
           {
-            "actionType": "vehicle.set-heading",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 5,
             "params": {
               "heading": 90,
               "reference": "true-north"
-            }
+            },
+            "actionType": "vehicle.set-heading"
           },
           {
-            "actionType": "gimbal.point-at",
             "target": "https://example.org/api/systems/gimbal-01",
             "sequence": 2,
             "params": {
@@ -568,26 +485,29 @@
                 "vertical": 205,
                 "verticalReference": "msl"
               }
-            }
+            },
+            "actionType": "gimbal.point-at"
           },
           {
-            "actionType": "camera.set-zoom",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 5,
             "params": {
               "zoomLevel": 3
-            }
+            },
+            "actionType": "camera.set-zoom"
           },
           {
-            "actionType": "camera.capture-image",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 6,
             "params": {
               "count": 5,
               "interval": 2
-            }
+            },
+            "actionType": "camera.capture-image"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:03:00Z",
+        "title": "Tower T1"
       },
       "geometry": {
         "type": "Point",
@@ -603,25 +523,22 @@
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Tower T2",
         "previousEnd": "seg2",
         "waypointId": "tower-t2",
         "length": 613,
         "duration_s": 77,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:04:57Z",
         "actions": [
           {
-            "actionType": "camera.start-video",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 7,
             "params": {
               "maxDuration": 180,
               "label": "T2-orbit"
-            }
+            },
+            "actionType": "camera.start-video"
           },
           {
-            "actionType": "vehicle.orbit",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 6,
             "params": {
@@ -630,15 +547,18 @@
               "turns": 1.5,
               "facing": "center",
               "speed": 4
-            }
+            },
+            "actionType": "vehicle.orbit"
           },
           {
-            "actionType": "camera.stop-video",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 8,
-            "params": {}
+            "params": {},
+            "actionType": "camera.stop-video"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:04:57Z",
+        "title": "Tower T2"
       },
       "geometry": {
         "type": "Point",
@@ -654,52 +574,52 @@
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Sensor drop site",
         "previousEnd": "seg3",
         "waypointId": "sensor-site",
         "length": 472,
         "duration_s": 59,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:08:26Z",
         "actions": [
           {
-            "actionType": "vehicle.hold-position",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 7,
             "params": {
               "duration": 5
-            }
+            },
+            "actionType": "vehicle.hold-position"
           },
           {
-            "actionType": "payload.winch",
             "target": "https://example.org/api/systems/winch-01",
             "sequence": 1,
             "params": {
               "action": "deploy",
               "length": 15,
               "rate": 1.0
-            }
+            },
+            "actionType": "payload.winch"
           },
           {
-            "actionType": "payload.release",
             "target": "https://example.org/api/systems/winch-01",
             "sequence": 2,
             "params": {
               "slot": 0,
               "mode": "deploy"
-            }
+            },
+            "actionType": "payload.release"
           },
           {
-            "actionType": "payload.winch",
             "target": "https://example.org/api/systems/winch-01",
             "sequence": 3,
             "params": {
               "action": "retract",
               "length": 15,
               "rate": 1.5
-            }
+            },
+            "actionType": "payload.winch"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:08:26Z",
+        "title": "Sensor drop site"
       },
       "geometry": {
         "type": "Point",
@@ -715,26 +635,23 @@
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Return corridor",
         "previousEnd": "seg4",
         "length": 695,
         "duration_s": 50,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:10:46Z",
         "segment_actions": [
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 8,
             "params": {
               "speed": 14,
               "speedType": "ground"
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "actions": [
           {
-            "actionType": "vehicle.set-vertical-position",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 9,
             "params": {
@@ -743,9 +660,12 @@
                 "reference": "home"
               },
               "rate": 2.0
-            }
+            },
+            "actionType": "vehicle.set-vertical-position"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:10:46Z",
+        "title": "Return corridor"
       },
       "geometry": {
         "type": "Point",
@@ -761,13 +681,13 @@
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Pad A",
         "previousEnd": "seg5",
         "waypointId": "end",
         "length": 1307,
         "duration_s": 163,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:13:29Z"
+        "timestamp": "2026-10-12T08:13:29Z",
+        "title": "Pad A"
       },
       "geometry": {
         "type": "Point",
@@ -787,14 +707,14 @@
         "timestamp": "2026-10-12T08:13:29Z",
         "actions": [
           {
-            "actionType": "vehicle.land",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 10,
             "params": {
               "precision": "opportunistic",
               "descentRate": 1.0,
               "disarmAfter": true
-            }
+            },
+            "actionType": "vehicle.land"
           }
         ]
       },

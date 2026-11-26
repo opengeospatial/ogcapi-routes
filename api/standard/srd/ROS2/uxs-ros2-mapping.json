@@ -2,7 +2,7 @@
   "binding": "ros2",
   "title": "ROS 2 binding for the Common Command Registry",
   "registry": "Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)",
-  "registryVersion": "0.1.0",
+  "registryVersion": "0.1.0-draft",
   "baseUri": "http://www.opengis.net/def/uxs-command/",
   "source": {
     "document": "SRD__ROS_2_Binding_for_the_Common_Command_Registry.md",

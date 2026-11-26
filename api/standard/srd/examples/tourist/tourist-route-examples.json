@@ -6,134 +6,45 @@
       "description": "A multimodal city tour: e-scooter to the centre, a walk with two visits, then an e-bike ride along the river and up to a viewpoint.",
       "vehicleClass": null,
       "routeDefinition": {
-        "start": {
-          "id": "start",
-          "title": "Porta Nuova station",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.6784,
-              45.0624
-            ]
-          }
-        },
-        "intermediateWaypoints": [
-          {
-            "id": "palazzo-reale",
-            "title": "Palazzo Reale",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6866,
-                45.0711
-              ]
-            },
-            "constraint": {
-              "id": "tc-reale",
-              "title": "Opening time",
-              "type": "noEarlierThan",
-              "timePoint": "2026-10-17T07:00:00Z",
-              "delta": 0
-            }
-          },
-          {
-            "id": "mole-antonelliana",
-            "title": "Mole Antonelliana",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6933,
-                45.0689
-              ]
-            }
-          },
-          {
-            "id": "valentino-park",
-            "title": "Parco del Valentino",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.687,
-                45.053
-              ]
-            }
-          },
-          {
-            "id": "monte-cappuccini",
-            "title": "Monte dei Cappuccini",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6993,
-                45.0626
-              ]
-            }
-          }
-        ],
-        "end": {
-          "id": "end",
-          "title": "Gran Madre bike station",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.6975,
-              45.064
-            ]
-          }
-        },
-        "mode": {
-          "id": "micromobility-multimodal",
-          "title": "Micromobility and walking",
-          "domain": [
-            "ground"
-          ],
-          "supportedRegions": [
-            {
-              "id": "reg-turin",
-              "title": "Turin centre",
-              "bbox": [
-                7.64,
-                45.03,
-                7.72,
-                45.09
-              ]
-            }
-          ]
-        },
-        "spatialConstraints": [
-          {
-            "id": "sc-area",
-            "title": "Tour area",
-            "type": "doNotLeave",
-            "area": {
-              "type": "Polygon",
+        "inputs": {
+          "name": "Turin highlights (e-scooter, walk, e-bike)",
+          "waypoints": {
+            "value": {
+              "type": "MultiPoint",
               "coordinates": [
                 [
-                  [
-                    7.64,
-                    45.04
-                  ],
-                  [
-                    7.72,
-                    45.04
-                  ],
-                  [
-                    7.72,
-                    45.09
-                  ],
-                  [
-                    7.64,
-                    45.09
-                  ],
-                  [
-                    7.64,
-                    45.04
-                  ]
+                  7.6784,
+                  45.0624
+                ],
+                [
+                  7.6866,
+                  45.0711
+                ],
+                [
+                  7.6933,
+                  45.0689
+                ],
+                [
+                  7.687,
+                  45.053
+                ],
+                [
+                  7.6993,
+                  45.0626
+                ],
+                [
+                  7.6975,
+                  45.064
                 ]
               ]
             }
+          },
+          "mode": {
+            "value": {
+              "id": "micromobility-multimodal"
+            }
           }
-        ]
+        }
       },
       "route": {
         "type": "FeatureCollection",
@@ -141,162 +52,73 @@
         "title": "Turin highlights: e-scooter, walk and e-bike",
         "description": "A multimodal city tour: e-scooter to the centre, a walk with two visits, then an e-bike ride along the river and up to a viewpoint.",
         "describedBy": {
-          "start": {
-            "id": "start",
-            "title": "Porta Nuova station",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6784,
-                45.0624
-              ]
-            }
-          },
-          "intermediateWaypoints": [
-            {
-              "id": "palazzo-reale",
-              "title": "Palazzo Reale",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.6866,
-                  45.0711
-                ]
-              },
-              "constraint": {
-                "id": "tc-reale",
-                "title": "Opening time",
-                "type": "noEarlierThan",
-                "timePoint": "2026-10-17T07:00:00Z",
-                "delta": 0
-              }
-            },
-            {
-              "id": "mole-antonelliana",
-              "title": "Mole Antonelliana",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.6933,
-                  45.0689
-                ]
-              }
-            },
-            {
-              "id": "valentino-park",
-              "title": "Parco del Valentino",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.687,
-                  45.053
-                ]
-              }
-            },
-            {
-              "id": "monte-cappuccini",
-              "title": "Monte dei Cappuccini",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.6993,
-                  45.0626
-                ]
-              }
-            }
-          ],
-          "end": {
-            "id": "end",
-            "title": "Gran Madre bike station",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6975,
-                45.064
-              ]
-            }
-          },
-          "mode": {
-            "id": "micromobility-multimodal",
-            "title": "Micromobility and walking",
-            "domain": [
-              "ground"
-            ],
-            "supportedRegions": [
-              {
-                "id": "reg-turin",
-                "title": "Turin centre",
-                "bbox": [
-                  7.64,
-                  45.03,
-                  7.72,
-                  45.09
-                ]
-              }
-            ]
-          },
-          "spatialConstraints": [
-            {
-              "id": "sc-area",
-              "title": "Tour area",
-              "type": "doNotLeave",
-              "area": {
-                "type": "Polygon",
+          "inputs": {
+            "name": "Turin highlights (e-scooter, walk, e-bike)",
+            "waypoints": {
+              "value": {
+                "type": "MultiPoint",
                 "coordinates": [
                   [
-                    [
-                      7.64,
-                      45.04
-                    ],
-                    [
-                      7.72,
-                      45.04
-                    ],
-                    [
-                      7.72,
-                      45.09
-                    ],
-                    [
-                      7.64,
-                      45.09
-                    ],
-                    [
-                      7.64,
-                      45.04
-                    ]
+                    7.6784,
+                    45.0624
+                  ],
+                  [
+                    7.6866,
+                    45.0711
+                  ],
+                  [
+                    7.6933,
+                    45.0689
+                  ],
+                  [
+                    7.687,
+                    45.053
+                  ],
+                  [
+                    7.6993,
+                    45.0626
+                  ],
+                  [
+                    7.6975,
+                    45.064
                   ]
                 ]
               }
+            },
+            "mode": {
+              "value": {
+                "id": "micromobility-multimodal"
+              }
             }
-          ]
+          }
         },
         "actions": [
           {
-            "actionType": "tour.safety-briefing",
             "target": "https://example.org/api/travellers/tr-4821",
             "sequence": 1,
             "params": {
               "topic": "helmet",
               "severity": "info"
-            }
+            },
+            "actionType": "tour.safety-briefing"
           },
           {
-            "actionType": "tour.weather-alert",
             "target": "https://example.org/api/travellers/tr-4821",
             "sequence": 2,
             "params": {
               "condition": "heat",
               "advice": "slow-down"
-            }
+            },
+            "actionType": "tour.weather-alert"
           },
           {
-            "actionType": "tour.set-speed-limit",
             "target": "https://example.org/api/travellers/tr-4821",
             "sequence": 3,
             "params": {
               "maxSpeed": 25,
               "reason": "safety"
-            }
+            },
+            "actionType": "tour.set-speed-limit"
           }
         ],
         "travelModes": [
@@ -346,33 +168,33 @@
           {
             "condition": "no-vehicle-available",
             "action": {
-              "actionType": "tour.find-vehicle",
               "target": "https://example.org/api/travellers/tr-4821",
               "params": {
                 "vehicleType": "any",
                 "searchRadius": 500
-              }
+              },
+              "actionType": "tour.find-vehicle"
             }
           },
           {
             "condition": "battery-low",
             "action": {
-              "actionType": "tour.charge-vehicle",
               "target": "https://example.org/api/travellers/tr-4821",
               "params": {
                 "targetLevel": 60
-              }
+              },
+              "actionType": "tour.charge-vehicle"
             }
           },
           {
             "condition": "rain",
             "action": {
-              "actionType": "tour.weather-alert",
               "target": "https://example.org/api/travellers/tr-4821",
               "params": {
                 "condition": "rain",
                 "advice": "shelter"
-              }
+              },
+              "actionType": "tour.weather-alert"
             }
           }
         ],
@@ -384,13 +206,11 @@
               "featureType": "overview",
               "length": 5433,
               "duration_s": 2130,
-              "totalDuration_s": 11130,
               "processingTime": "2026-10-17T06:30:00Z",
               "constraints": [
-                "sc-area (doNotLeave) respected",
-                "tc-reale (noEarlierThan 07:00 UTC) satisfied",
-                "no stairs"
-              ]
+                "tc-reale (noEarlierThan 07:00 UTC) satisfied"
+              ],
+              "totalDuration_s": 11130
             },
             "geometry": {
               "type": "LineString",
@@ -537,7 +357,6 @@
               "timestamp": "2026-10-17T07:30:00Z",
               "actions": [
                 {
-                  "actionType": "tour.find-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 4,
                   "params": {
@@ -545,15 +364,16 @@
                     "searchRadius": 200,
                     "minBattery": 50,
                     "reserveFor": 600
-                  }
+                  },
+                  "actionType": "tour.find-vehicle"
                 },
                 {
-                  "actionType": "tour.unlock-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 5,
                   "params": {
                     "method": "app"
-                  }
+                  },
+                  "actionType": "tour.unlock-vehicle"
                 }
               ]
             },
@@ -571,53 +391,53 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Piazza San Carlo",
               "previousEnd": "start",
               "length": 714,
               "duration_s": 159,
               "travelMode": "escooter",
-              "timestamp": "2026-10-17T07:36:39Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-speed-limit",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 6,
                   "params": {
                     "maxSpeed": 20,
                     "reason": "operator-zone"
-                  }
+                  },
+                  "actionType": "tour.set-speed-limit"
                 },
                 {
-                  "actionType": "tour.avoid-zone",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 7,
                   "params": {
                     "zoneType": "no-parking",
                     "zoneId": "ZTL-A"
-                  }
+                  },
+                  "actionType": "tour.avoid-zone"
                 },
                 {
-                  "actionType": "tour.safety-briefing",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 8,
                   "params": {
                     "topic": "traffic",
                     "severity": "info"
-                  }
+                  },
+                  "actionType": "tour.safety-briefing"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.switch-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 9,
                   "params": {
                     "from": "escooter",
                     "to": "walk",
                     "transferTime": 90
-                  }
+                  },
+                  "actionType": "tour.switch-vehicle"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T07:36:39Z",
+              "title": "Piazza San Carlo"
             },
             "geometry": {
               "type": "Point",
@@ -633,13 +453,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Palazzo Reale",
               "previousEnd": "seg1",
               "waypointId": "palazzo-reale",
               "length": 456,
               "duration_s": 351,
               "travelMode": "walk",
-              "timestamp": "2026-10-17T07:44:30Z",
               "constraint": {
                 "id": "tc-reale",
                 "title": "Opening time",
@@ -649,29 +467,28 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "tour.audio-guide",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 10,
                   "params": {
                     "contentId": "turin-baroque-walk-en",
                     "language": "en",
                     "trigger": "on-approach"
-                  }
+                  },
+                  "actionType": "tour.audio-guide"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.buy-ticket",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 11,
                   "params": {
                     "ticketType": "entry",
                     "poiId": "palazzo-reale",
                     "quantity": 2
-                  }
+                  },
+                  "actionType": "tour.buy-ticket"
                 },
                 {
-                  "actionType": "tour.visit-poi",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 12,
                   "params": {
@@ -679,9 +496,12 @@
                     "kind": "monument",
                     "dwell": 3600,
                     "lockVehicle": false
-                  }
+                  },
+                  "actionType": "tour.visit-poi"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T07:44:30Z",
+              "title": "Palazzo Reale"
             },
             "geometry": {
               "type": "Point",
@@ -697,26 +517,23 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Mole Antonelliana",
               "previousEnd": "seg2",
               "waypointId": "mole-antonelliana",
               "length": 581,
               "duration_s": 447,
               "travelMode": "walk",
-              "timestamp": "2026-10-17T08:51:57Z",
               "actions": [
                 {
-                  "actionType": "tour.buy-ticket",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 13,
                   "params": {
                     "ticketType": "entry",
                     "poiId": "mole-antonelliana",
                     "quantity": 2
-                  }
+                  },
+                  "actionType": "tour.buy-ticket"
                 },
                 {
-                  "actionType": "tour.visit-poi",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 14,
                   "params": {
@@ -724,9 +541,12 @@
                     "kind": "museum",
                     "dwell": 2700,
                     "lockVehicle": false
-                  }
+                  },
+                  "actionType": "tour.visit-poi"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T08:51:57Z",
+              "title": "Mole Antonelliana"
             },
             "geometry": {
               "type": "Point",
@@ -742,38 +562,38 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Piazza Vittorio bike station",
               "previousEnd": "seg3",
               "length": 540,
               "duration_s": 415,
               "travelMode": "walk",
-              "timestamp": "2026-10-17T09:43:52Z",
               "actions": [
                 {
-                  "actionType": "tour.find-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 15,
                   "params": {
                     "vehicleType": "ebike",
                     "minBattery": 70
-                  }
+                  },
+                  "actionType": "tour.find-vehicle"
                 },
                 {
-                  "actionType": "tour.unlock-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 16,
-                  "params": {}
+                  "params": {},
+                  "actionType": "tour.unlock-vehicle"
                 },
                 {
-                  "actionType": "tour.set-assist-level",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 17,
                   "params": {
                     "level": "tour",
                     "maxSpeed": 25
-                  }
+                  },
+                  "actionType": "tour.set-assist-level"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T09:43:52Z",
+              "title": "Piazza Vittorio bike station"
             },
             "geometry": {
               "type": "Point",
@@ -789,70 +609,70 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Parco del Valentino",
               "previousEnd": "seg4",
               "waypointId": "valentino-park",
               "length": 1472,
               "duration_s": 294,
               "travelMode": "ebike",
-              "timestamp": "2026-10-17T09:52:46Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-speed-limit",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 18,
                   "params": {
                     "maxSpeed": 15,
                     "reason": "shared-path"
-                  }
+                  },
+                  "actionType": "tour.set-speed-limit"
                 },
                 {
-                  "actionType": "tour.safety-briefing",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 19,
                   "params": {
                     "topic": "shared-path"
-                  }
+                  },
+                  "actionType": "tour.safety-briefing"
                 },
                 {
-                  "actionType": "tour.audio-guide",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 20,
                   "params": {
                     "contentId": "po-river-walk-en",
                     "trigger": "on-approach"
-                  }
+                  },
+                  "actionType": "tour.audio-guide"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.lock-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 21,
                   "params": {
                     "lockType": "cable"
-                  }
+                  },
+                  "actionType": "tour.lock-vehicle"
                 },
                 {
-                  "actionType": "tour.rest-stop",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 22,
                   "params": {
                     "placeId": "cafe-valentino",
                     "kind": "coffee",
                     "dwell": 1200
-                  }
+                  },
+                  "actionType": "tour.rest-stop"
                 },
                 {
-                  "actionType": "tour.check-battery",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 23,
                   "params": {
                     "requiredRange": 6000,
                     "reserve": 15
-                  }
+                  },
+                  "actionType": "tour.check-battery"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T09:52:46Z",
+              "title": "Parco del Valentino"
             },
             "geometry": {
               "type": "Point",
@@ -868,34 +688,34 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Monte dei Cappuccini",
               "previousEnd": "seg5",
               "waypointId": "monte-cappuccini",
               "length": 1459,
               "duration_s": 417,
               "travelMode": "ebike",
-              "timestamp": "2026-10-17T10:24:43Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-assist-level",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 24,
                   "params": {
                     "level": "sport"
-                  }
+                  },
+                  "actionType": "tour.set-assist-level"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.photo-stop",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 25,
                   "params": {
                     "viewDirection": 270,
                     "dwell": 600
-                  }
+                  },
+                  "actionType": "tour.photo-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T10:24:43Z",
+              "title": "Monte dei Cappuccini"
             },
             "geometry": {
               "type": "Point",
@@ -911,32 +731,32 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Gran Madre bike station",
               "previousEnd": "seg6",
               "waypointId": "end",
               "length": 211,
               "duration_s": 47,
               "travelMode": "ebike",
-              "timestamp": "2026-10-17T10:35:30Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-assist-level",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 26,
                   "params": {
                     "level": "eco"
-                  }
+                  },
+                  "actionType": "tour.set-assist-level"
                 },
                 {
-                  "actionType": "tour.safety-briefing",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 27,
                   "params": {
                     "topic": "steep-descent",
                     "severity": "warning"
-                  }
+                  },
+                  "actionType": "tour.safety-briefing"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-17T10:35:30Z",
+              "title": "Gran Madre bike station"
             },
             "geometry": {
               "type": "Point",
@@ -956,14 +776,14 @@
               "timestamp": "2026-10-17T10:35:30Z",
               "actions": [
                 {
-                  "actionType": "tour.return-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 28,
                   "params": {
                     "stationId": "ST-GM-02",
                     "parkingZone": "station",
                     "photoProof": false
-                  }
+                  },
+                  "actionType": "tour.return-vehicle"
                 }
               ]
             },
@@ -984,106 +804,37 @@
       "description": "An e-bike ride with a ferry crossing, a visit with a locked bike, a viewpoint and a range check.",
       "vehicleClass": null,
       "routeDefinition": {
-        "start": {
-          "id": "start",
-          "title": "Como lakefront",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              9.0852,
-              45.8081
-            ]
-          }
-        },
-        "intermediateWaypoints": [
-          {
-            "id": "villa-melzi",
-            "title": "Villa Melzi Gardens",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                9.2606,
-                45.9835
-              ]
-            }
-          },
-          {
-            "id": "punta-spartivento",
-            "title": "Punta Spartivento",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                9.2608,
-                45.9915
-              ]
-            }
-          }
-        ],
-        "end": {
-          "id": "end",
-          "title": "Bellagio e-bike station",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              9.2623,
-              45.9857
-            ]
-          }
-        },
-        "mode": {
-          "id": "micromobility-ferry",
-          "title": "Micromobility with ferry",
-          "domain": [
-            "ground",
-            "maritime"
-          ],
-          "supportedRegions": [
-            {
-              "id": "reg-como",
-              "title": "Lake Como",
-              "bbox": [
-                9.05,
-                45.78,
-                9.3,
-                46.02
-              ]
-            }
-          ]
-        },
-        "spatialConstraints": [
-          {
-            "id": "sc-lake",
-            "title": "Tour area",
-            "type": "doNotLeave",
-            "area": {
-              "type": "Polygon",
+        "inputs": {
+          "name": "Lake Como e-bike with ferry",
+          "waypoints": {
+            "value": {
+              "type": "MultiPoint",
               "coordinates": [
                 [
-                  [
-                    9.05,
-                    45.78
-                  ],
-                  [
-                    9.3,
-                    45.78
-                  ],
-                  [
-                    9.3,
-                    46.02
-                  ],
-                  [
-                    9.05,
-                    46.02
-                  ],
-                  [
-                    9.05,
-                    45.78
-                  ]
+                  9.0852,
+                  45.8081
+                ],
+                [
+                  9.2606,
+                  45.9835
+                ],
+                [
+                  9.2608,
+                  45.9915
+                ],
+                [
+                  9.2623,
+                  45.9857
                 ]
               ]
             }
+          },
+          "mode": {
+            "value": {
+              "id": "micromobility-ferry"
+            }
           }
-        ]
+        }
       },
       "route": {
         "type": "FeatureCollection",
@@ -1091,133 +842,64 @@
         "title": "Lake Como e-bike with ferry",
         "description": "An e-bike ride with a ferry crossing, a visit with a locked bike, a viewpoint and a range check.",
         "describedBy": {
-          "start": {
-            "id": "start",
-            "title": "Como lakefront",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                9.0852,
-                45.8081
-              ]
-            }
-          },
-          "intermediateWaypoints": [
-            {
-              "id": "villa-melzi",
-              "title": "Villa Melzi Gardens",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  9.2606,
-                  45.9835
-                ]
-              }
-            },
-            {
-              "id": "punta-spartivento",
-              "title": "Punta Spartivento",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  9.2608,
-                  45.9915
-                ]
-              }
-            }
-          ],
-          "end": {
-            "id": "end",
-            "title": "Bellagio e-bike station",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                9.2623,
-                45.9857
-              ]
-            }
-          },
-          "mode": {
-            "id": "micromobility-ferry",
-            "title": "Micromobility with ferry",
-            "domain": [
-              "ground",
-              "maritime"
-            ],
-            "supportedRegions": [
-              {
-                "id": "reg-como",
-                "title": "Lake Como",
-                "bbox": [
-                  9.05,
-                  45.78,
-                  9.3,
-                  46.02
-                ]
-              }
-            ]
-          },
-          "spatialConstraints": [
-            {
-              "id": "sc-lake",
-              "title": "Tour area",
-              "type": "doNotLeave",
-              "area": {
-                "type": "Polygon",
+          "inputs": {
+            "name": "Lake Como e-bike with ferry",
+            "waypoints": {
+              "value": {
+                "type": "MultiPoint",
                 "coordinates": [
                   [
-                    [
-                      9.05,
-                      45.78
-                    ],
-                    [
-                      9.3,
-                      45.78
-                    ],
-                    [
-                      9.3,
-                      46.02
-                    ],
-                    [
-                      9.05,
-                      46.02
-                    ],
-                    [
-                      9.05,
-                      45.78
-                    ]
+                    9.0852,
+                    45.8081
+                  ],
+                  [
+                    9.2606,
+                    45.9835
+                  ],
+                  [
+                    9.2608,
+                    45.9915
+                  ],
+                  [
+                    9.2623,
+                    45.9857
                   ]
                 ]
               }
+            },
+            "mode": {
+              "value": {
+                "id": "micromobility-ferry"
+              }
             }
-          ]
+          }
         },
         "actions": [
           {
-            "actionType": "tour.safety-briefing",
             "target": "https://example.org/api/travellers/tr-4821",
             "sequence": 1,
             "params": {
               "topic": "helmet",
               "severity": "info"
-            }
+            },
+            "actionType": "tour.safety-briefing"
           },
           {
-            "actionType": "tour.weather-alert",
             "target": "https://example.org/api/travellers/tr-4821",
             "sequence": 2,
             "params": {
               "condition": "wind",
               "advice": "slow-down"
-            }
+            },
+            "actionType": "tour.weather-alert"
           },
           {
-            "actionType": "tour.set-assist-level",
             "target": "https://example.org/api/travellers/tr-4821",
             "sequence": 3,
             "params": {
               "level": "eco"
-            }
+            },
+            "actionType": "tour.set-assist-level"
           }
         ],
         "travelModes": [
@@ -1266,12 +948,12 @@
           {
             "condition": "ferry-cancelled",
             "action": {
-              "actionType": "tour.weather-alert",
               "target": "https://example.org/api/travellers/tr-4821",
               "params": {
                 "condition": "storm",
                 "advice": "reroute"
-              }
+              },
+              "actionType": "tour.weather-alert"
             }
           }
         ],
@@ -1283,12 +965,9 @@
               "featureType": "overview",
               "length": 27240,
               "duration_s": 4906,
-              "totalDuration_s": 10966,
               "processingTime": "2026-10-18T07:00:00Z",
-              "constraints": [
-                "sc-lake (doNotLeave) respected",
-                "ferry crossing added by the server"
-              ]
+              "constraints": [],
+              "totalDuration_s": 10966
             },
             "geometry": {
               "type": "LineString",
@@ -1405,19 +1084,19 @@
               "timestamp": "2026-10-18T08:00:00Z",
               "actions": [
                 {
-                  "actionType": "tour.find-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 4,
                   "params": {
                     "vehicleType": "ebike",
                     "minBattery": 80
-                  }
+                  },
+                  "actionType": "tour.find-vehicle"
                 },
                 {
-                  "actionType": "tour.unlock-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 5,
-                  "params": {}
+                  "params": {},
+                  "actionType": "tour.unlock-vehicle"
                 }
               ]
             },
@@ -1435,51 +1114,51 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Cernobbio ferry pier",
               "previousEnd": "start",
               "length": 3843,
               "duration_s": 854,
               "travelMode": "ebike",
-              "timestamp": "2026-10-18T08:18:14Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-speed-limit",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 6,
                   "params": {
                     "maxSpeed": 15,
                     "reason": "shared-path"
-                  }
+                  },
+                  "actionType": "tour.set-speed-limit"
                 },
                 {
-                  "actionType": "tour.avoid-zone",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 7,
                   "params": {
                     "zoneType": "no-riding",
                     "zoneId": "promenade-como"
-                  }
+                  },
+                  "actionType": "tour.avoid-zone"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.dismount",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 8,
                   "params": {
                     "reason": "ferry"
-                  }
+                  },
+                  "actionType": "tour.dismount"
                 },
                 {
-                  "actionType": "tour.buy-ticket",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 9,
                   "params": {
                     "ticketType": "transit",
                     "quantity": 2
-                  }
+                  },
+                  "actionType": "tour.buy-ticket"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-18T08:18:14Z",
+              "title": "Cernobbio ferry pier"
             },
             "geometry": {
               "type": "Point",
@@ -1495,31 +1174,31 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Bellagio pier",
               "previousEnd": "seg1",
               "length": 21499,
               "duration_s": 3583,
               "travelMode": "ferry",
-              "timestamp": "2026-10-18T09:32:57Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.safety-briefing",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 10,
                   "params": {
                     "topic": "weather",
                     "severity": "info"
-                  }
+                  },
+                  "actionType": "tour.safety-briefing"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.remount",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 11,
-                  "params": {}
+                  "params": {},
+                  "actionType": "tour.remount"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-18T09:32:57Z",
+              "title": "Bellagio pier"
             },
             "geometry": {
               "type": "Point",
@@ -1535,36 +1214,33 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Villa Melzi Gardens",
               "previousEnd": "seg2",
               "waypointId": "villa-melzi",
               "length": 351,
               "duration_s": 100,
               "travelMode": "ebike",
-              "timestamp": "2026-10-18T09:36:37Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-speed-limit",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 12,
                   "params": {
                     "maxSpeed": 10,
                     "reason": "pedestrian-zone"
-                  }
+                  },
+                  "actionType": "tour.set-speed-limit"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.audio-guide",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 13,
                   "params": {
                     "contentId": "bellagio-old-town-en",
                     "trigger": "on-arrival"
-                  }
+                  },
+                  "actionType": "tour.audio-guide"
                 },
                 {
-                  "actionType": "tour.visit-poi",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 14,
                   "params": {
@@ -1572,9 +1248,12 @@
                     "kind": "park",
                     "dwell": 3600,
                     "lockVehicle": true
-                  }
+                  },
+                  "actionType": "tour.visit-poi"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-18T09:36:37Z",
+              "title": "Villa Melzi Gardens"
             },
             "geometry": {
               "type": "Point",
@@ -1590,43 +1269,43 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Punta Spartivento",
               "previousEnd": "seg3",
               "waypointId": "punta-spartivento",
               "length": 891,
               "duration_s": 223,
               "travelMode": "ebike",
-              "timestamp": "2026-10-18T10:45:20Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.set-assist-level",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 15,
                   "params": {
                     "level": "sport"
-                  }
+                  },
+                  "actionType": "tour.set-assist-level"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "tour.photo-stop",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 16,
                   "params": {
                     "viewDirection": 0,
                     "dwell": 600
-                  }
+                  },
+                  "actionType": "tour.photo-stop"
                 },
                 {
-                  "actionType": "tour.check-battery",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 17,
                   "params": {
                     "requiredRange": 1200,
                     "reserve": 20
-                  }
+                  },
+                  "actionType": "tour.check-battery"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-18T10:45:20Z",
+              "title": "Punta Spartivento"
             },
             "geometry": {
               "type": "Point",
@@ -1642,23 +1321,23 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Bellagio e-bike station",
               "previousEnd": "seg4",
               "waypointId": "end",
               "length": 656,
               "duration_s": 146,
               "travelMode": "ebike",
-              "timestamp": "2026-10-18T11:02:46Z",
               "segment_actions": [
                 {
-                  "actionType": "tour.safety-briefing",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 18,
                   "params": {
                     "topic": "shared-path"
-                  }
+                  },
+                  "actionType": "tour.safety-briefing"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-18T11:02:46Z",
+              "title": "Bellagio e-bike station"
             },
             "geometry": {
               "type": "Point",
@@ -1678,13 +1357,13 @@
               "timestamp": "2026-10-18T11:02:46Z",
               "actions": [
                 {
-                  "actionType": "tour.return-vehicle",
                   "target": "https://example.org/api/travellers/tr-4821",
                   "sequence": 19,
                   "params": {
                     "stationId": "ST-BEL-01",
                     "parkingZone": "station"
-                  }
+                  },
+                  "actionType": "tour.return-vehicle"
                 }
               ]
             },

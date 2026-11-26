@@ -2,7 +2,7 @@
   "binding": "mavlink",
   "title": "MAVLink binding for the Common Command Registry",
   "registry": "Common Command Registry for Uncrewed Systems (UAV, UGV, USV, UUV)",
-  "registryVersion": "0.1.0",
+  "registryVersion": "0.1.0-draft",
   "baseUri": "http://www.opengis.net/def/uxs-command/",
   "source": {
     "document": "SRD__MAVLink_Binding_Profile_for_OGC_API___Routes_Actions.md",
@@ -65,7 +65,11 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Navigate to waypoint."
+      "notes": "Navigate to waypoint.",
+      "registryCommand": [
+        "vehicle.follow-path",
+        "vehicle.goto"
+      ]
     },
     {
       "id": "mavlink.nav-loiter-unlim",
@@ -99,7 +103,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Loiter around this waypoint an unlimited amount of time"
+      "notes": "Loiter around this waypoint an unlimited amount of time",
+      "registryCommand": "vehicle.hold-position"
     },
     {
       "id": "mavlink.nav-loiter-turns",
@@ -143,7 +148,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Loiter around this waypoint for X turns"
+      "notes": "Loiter around this waypoint for X turns",
+      "registryCommand": "vehicle.orbit"
     },
     {
       "id": "mavlink.nav-loiter-time",
@@ -188,7 +194,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Loiter at the specified latitude, longitude and altitude for a certain amount of time."
+      "notes": "Loiter at the specified latitude, longitude and altitude for a certain amount of time.",
+      "registryCommand": "vehicle.hold-position"
     },
     {
       "id": "mavlink.nav-return-to-launch",
@@ -208,7 +215,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Return to launch location"
+      "notes": "Return to launch location",
+      "registryCommand": "vehicle.return-to-home"
     },
     {
       "id": "mavlink.nav-land",
@@ -248,7 +256,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Land at location."
+      "notes": "Land at location.",
+      "registryCommand": "vehicle.land"
     },
     {
       "id": "mavlink.nav-takeoff",
@@ -288,7 +297,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Takeoff from ground / hand."
+      "notes": "Takeoff from ground / hand.",
+      "registryCommand": "vehicle.takeoff"
     },
     {
       "id": "mavlink.nav-land-local",
@@ -605,7 +615,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Start orbiting on the circumference of a circle defined by the parameters."
+      "notes": "Start orbiting on the circumference of a circle defined by the parameters.",
+      "registryCommand": "vehicle.orbit"
     },
     {
       "id": "mavlink.do-figure-eight",
@@ -780,7 +791,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Navigate to waypoint using a spline path."
+      "notes": "Navigate to waypoint using a spline path.",
+      "registryCommand": "vehicle.follow-path"
     },
     {
       "id": "mavlink.nav-vtol-takeoff",
@@ -813,7 +825,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Takeoff from ground using VTOL mode, and transition to forward flight with specified heading."
+      "notes": "Takeoff from ground using VTOL mode, and transition to forward flight with specified heading.",
+      "registryCommand": "vehicle.takeoff"
     },
     {
       "id": "mavlink.nav-vtol-land",
@@ -853,7 +866,11 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Land using VTOL mode"
+      "notes": "Land using VTOL mode",
+      "registryCommand": [
+        "vehicle.land",
+        "vehicle.return-to-home"
+      ]
     },
     {
       "id": "mavlink.nav-guided-enable",
@@ -925,7 +942,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Delay the next navigation command a number of seconds or until a specified time"
+      "notes": "Delay the next navigation command a number of seconds or until a specified time",
+      "registryCommand": "mission.wait"
     },
     {
       "id": "mavlink.nav-payload-place",
@@ -998,7 +1016,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Delay mission state machine."
+      "notes": "Delay mission state machine.",
+      "registryCommand": "mission.wait"
     },
     {
       "id": "mavlink.condition-change-alt",
@@ -1106,7 +1125,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Reach a certain target angle."
+      "notes": "Reach a certain target angle.",
+      "registryCommand": "vehicle.set-heading"
     },
     {
       "id": "mavlink.condition-last",
@@ -1163,7 +1183,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Set system mode."
+      "notes": "Set system mode.",
+      "registryCommand": "vehicle.set-mode"
     },
     {
       "id": "mavlink.do-jump",
@@ -1236,7 +1257,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Change speed and/or throttle set points."
+      "notes": "Change speed and/or throttle set points.",
+      "registryCommand": "vehicle.set-speed"
     },
     {
       "id": "mavlink.do-set-home",
@@ -1289,7 +1311,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Sets the home position to either to the current position or a specified position."
+      "notes": "Sets the home position to either to the current position or a specified position.",
+      "registryCommand": "vehicle.set-home"
     },
     {
       "id": "mavlink.do-set-parameter",
@@ -1354,7 +1377,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Set a relay to a condition."
+      "notes": "Set a relay to a condition.",
+      "registryCommand": "payload.set-switch"
     },
     {
       "id": "mavlink.do-repeat-relay",
@@ -1428,7 +1452,11 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Set a servo to a desired PWM value."
+      "notes": "Set a servo to a desired PWM value.",
+      "registryCommand": [
+        "payload.release",
+        "payload.set-actuator"
+      ]
     },
     {
       "id": "mavlink.do-repeat-servo",
@@ -1502,7 +1530,8 @@
       "hazard": "destructive",
       "status": "stable",
       "default": false,
-      "notes": "Terminate flight immediately."
+      "notes": "Terminate flight immediately.",
+      "registryCommand": "vehicle.terminate"
     },
     {
       "id": "mavlink.do-change-altitude",
@@ -1535,7 +1564,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Change altitude set point."
+      "notes": "Change altitude set point.",
+      "registryCommand": "vehicle.set-vertical-position"
     },
     {
       "id": "mavlink.do-set-actuator",
@@ -1598,7 +1628,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Sets actuators (e.g. servos) to a desired value."
+      "notes": "Sets actuators (e.g. servos) to a desired value.",
+      "registryCommand": "payload.set-actuator"
     },
     {
       "id": "mavlink.do-return-path-start",
@@ -1758,7 +1789,11 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Reposition the vehicle to a specific WGS84 global position."
+      "notes": "Reposition the vehicle to a specific WGS84 global position.",
+      "registryCommand": [
+        "vehicle.goto",
+        "vehicle.move-relative"
+      ]
     },
     {
       "id": "mavlink.do-pause-continue",
@@ -1785,7 +1820,12 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "If in a GPS controlled position mode, hold the current position or continue."
+      "notes": "If in a GPS controlled position mode, hold the current position or continue.",
+      "registryCommand": [
+        "mission.pause",
+        "mission.resume",
+        "vehicle.stop"
+      ]
     },
     {
       "id": "mavlink.do-set-reverse",
@@ -1844,7 +1884,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Sets the region of interest (ROI) to a location."
+      "notes": "Sets the region of interest (ROI) to a location.",
+      "registryCommand": "gimbal.point-at"
     },
     {
       "id": "mavlink.do-set-roi-wpnext-offset",
@@ -1918,7 +1959,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Cancels any previous ROI command returning the vehicle/sensors to default flight characteristics."
+      "notes": "Cancels any previous ROI command returning the vehicle/sensors to default flight characteristics.",
+      "registryCommand": "gimbal.clear-target"
     },
     {
       "id": "mavlink.do-set-roi-sysid",
@@ -2041,7 +2083,8 @@
       "hazard": "none",
       "status": "superseded",
       "default": false,
-      "notes": "Superseded → MAV_CMD_DO_SET_ROI\\_\\*. Sets the region of interest (ROI) for a sensor set or the vehicle itself."
+      "notes": "Superseded → MAV_CMD_DO_SET_ROI\\_\\*. Sets the region of interest (ROI) for a sensor set or the vehicle itself.",
+      "registryCommand": "gimbal.point-at"
     },
     {
       "id": "mavlink.do-digicam-configure",
@@ -2168,7 +2211,11 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Control digital camera."
+      "notes": "Control digital camera.",
+      "registryCommand": [
+        "camera.capture-image",
+        "sensor.trigger"
+      ]
     },
     {
       "id": "mavlink.do-mount-configure",
@@ -2294,7 +2341,8 @@
       "hazard": "none",
       "status": "superseded",
       "default": false,
-      "notes": "Superseded → MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW. Mission command to control a camera or antenna mount"
+      "notes": "Superseded → MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW. Mission command to control a camera or antenna mount",
+      "registryCommand": "gimbal.point"
     },
     {
       "id": "mavlink.do-set-cam-trigg-dist",
@@ -2341,7 +2389,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Mission command to set camera trigger distance for this flight."
+      "notes": "Mission command to set camera trigger distance for this flight.",
+      "registryCommand": "camera.set-trigger-distance"
     },
     {
       "id": "mavlink.do-fence-enable",
@@ -2401,7 +2450,8 @@
       "hazard": "destructive",
       "status": "stable",
       "default": false,
-      "notes": "Mission item/command to release a parachute or enable/disable auto release."
+      "notes": "Mission item/command to release a parachute or enable/disable auto release.",
+      "registryCommand": "vehicle.terminate"
     },
     {
       "id": "mavlink.do-motor-test",
@@ -2518,7 +2568,11 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Mission command to operate a gripper."
+      "notes": "Mission command to operate a gripper.",
+      "registryCommand": [
+        "payload.gripper",
+        "payload.release"
+      ]
     },
     {
       "id": "mavlink.do-autotune-enable",
@@ -2592,7 +2646,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Sets a desired vehicle turn angle and speed change."
+      "notes": "Sets a desired vehicle turn angle and speed change.",
+      "registryCommand": "vehicle.set-heading"
     },
     {
       "id": "mavlink.do-set-cam-trigg-interval",
@@ -2918,7 +2973,8 @@
       "hazard": "destructive",
       "status": "stable",
       "default": false,
-      "notes": "Trigger calibration."
+      "notes": "Trigger calibration.",
+      "registryCommand": "sensor.calibrate"
     },
     {
       "id": "mavlink.preflight-set-sensor-offsets",
@@ -3095,7 +3151,11 @@
       "hazard": "destructive",
       "status": "stable",
       "default": false,
-      "notes": "Request the reboot or shutdown of system components."
+      "notes": "Request the reboot or shutdown of system components.",
+      "registryCommand": [
+        "sensor.reset",
+        "vehicle.reboot"
+      ]
     },
     {
       "id": "mavlink.override-goto",
@@ -3227,7 +3287,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Enable the specified standard MAVLink mode."
+      "notes": "Enable the specified standard MAVLink mode.",
+      "registryCommand": "vehicle.set-mode"
     },
     {
       "id": "mavlink.mission-start",
@@ -3259,7 +3320,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "start running a mission"
+      "notes": "start running a mission",
+      "registryCommand": "mission.start"
     },
     {
       "id": "mavlink.actuator-test",
@@ -3362,7 +3424,8 @@
       "hazard": "destructive",
       "status": "stable",
       "default": false,
-      "notes": "Arms / Disarms a component"
+      "notes": "Arms / Disarms a component",
+      "registryCommand": "vehicle.set-armed"
     },
     {
       "id": "mavlink.run-prearm-checks",
@@ -3408,7 +3471,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Turns illuminators ON/OFF."
+      "notes": "Turns illuminators ON/OFF.",
+      "registryCommand": "payload.set-lights"
     },
     {
       "id": "mavlink.do-illuminator-configure",
@@ -3640,7 +3704,12 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Set the interval between messages for a particular MAVLink message ID."
+      "notes": "Set the interval between messages for a particular MAVLink message ID.",
+      "registryCommand": [
+        "sensor.set-sampling-rate",
+        "sensor.start-acquisition",
+        "sensor.stop-acquisition"
+      ]
     },
     {
       "id": "mavlink.request-message",
@@ -3702,7 +3771,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Request the target system(s) emit a single instance of a specified message (i.e. a \"one-shot\" versi…"
+      "notes": "Request the target system(s) emit a single instance of a specified message (i.e. a \"one-shot\" versi…",
+      "registryCommand": "sensor.get-status"
     },
     {
       "id": "mavlink.request-protocol-version",
@@ -3993,7 +4063,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Set camera running mode."
+      "notes": "Set camera running mode.",
+      "registryCommand": "camera.set-mode"
     },
     {
       "id": "mavlink.set-camera-zoom",
@@ -4032,7 +4103,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Set camera zoom."
+      "notes": "Set camera zoom.",
+      "registryCommand": "camera.set-zoom"
     },
     {
       "id": "mavlink.set-camera-focus",
@@ -4071,7 +4143,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Set camera focus."
+      "notes": "Set camera focus.",
+      "registryCommand": "camera.set-focus"
     },
     {
       "id": "mavlink.set-storage-usage",
@@ -4142,7 +4215,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Set camera source."
+      "notes": "Set camera source.",
+      "registryCommand": "camera.select-source"
     },
     {
       "id": "mavlink.jump-tag",
@@ -4286,7 +4360,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Set gimbal manager pitch/yaw setpoints (low rate command)."
+      "notes": "Set gimbal manager pitch/yaw setpoints (low rate command).",
+      "registryCommand": "gimbal.point"
     },
     {
       "id": "mavlink.do-gimbal-manager-configure",
@@ -4336,7 +4411,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Gimbal configuration to set which sysid/compid is in primary and secondary control."
+      "notes": "Gimbal configuration to set which sysid/compid is in primary and secondary control.",
+      "registryCommand": "gimbal.set-mode"
     },
     {
       "id": "mavlink.image-start-capture",
@@ -4382,7 +4458,11 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Start image capture sequence."
+      "notes": "Start image capture sequence.",
+      "registryCommand": [
+        "camera.capture-image",
+        "sensor.trigger"
+      ]
     },
     {
       "id": "mavlink.image-stop-capture",
@@ -4409,7 +4489,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Stop image capture sequence."
+      "notes": "Stop image capture sequence.",
+      "registryCommand": "camera.stop-image-capture"
     },
     {
       "id": "mavlink.request-camera-image-capture",
@@ -4523,7 +4604,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "If the camera supports point visual tracking (CAMERA_CAP_FLAGS_HAS_TRACKING_POINT is set), this com…"
+      "notes": "If the camera supports point visual tracking (CAMERA_CAP_FLAGS_HAS_TRACKING_POINT is set), this com…",
+      "registryCommand": "gimbal.track-image-point"
     },
     {
       "id": "mavlink.camera-track-rectangle",
@@ -4599,7 +4681,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Stops ongoing tracking."
+      "notes": "Stops ongoing tracking.",
+      "registryCommand": "gimbal.track-image-point"
     },
     {
       "id": "mavlink.video-start-capture",
@@ -4639,7 +4722,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Starts video capture (recording)."
+      "notes": "Starts video capture (recording).",
+      "registryCommand": "camera.start-video"
     },
     {
       "id": "mavlink.video-stop-capture",
@@ -4672,7 +4756,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Stop the current video capture (recording)."
+      "notes": "Stop the current video capture (recording).",
+      "registryCommand": "camera.stop-video"
     },
     {
       "id": "mavlink.video-start-streaming",
@@ -4815,7 +4900,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Request to start streaming logging data over MAVLink (see also LOGGING_DATA message)"
+      "notes": "Request to start streaming logging data over MAVLink (see also LOGGING_DATA message)",
+      "registryCommand": "data.start-recording"
     },
     {
       "id": "mavlink.logging-stop",
@@ -4835,7 +4921,8 @@
       "hazard": "none",
       "status": "stable",
       "default": true,
-      "notes": "Request to stop streaming log data over MAVLink"
+      "notes": "Request to stop streaming log data over MAVLink",
+      "registryCommand": "data.stop-recording"
     },
     {
       "id": "mavlink.airframe-configuration",
@@ -4975,7 +5062,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Request VTOL transition"
+      "notes": "Request VTOL transition",
+      "registryCommand": "vehicle.transition"
     },
     {
       "id": "mavlink.arm-authorization-request",
@@ -6314,7 +6402,8 @@
       "hazard": "flight-critical",
       "status": "stable",
       "default": true,
-      "notes": "Command to operate winch."
+      "notes": "Command to operate winch.",
+      "registryCommand": "payload.winch"
     },
     {
       "id": "mavlink.guided-change-speed",

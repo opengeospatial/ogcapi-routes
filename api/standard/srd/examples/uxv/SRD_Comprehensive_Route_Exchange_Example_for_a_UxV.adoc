@@ -52,7 +52,7 @@ The example is a multirotor UAV that inspects two towers, drops a sensor with a 
 
 | *Mode*, *SupportedRegion*, *SpatialConstraint*, *TemporalConstraint*
 | «property» attributes
-| Objects in `describedBy`. Enumerations `Domain` (`air`, `ground`, `maritime`), `RestrictionType` (`doNotEnter`, `doNotLeave`, `override`) and `TemporalConstraintType` (`noEarlierThan`, `noLaterThan`, `interval`) give the values
+| Objects in `describedBy`. Enumeration `Domain` (`air`, `ground`, `maritime`) and `TemporalConstraintType` (`noEarlierThan`, `noLaterThan`, `interval`) give the values
 
 | *Action*
 | none
@@ -145,115 +145,88 @@ The multirotor `uav-07` starts from Pad A. At route level the executor powers th
 
 ==== Route definition
 
-The input is the `RouteDefinition` of the diagram and nothing else: the start, the end, the waypoints to be visited (identified by `id`, named by `title`, placed by `location`), the mode, and spatial and temporal constraints. *It contains no actions.* Waypoints have no actions in the diagram because they are inputs to the algorithms; the actions are produced by the route server.
+The input is a route definition for the HTTP POST request to `/routes`, and nothing else: the waypoints (start, intermediate, end), the mode, and spatial and temporal constraints, wrapped in the `inputs` member required by the Core requirements class (and the `value` members required by the Modes, Spatial Constraints and Temporal constraints requirements classes). *It contains no actions.* Waypoints have no actions because they are inputs to the algorithms; the actions are produced by the route server.
+
+The `start` / `intermediateWaypoints` / `end` structure with `id`, `title` and `location` of the conceptual *RouteDefinition* class in the diagram is an *informative model* used to explain the example (and echoed in `describedBy`); the conformant wire form for the same input is the payload below, where the ordered waypoint coordinates become the `MultiPoint` of `inputs.waypoints.value` and waypoint titles are carried in the route response.
 
 [,json]
 ----
 {
-  "start": {
-    "id": "start",
-    "title": "Pad A",
-    "location": {
-      "type": "Point",
-      "coordinates": [7.88, 45.19]
-    }
-  },
-  "intermediateWaypoints": [
-    {
-      "id": "tower-t1",
-      "title": "Tower T1",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.8902, 45.1941]
-      }
-    },
-    {
-      "id": "tower-t2",
-      "title": "Tower T2",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.8975, 45.196]
-      }
-    },
-    {
-      "id": "sensor-site",
-      "title": "Sensor drop site",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.902, 45.1988]
-      }
-    }
-  ],
-  "end": {
-    "id": "end",
-    "title": "Pad A",
-    "location": {
-      "type": "Point",
-      "coordinates": [7.88, 45.19]
-    }
-  },
-  "mode": {
-    "id": "uav-multirotor",
-    "title": "Multirotor UAV",
-    "domain": [
-      "air"
-    ],
-    "supportedRegions": [
-      {
-        "id": "reg-po",
-        "title": "Po valley test area",
-        "bbox": [7.8, 45.1, 8.0, 45.3]
-      }
-    ]
-  },
-  "spatialConstraints": [
-    {
-      "id": "sc-fence",
-      "title": "Operating area",
-      "type": "doNotLeave",
-      "area": {
-        "type": "Polygon",
+  "inputs": {
+    "name": "Tower inspection with sensor drop",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
         "coordinates": [
           [
-            [7.87, 45.185],
-            [7.912, 45.185],
-            [7.912, 45.205],
-            [7.87, 45.205],
-            [7.87, 45.185]
+            7.88,
+            45.19
+          ],
+          [
+            7.8902,
+            45.1941
+          ],
+          [
+            7.8975,
+            45.196
+          ],
+          [
+            7.902,
+            45.1988
+          ],
+          [
+            7.88,
+            45.19
           ]
         ]
-      },
-      "lower_vertical_limit": 150,
-      "upper_vertical_limit": 320
+      }
     },
-    {
-      "id": "sc-nfz",
-      "title": "Temporary no-fly zone",
-      "type": "doNotEnter",
-      "area": {
-        "type": "Polygon",
+    "mode": {
+      "value": {
+        "id": "uav-multirotor"
+      }
+    },
+    "spatial_constraints": {
+      "value": {
+        "type": "MultiPolygon",
         "coordinates": [
           [
-            [7.893, 45.193],
-            [7.894, 45.193],
-            [7.894, 45.1938],
-            [7.893, 45.1938],
-            [7.893, 45.193]
+            [
+              [
+                7.893,
+                45.193
+              ],
+              [
+                7.894,
+                45.193
+              ],
+              [
+                7.894,
+                45.1938
+              ],
+              [
+                7.893,
+                45.1938
+              ],
+              [
+                7.893,
+                45.193
+              ]
+            ]
           ]
         ]
-      },
-      "buffer": 10
+      }
+    },
+    "temporal_constraint": {
+      "value": {
+        "id": "tc-day",
+        "title": "Daylight window",
+        "type": "interval",
+        "timePoint": "2026-10-12T07:00:00Z",
+        "delta": 36000
+      }
     }
-  ],
-  "temporalConstraints": [
-    {
-      "id": "tc-day",
-      "title": "Daylight window",
-      "type": "interval",
-      "timePoint": "2026-10-12T07:00:00Z",
-      "delta": 36000
-    }
-  ]
+  }
 }
 ----
 
@@ -729,144 +702,115 @@ Contingencies are armed for the whole route and executed when the condition occu
   "title": "Tower inspection with sensor drop",
   "description": "A multirotor inspects two towers, drops a sensor with a winch and lands.",
   "describedBy": {
-    "start": {
-      "id": "start",
-      "title": "Pad A",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.88, 45.19]
-      }
-    },
-    "intermediateWaypoints": [
-      {
-        "id": "tower-t1",
-        "title": "Tower T1",
-        "location": {
-          "type": "Point",
-          "coordinates": [7.8902, 45.1941]
-        }
-      },
-      {
-        "id": "tower-t2",
-        "title": "Tower T2",
-        "location": {
-          "type": "Point",
-          "coordinates": [7.8975, 45.196]
-        }
-      },
-      {
-        "id": "sensor-site",
-        "title": "Sensor drop site",
-        "location": {
-          "type": "Point",
-          "coordinates": [7.902, 45.1988]
-        }
-      }
-    ],
-    "end": {
-      "id": "end",
-      "title": "Pad A",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.88, 45.19]
-      }
-    },
-    "mode": {
-      "id": "uav-multirotor",
-      "title": "Multirotor UAV",
-      "domain": [
-        "air"
-      ],
-      "supportedRegions": [
-        {
-          "id": "reg-po",
-          "title": "Po valley test area",
-          "bbox": [7.8, 45.1, 8.0, 45.3]
-        }
-      ]
-    },
-    "spatialConstraints": [
-      {
-        "id": "sc-fence",
-        "title": "Operating area",
-        "type": "doNotLeave",
-        "area": {
-          "type": "Polygon",
+    "inputs": {
+      "name": "Tower inspection with sensor drop",
+      "waypoints": {
+        "value": {
+          "type": "MultiPoint",
           "coordinates": [
             [
-              [7.87, 45.185],
-              [7.912, 45.185],
-              [7.912, 45.205],
-              [7.87, 45.205],
-              [7.87, 45.185]
+              7.88,
+              45.19
+            ],
+            [
+              7.8902,
+              45.1941
+            ],
+            [
+              7.8975,
+              45.196
+            ],
+            [
+              7.902,
+              45.1988
+            ],
+            [
+              7.88,
+              45.19
             ]
           ]
-        },
-        "lower_vertical_limit": 150,
-        "upper_vertical_limit": 320
+        }
       },
-      {
-        "id": "sc-nfz",
-        "title": "Temporary no-fly zone",
-        "type": "doNotEnter",
-        "area": {
-          "type": "Polygon",
+      "mode": {
+        "value": {
+          "id": "uav-multirotor"
+        }
+      },
+      "spatial_constraints": {
+        "value": {
+          "type": "MultiPolygon",
           "coordinates": [
             [
-              [7.893, 45.193],
-              [7.894, 45.193],
-              [7.894, 45.1938],
-              [7.893, 45.1938],
-              [7.893, 45.193]
+              [
+                [
+                  7.893,
+                  45.193
+                ],
+                [
+                  7.894,
+                  45.193
+                ],
+                [
+                  7.894,
+                  45.1938
+                ],
+                [
+                  7.893,
+                  45.1938
+                ],
+                [
+                  7.893,
+                  45.193
+                ]
+              ]
             ]
           ]
-        },
-        "buffer": 10
+        }
+      },
+      "temporal_constraint": {
+        "value": {
+          "id": "tc-day",
+          "title": "Daylight window",
+          "type": "interval",
+          "timePoint": "2026-10-12T07:00:00Z",
+          "delta": 36000
+        }
       }
-    ],
-    "temporalConstraints": [
-      {
-        "id": "tc-day",
-        "title": "Daylight window",
-        "type": "interval",
-        "timePoint": "2026-10-12T07:00:00Z",
-        "delta": 36000
-      }
-    ]
+    }
   },
   "actions": [
     {
-      "actionType": "sensor.set-power",
       "target": "https://example.org/api/systems/camera-01",
       "sequence": 1,
       "params": {
         "state": "on"
-      }
+      },
+      "actionType": "sensor.set-power"
     },
     {
-      "actionType": "camera.select-source",
       "target": "https://example.org/api/systems/camera-01",
       "sequence": 2,
       "params": {
         "source": "visible"
-      }
+      },
+      "actionType": "camera.select-source"
     },
     {
-      "actionType": "data.start-recording",
       "target": "https://example.org/api/systems/camera-01",
       "sequence": 3,
       "params": {
         "label": "insp-2026-10-12-a"
-      }
+      },
+      "actionType": "data.start-recording"
     },
     {
-      "actionType": "vehicle.set-speed",
       "target": "https://example.org/api/systems/uav-07",
       "sequence": 1,
       "params": {
         "speed": 8,
         "speedType": "ground"
-      }
+      },
+      "actionType": "vehicle.set-speed"
     }
   ],
   "vehicleClass": "UAV",
@@ -926,12 +870,12 @@ Contingencies are armed for the whole route and executed when the condition occu
       "condition": "link-lost",
       "timeout_s": 15,
       "action": {
-        "actionType": "vehicle.return-to-home",
         "target": "https://example.org/api/systems/uav-07",
         "params": {
           "destination": "home",
           "finalAction": "land"
-        }
+        },
+        "actionType": "vehicle.return-to-home"
       }
     },
     {
@@ -941,33 +885,33 @@ Contingencies are armed for the whole route and executed when the condition occu
         "unit": "%"
       },
       "action": {
-        "actionType": "vehicle.return-to-home",
         "target": "https://example.org/api/systems/uav-07",
         "params": {
           "destination": "home",
           "finalAction": "land"
-        }
+        },
+        "actionType": "vehicle.return-to-home"
       }
     },
     {
       "condition": "geofence-breach",
       "action": {
-        "actionType": "vehicle.stop",
         "target": "https://example.org/api/systems/uav-07",
         "params": {
           "mode": "controlled"
-        }
+        },
+        "actionType": "vehicle.stop"
       }
     },
     {
       "condition": "winch-fault",
       "target": "https://example.org/api/systems/winch-01",
       "action": {
-        "actionType": "payload.winch",
         "target": "https://example.org/api/systems/winch-01",
         "params": {
           "action": "hold"
-        }
+        },
+        "actionType": "payload.winch"
       }
     }
   ],
@@ -979,42 +923,141 @@ Contingencies are armed for the whole route and executed when the condition occu
         "featureType": "overview",
         "length": 4013,
         "duration_s": 469,
-        "totalDuration_s": 809,
         "processingTime": "2026-10-12T07:00:00Z",
         "constraints": [
-          "sc-fence (doNotLeave, 150-320 m MSL) respected",
-          "sc-nfz (doNotEnter, buffer 10 m) avoided",
+          "sc-nfz avoided",
           "tc-day (interval 07:00-17:00 UTC) satisfied"
-        ]
+        ],
+        "totalDuration_s": 809
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [7.88, 45.19, 188],
-          [7.881325, 45.190735, 199.8],
-          [7.88275, 45.19125, 211.5],
-          [7.884175, 45.191765, 223.2],
-          [7.8855, 45.1925, 235],
-          [7.886643, 45.192994, 235.2],
-          [7.88785, 45.1933, 235.5],
-          [7.889057, 45.193606, 235.8],
-          [7.8902, 45.1941, 236],
-          [7.891987, 45.194721, 238.5],
-          [7.89385, 45.19505, 241.0],
-          [7.895713, 45.195379, 243.5],
-          [7.8975, 45.196, 246],
-          [7.898569, 45.19679, 244.5],
-          [7.89975, 45.1974, 243.0],
-          [7.900931, 45.19801, 241.5],
-          [7.902, 45.1988, 240],
-          [7.900326, 45.19771, 238.8],
-          [7.8985, 45.1969, 237.5],
-          [7.896674, 45.19609, 236.2],
-          [7.895, 45.195, 235],
-          [7.89135, 45.19345, 223.2],
-          [7.8875, 45.1925, 211.5],
-          [7.88365, 45.19155, 199.8],
-          [7.88, 45.19, 188]
+          [
+            7.88,
+            45.19,
+            188
+          ],
+          [
+            7.881325,
+            45.190735,
+            199.8
+          ],
+          [
+            7.88275,
+            45.19125,
+            211.5
+          ],
+          [
+            7.884175,
+            45.191765,
+            223.2
+          ],
+          [
+            7.8855,
+            45.1925,
+            235
+          ],
+          [
+            7.886643,
+            45.192994,
+            235.2
+          ],
+          [
+            7.88785,
+            45.1933,
+            235.5
+          ],
+          [
+            7.889057,
+            45.193606,
+            235.8
+          ],
+          [
+            7.8902,
+            45.1941,
+            236
+          ],
+          [
+            7.891987,
+            45.194721,
+            238.5
+          ],
+          [
+            7.89385,
+            45.19505,
+            241.0
+          ],
+          [
+            7.895713,
+            45.195379,
+            243.5
+          ],
+          [
+            7.8975,
+            45.196,
+            246
+          ],
+          [
+            7.898569,
+            45.19679,
+            244.5
+          ],
+          [
+            7.89975,
+            45.1974,
+            243.0
+          ],
+          [
+            7.900931,
+            45.19801,
+            241.5
+          ],
+          [
+            7.902,
+            45.1988,
+            240
+          ],
+          [
+            7.900326,
+            45.19771,
+            238.8
+          ],
+          [
+            7.8985,
+            45.1969,
+            237.5
+          ],
+          [
+            7.896674,
+            45.19609,
+            236.2
+          ],
+          [
+            7.895,
+            45.195,
+            235
+          ],
+          [
+            7.89135,
+            45.19345,
+            223.2
+          ],
+          [
+            7.8875,
+            45.1925,
+            211.5
+          ],
+          [
+            7.88365,
+            45.19155,
+            199.8
+          ],
+          [
+            7.88,
+            45.19,
+            188
+          ]
         ]
       }
     },
@@ -1027,7 +1070,6 @@ Contingencies are armed for the whole route and executed when the condition occu
         "timestamp": "2026-10-12T08:00:00Z",
         "actions": [
           {
-            "actionType": "vehicle.takeoff",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 2,
             "params": {
@@ -1036,13 +1078,18 @@ Contingencies are armed for the whole route and executed when the condition occu
                 "reference": "home"
               },
               "climbRate": 3.0
-            }
+            },
+            "actionType": "vehicle.takeoff"
           }
         ]
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.88, 45.19, 188]
+        "coordinates": [
+          7.88,
+          45.19,
+          188
+        ]
       }
     },
     {
@@ -1050,38 +1097,42 @@ Contingencies are armed for the whole route and executed when the condition occu
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Ingress",
         "previousEnd": "start",
         "length": 515,
         "duration_s": 52,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:01:52Z",
         "segment_actions": [
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 3,
             "params": {
               "speed": 12,
               "speedType": "ground"
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "actions": [
           {
-            "actionType": "gimbal.point",
             "target": "https://example.org/api/systems/gimbal-01",
             "sequence": 1,
             "params": {
               "pitch": -30,
               "frame": "vehicle"
-            }
+            },
+            "actionType": "gimbal.point"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:01:52Z",
+        "title": "Ingress"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.8855, 45.1925, 235]
+        "coordinates": [
+          7.8855,
+          45.1925,
+          235
+        ]
       }
     },
     {
@@ -1089,43 +1140,40 @@ Contingencies are armed for the whole route and executed when the condition occu
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Tower T1",
         "previousEnd": "seg1",
         "waypointId": "tower-t1",
         "length": 411,
         "duration_s": 68,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:03:00Z",
         "segment_actions": [
           {
-            "actionType": "camera.set-trigger-distance",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 4,
             "params": {
               "distance": 20
-            }
+            },
+            "actionType": "camera.set-trigger-distance"
           },
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 4,
             "params": {
               "speed": 6
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "actions": [
           {
-            "actionType": "vehicle.set-heading",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 5,
             "params": {
               "heading": 90,
               "reference": "true-north"
-            }
+            },
+            "actionType": "vehicle.set-heading"
           },
           {
-            "actionType": "gimbal.point-at",
             "target": "https://example.org/api/systems/gimbal-01",
             "sequence": 2,
             "params": {
@@ -1135,30 +1183,37 @@ Contingencies are armed for the whole route and executed when the condition occu
                 "vertical": 205,
                 "verticalReference": "msl"
               }
-            }
+            },
+            "actionType": "gimbal.point-at"
           },
           {
-            "actionType": "camera.set-zoom",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 5,
             "params": {
               "zoomLevel": 3
-            }
+            },
+            "actionType": "camera.set-zoom"
           },
           {
-            "actionType": "camera.capture-image",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 6,
             "params": {
               "count": 5,
               "interval": 2
-            }
+            },
+            "actionType": "camera.capture-image"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:03:00Z",
+        "title": "Tower T1"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.8902, 45.1941, 236]
+        "coordinates": [
+          7.8902,
+          45.1941,
+          236
+        ]
       }
     },
     {
@@ -1166,25 +1221,22 @@ Contingencies are armed for the whole route and executed when the condition occu
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Tower T2",
         "previousEnd": "seg2",
         "waypointId": "tower-t2",
         "length": 613,
         "duration_s": 77,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:04:57Z",
         "actions": [
           {
-            "actionType": "camera.start-video",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 7,
             "params": {
               "maxDuration": 180,
               "label": "T2-orbit"
-            }
+            },
+            "actionType": "camera.start-video"
           },
           {
-            "actionType": "vehicle.orbit",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 6,
             "params": {
@@ -1193,19 +1245,26 @@ Contingencies are armed for the whole route and executed when the condition occu
               "turns": 1.5,
               "facing": "center",
               "speed": 4
-            }
+            },
+            "actionType": "vehicle.orbit"
           },
           {
-            "actionType": "camera.stop-video",
             "target": "https://example.org/api/systems/camera-01",
             "sequence": 8,
-            "params": {}
+            "params": {},
+            "actionType": "camera.stop-video"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:04:57Z",
+        "title": "Tower T2"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.8975, 45.196, 246]
+        "coordinates": [
+          7.8975,
+          45.196,
+          246
+        ]
       }
     },
     {
@@ -1213,56 +1272,60 @@ Contingencies are armed for the whole route and executed when the condition occu
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Sensor drop site",
         "previousEnd": "seg3",
         "waypointId": "sensor-site",
         "length": 472,
         "duration_s": 59,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:08:26Z",
         "actions": [
           {
-            "actionType": "vehicle.hold-position",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 7,
             "params": {
               "duration": 5
-            }
+            },
+            "actionType": "vehicle.hold-position"
           },
           {
-            "actionType": "payload.winch",
             "target": "https://example.org/api/systems/winch-01",
             "sequence": 1,
             "params": {
               "action": "deploy",
               "length": 15,
               "rate": 1.0
-            }
+            },
+            "actionType": "payload.winch"
           },
           {
-            "actionType": "payload.release",
             "target": "https://example.org/api/systems/winch-01",
             "sequence": 2,
             "params": {
               "slot": 0,
               "mode": "deploy"
-            }
+            },
+            "actionType": "payload.release"
           },
           {
-            "actionType": "payload.winch",
             "target": "https://example.org/api/systems/winch-01",
             "sequence": 3,
             "params": {
               "action": "retract",
               "length": 15,
               "rate": 1.5
-            }
+            },
+            "actionType": "payload.winch"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:08:26Z",
+        "title": "Sensor drop site"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.902, 45.1988, 240]
+        "coordinates": [
+          7.902,
+          45.1988,
+          240
+        ]
       }
     },
     {
@@ -1270,26 +1333,23 @@ Contingencies are armed for the whole route and executed when the condition occu
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Return corridor",
         "previousEnd": "seg4",
         "length": 695,
         "duration_s": 50,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:10:46Z",
         "segment_actions": [
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 8,
             "params": {
               "speed": 14,
               "speedType": "ground"
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "actions": [
           {
-            "actionType": "vehicle.set-vertical-position",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 9,
             "params": {
@@ -1298,13 +1358,20 @@ Contingencies are armed for the whole route and executed when the condition occu
                 "reference": "home"
               },
               "rate": 2.0
-            }
+            },
+            "actionType": "vehicle.set-vertical-position"
           }
-        ]
+        ],
+        "timestamp": "2026-10-12T08:10:46Z",
+        "title": "Return corridor"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.895, 45.195, 235]
+        "coordinates": [
+          7.895,
+          45.195,
+          235
+        ]
       }
     },
     {
@@ -1312,17 +1379,21 @@ Contingencies are armed for the whole route and executed when the condition occu
       "type": "Feature",
       "properties": {
         "featureType": "segment",
-        "title": "Pad A",
         "previousEnd": "seg5",
         "waypointId": "end",
         "length": 1307,
         "duration_s": 163,
         "travelMode": "uav-multirotor",
-        "timestamp": "2026-10-12T08:13:29Z"
+        "timestamp": "2026-10-12T08:13:29Z",
+        "title": "Pad A"
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.88, 45.19, 188]
+        "coordinates": [
+          7.88,
+          45.19,
+          188
+        ]
       }
     },
     {
@@ -1334,20 +1405,24 @@ Contingencies are armed for the whole route and executed when the condition occu
         "timestamp": "2026-10-12T08:13:29Z",
         "actions": [
           {
-            "actionType": "vehicle.land",
             "target": "https://example.org/api/systems/uav-07",
             "sequence": 10,
             "params": {
               "precision": "opportunistic",
               "descentRate": 1.0,
               "disarmAfter": true
-            }
+            },
+            "actionType": "vehicle.land"
           }
         ]
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [7.88, 45.19, 188]
+        "coordinates": [
+          7.88,
+          45.19,
+          188
+        ]
       }
     }
   ]
