@@ -1,0 +1,1079 @@
+[appendix]
+:appendix-caption: Annex
+
+[[building-clients]]
+== Building Clients
+
+=== Introduction
+
+OGC API - Routes is a schema-driven API for route generation and route retrieval. As a client developer, your job is not merely to submit start and destination points. It is to dynamically discover the routing capabilities a server offers, build appropriate route-planning interfaces from that metadata, and visualize the resulting routes.
+
+Unlike routing systems that hardcode assumptions about vehicle types, route options, route attributes, or route actions, OGC API - Routes is designed to be self-describing. Clients should discover modes, actions, attributes, supported regions, and mode-specific request schemas from the server and adapt automatically.
+
+This annex walks through the full client lifecycle: capability discovery, mode discovery, region discovery, action discovery, attribute discovery, dynamic UI generation, route creation (synchronous and asynchronous), and route visualization. The goal is a client that works unmodified across deployments supporting entirely different routing domains: ground vehicles, maritime vessels, UAVs, USVs, defence planning, survey planning, inspection planning, or space operations.
+
+=== Discovery
+
+==== Landing Page
+
+Every OGC API - Routes implementation exposes a landing page:
+
+[source,http]
+----
+GET /
+----
+
+[source,json]
+----
+{
+  "title": "My Routing Server",
+  "description": "OGC API Routes service",
+  "links": [
+    { "rel": "modes", "href": "/modes" },
+    { "rel": "actions", "href": "/actions" },
+    { "rel": "attributes", "href": "/attributes" }
+  ]
+}
+----
+
+The landing page is the entry point into everything else. A well-behaved client follows the advertised links rather than assuming that `/modes`, `/actions`, and `/attributes` exist at fixed paths.
+
+=== Discovering Supported Modes
+
+==== Why Modes Matter
+
+Modes define the routing capabilities a server supports, such as `drone`, `truck`, `ship`, `bicycle`, `satellite`, `inspection`, or `survey`. The OGC API does *not* define a fixed list of modes. Each server advertises its own, and clients must discover them dynamically rather than assuming any particular name exists.
+
+==== List Available Modes
+
+[source,http]
+----
+GET /modes
+----
+
+[source,json]
+----
+[
+  {
+    "name": "drone",
+    "description": "Routing for unmanned aerial vehicles",
+    "domain": ["air"],
+    "supported_regions": [
+      {
+        "bbox": [-123.5, 37.7, -122.3, 38.1],
+        "description": "San Francisco Bay Area"
+      }
+    ]
+  },
+  {
+    "name": "ship",
+    "description": "Maritime transport routes",
+    "domain": ["maritime"],
+    "supported_regions": [
+      {
+        "bbox": [-70.0, 40.0, -60.0, 45.0],
+        "description": "North Atlantic shipping lane"
+      }
+    ]
+  }
+]
+----
+
+A client should use this response to populate a routing-mode selector, display available domains, allow filtering by mode, visualize supported routing regions, and prevent invalid requests outside supported areas before they are submitted.
+
+==== Using Supported Regions
+
+A map-based client can render each mode's `bbox` as a coverage overlay, disable route generation outside valid areas, and warn the user before a doomed request is submitted. Where more than one provider covers overlapping regions, the client can also help select the appropriate one automatically.
+
+=== Discovering Mode Schemas
+
+Once the user selects a mode, fetch its definition:
+
+[source,http]
+----
+GET /modes/{modeId}
+----
+
+The response is an OpenAPI 3.0-compatible schema describing the mode-specific
+parameters, that is, the members of the object form of `/inputs/mode` other
+than `id`:
+
+[source,json]
+----
+{
+  "type": "object",
+  "properties": {
+    "angle": {
+      "type": "integer",
+      "minimum": 100,
+      "maximum": 120
+    },
+    "resolution": {
+      "type": "number",
+      "minimum": 0.1,
+      "maximum": 100
+    }
+  },
+  "required": ["resolution", "angle"]
+}
+----
+
+This schema is the contract between client and server. A client should never hardcode form fields for a specific mode. The flow is always _schema → UI → request_, in that order.
+
+[[discovering-attributes]]
+=== Discovering Attributes
+
+==== Attribute List
+
+[source,http]
+----
+GET /attributes
+----
+
+[source,json]
+----
+{
+  "total_distance": { "description": "Total distance of the route" },
+  "estimated_duration": { "description": "Estimated travel time of the route" },
+  "difficulty": { "description": "Difficulty level" },
+  "restricted_area_crossing": { "description": "Whether the route crosses a restricted area" }
+}
+----
+
+These are the attributes the server may attach to generated route objects.
+
+==== Attribute Details
+
+[source,http]
+----
+GET /attributes/{attributeId}
+----
+
+[source,json]
+----
+{
+  "name": "difficulty",
+  "description": "Difficulty level of generated route",
+  "type": "string",
+  "enum": ["easy", "moderate", "hard"]
+}
+----
+
+Definitions of other attributes follow the same pattern. The members other than `name`, `description`, `type`, and `enum` (here `unit`) are illustrative for this demo:
+
+[source,json]
+----
+{
+  "name": "total_distance",
+  "description": "Total distance of the route",
+  "type": "number",
+  "unit": "m"
+}
+----
+
+[source,json]
+----
+{
+  "name": "estimated_duration",
+  "description": "Estimated travel time of the route",
+  "type": "number",
+  "unit": "s"
+}
+----
+
+[source,json]
+----
+{
+  "name": "restricted_area_crossing",
+  "description": "Whether the route crosses a restricted area",
+  "type": "boolean"
+}
+----
+
+A client can use this metadata to render values correctly, display legends, apply colors, validate user edits, and generate tooltips, all without hardcoding what "difficulty" means for any particular deployment.
+
+=== Discovering Actions
+
+==== Action List
+
+[source,http]
+----
+GET /actions
+----
+
+[source,json]
+----
+["vehicle.land", "mission.wait"]
+----
+
+Actions represent planning primitives that the server generates and understands. A route might include a `vehicle.land` or `mission.wait` action at a particular waypoint, for instance: each action instance carries an `actionType` member with the action identifier and a `params` member with the action parameters (optionally `id`, `description`, `target` and `sequence`).
+
+==== Action Schemas
+
+[source,http]
+----
+GET /actions/vehicle.land
+----
+
+[source,json]
+----
+{
+  "title": "Land",
+  "allOf": [
+    { "$ref": "https://example.org/api/routing/v1/schemas/action.schema.json" },
+    {
+      "properties": {
+        "actionType": { "const": "vehicle.land" },
+        "params": {
+          "type": "object",
+          "properties": {
+            "altitude_m": { "type": "number", "minimum": 0 }
+          }
+        }
+      },
+      "required": ["actionType", "params"]
+    }
+  ]
+}
+----
+
+==== Avoid Hard-Coding Actions
+
+Avoid this pattern:
+
+[source,javascript]
+----
+if (action.actionType === "vehicle.land") {
+  // ...
+}
+----
+
+Prefer discovering the action inventory and its schema at runtime (`GET /actions`, `GET /actions/{actionId}`) and using the retrieved schema to build editors, viewers, and validators generically. A client written this way keeps working when the server adds a new action type, with no redeploy required.
+
+=== A Schema-Driven Client
+
+==== Core Principle
+
+Everything should be generated from metadata. The client should have no built-in knowledge of whether the server supports defence planning, bicycle routing, survey planning, maritime routing, USV routing, or UAV routing. The flow is always: server schema → client UI → route request. The same client should work against entirely different deployments.
+
+==== Why This Matters
+
+Consider two servers: Server A advertising `inspection` and `survey`, and Server B advertising `drone`, `truck`, and `ship`. A schema-driven client works with both without modification, because it never encodes assumptions about which modes exist. It only encodes how to turn _any_ schema into a form and _any_ form into a request.
+
+=== Building a Route Planning User Interface
+
+The recommended workflow is map-centric rather than form-centric:
+
+[source,text]
+----
+Discover modes --> Select mode --> Display supported regions
+  --> Generate mode form from schema --> Select route geometry on map
+  --> Submit route request --> Receive route (immediately or via a job)
+  --> Display route
+----
+
+`POST /routes` supports two execution models. Which one applies is determined by the client's `Prefer` header together with the selected mode's `jobControlOptions` (each mode listed at `GET /modes` advertises `sync-execute` and/or `async-execute`; a mode that omits the property supports only synchronous execution):
+
+* *Synchronous:* the completed route is returned directly in the response (`200 OK`).
+* *Asynchronous:* the server accepts the request and returns a reference to a job (`201 Created`). The client monitors progress and retrieves the route when the job completes. This model suits long-running computations such as wide-area survey coverage, multi-leg defence routes, or multi-day maritime voyages. See <<async-execution>>.
+
+A client must be prepared for both outcomes.
+
+==== Region Visualization
+
+Given `{"supported_regions": [{"bbox": [-70, 40, -60, 45]}]}`, render the bounding box on the map as a shaded coverage area, optionally with a mode-specific overlay style, and warn the user if they try to plan outside it.
+
+==== Map Interaction
+
+Users typically define a start location, a destination, and optional intermediate waypoints directly on the map: click to set the start, click again for the destination, then add optional waypoints. This all happens before the request is assembled or submitted.
+
+==== Dynamic Mode Form Generation
+
+The mode schema should be converted into UI controls using a consistent mapping:
+
+[cols="1,1",options="header"]
+|===
+|Schema type |Suggested control
+|`string` |Text field
+|`string` with `enum` |Drop-down
+|`number` |Decimal numeric input
+|`integer` |Whole-number input (spinner)
+|`boolean` |Checkbox
+|`object` |Nested form
+|`array` |Collection editor
+|===
+
+For example, `{"angle": {"type": "integer", "minimum": 100, "maximum": 120}}` becomes a labeled spinner bounded to [100, 120], without a single line of hand-written UI code specific to "angle".
+
+=== Creating a Route
+
+Clients submit route requests to `POST /routes` with a route definition in the request content. The inputs are grouped under an `inputs` member: `waypoints` is a GeoJSON MultiPoint in traversal order, and `mode` selects a mode advertised at `/modes`. A string value is shorthand for the object form `{ "value": { "id": ... } }`; mode-specific parameters are members of `value` alongside `id` and are validated against the schema served at `GET /modes/{modeId}`, with invalid parameters reported as `400`. A typical navigation request:
+
+[source,json]
+----
+{
+  "inputs": {
+    "name": "North Atlantic crossing",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
+        "coordinates": [
+          [-65.0, 42.0],
+          [-62.0, 44.0]
+        ]
+      }
+    },
+    "mode": {
+      "value": {
+        "id": "ship",
+        "profile": "USV"
+      }
+    }
+  }
+}
+----
+
+Coordinates are always `[longitude, latitude]`. The first point is the start, the last is the destination, and any points in between are intermediate waypoints. Both endpoints above lie inside the `ship` mode's advertised bounding box.
+
+==== Synchronous Execution
+
+When the server computes the route within the request, it answers:
+
+[source,http]
+----
+200 OK
+----
+
+[source,text]
+----
+Response body: the route (application/geo+json)
+----
+
+No job identifier or progress endpoint is involved. The request either returns the completed route or fails, like any other synchronous HTTP call.
+
+[[async-execution]]
+==== Asynchronous Execution
+
+A client that is willing to receive a deferred response indicates so with the `Prefer` header, provided the selected mode advertises `async-execute` in its `jobControlOptions`:
+
+[source,http]
+----
+POST /routes
+Prefer: respond-async
+----
+
+If the server accepts the request for deferred execution, it responds with a status document and the location of the route resource:
+
+[source,http]
+----
+201 Created
+Location: /routes/abc123
+----
+
+[source,json]
+----
+{
+  "routeId": "abc123",
+  "type": "route",
+  "status": "accepted",
+  "message": "Route calculation accepted",
+  "created": "2026-11-24T10:15:00Z"
+}
+----
+
+The client then monitors the computation rather than blocking on the initial request. The behavior is governed by the mode's `jobControlOptions`: if the selected mode advertises `async-execute`, a `Prefer: respond-async` request SHALL be answered with `201 Created`, a `Location` header and a `Preference-Applied: respond-async` header; if the mode does not support asynchronous execution, the server SHALL answer `400` with problem details. A client should therefore check `jobControlOptions` before sending the preference, branch on the response status, and treat a `400` answer to an async request as "resend synchronously without the header".
+
+===== Retrieving the Status or the Route
+
+A single resource serves both purposes:
+
+[source,http]
+----
+GET /routes/{routeId}
+----
+
+The response depends on the state of the computation:
+
+[cols="2,1,2",options="header"]
+|===
+|Situation |Status |Response body
+|Calculation in progress (`status` is `accepted` or `running`) |`200 OK` |Status document (`application/json`)
+|Calculation complete (`status` is `successful`) |`200 OK` |The route (`application/geo+json`)
+|Route does not exist |`404 Not Found` |Problem details (RFC 9457)
+|Valid request, but no route can be computed |`422 Unprocessable Entity` |Problem details (RFC 9457)
+|Unexpected server failure |`500 Internal Server Error` |Problem details (RFC 9457)
+|===
+
+Both `200 OK` outcomes come from the same URL, so a client tells them apart by the `Content-Type` of the response (`application/json` for a status document, `application/geo+json` for the route) and not by guessing from the shape of the body.
+
+While the computation is in progress, the status document looks like this:
+
+[source,json]
+----
+{
+  "routeId": "abc123",
+  "type": "route",
+  "status": "running",
+  "message": "Computing route",
+  "created": "2026-11-24T10:15:00Z",
+  "started": "2026-11-24T10:15:01Z"
+}
+----
+
+A status document includes at least `routeId`, `type` (always `"route"`), `status`, `message`, and `created`. The `started` and `finished` timestamps (ISO 8601) are optional. A client must not rely on any other member, such as a percentage, being present. If it shows a progress indicator, it should be an indeterminate one unless the server demonstrably provides more.
+
+A failed computation is reported through the HTTP status code together with problem details: `422` when no route can be computed for a valid request, and `500` for an unexpected server failure. Problem details are served as `application/problem+json`, and clients should show the `detail` member to the user when it is present.
+
+===== Cancelling and Deleting a Route
+
+[source,http]
+----
+DELETE /routes/{routeId}
+----
+
+The same operation cancels a running computation and removes a finished route:
+
+[cols="2,2,1",options="header"]
+|===
+|Situation |Behavior |Response
+|Calculation accepted or running |The server cancels the calculation, releases its resources, and dismisses the job. |`200 OK` with a status document
+|Calculation complete (route exists) |The server deletes the stored route. |`200 OK` with a status document
+|Route does not exist (unknown, already deleted, or expired) |Nothing to delete. |`404 Not Found` with problem details
+|Unexpected server failure |The server encounters an unexpected error. |`500 Internal Server Error` with problem details
+|===
+
+A successful `DELETE` returns a status document whose `status` is `dismissed`:
+
+[source,json]
+----
+{
+  "routeId": "abc123",
+  "type": "route",
+  "status": "dismissed",
+  "message": "Route calculation cancelled",
+  "created": "2026-11-24T10:15:00Z",
+  "started": "2026-11-24T10:15:01Z"
+}
+----
+
+After a successful `DELETE`, `GET /routes/{routeId}` returns `404 Not Found`, and so does a repeated `DELETE` of the same route. A client should therefore treat a `404` on `DELETE` as "already gone", not as a failure, and should expect a `404` on its polling request if the route has been deleted or has expired in the meantime.
+
+===== Workflow Diagram
+
+[source,text]
+----
+GET /modes
+  --> user selects "inspection"
+GET /modes/inspection
+  --> generate inspection-specific form
+GET /actions, GET /attributes
+  --> prepare renderers
+user selects route geometry
+POST /routes
+  --> without Prefer (synchronous request)
+        --> 200 OK            : route in body, render it
+  --> Prefer: respond-async (mode advertises "async-execute")
+        --> 201 Created       : follow Location (/routes/{routeId})
+        --> 400               : mode does not support async, resend without Prefer
+        GET /routes/{routeId}
+          --> 200 application/json     : status document, keep polling
+          --> 200 application/geo+json : the route, render it using discovered schemas
+          --> 404                      : route deleted or expired, stop
+          --> 422 / 500                : problem details, show detail, stop
+        DELETE /routes/{routeId}       : user cancels
+          --> 200 (status "dismissed"), later GETs return 404
+----
+
+=== Rendering Routes
+
+Clients should not assume anything about a route's attributes, actions, or profile-specific extensions ahead of time. Instead, discover the supporting metadata from `GET /attributes` and `GET /actions`, and render whatever the route actually contains using that metadata.
+
+=== Profile-Driven Visualization
+
+One of the most important architectural ideas in OGC API - Routes is support for domain-specific profiles (defence, maritime, bicycle, UAV, USV, survey, inspection, and others) without the client needing special-case code for any of them:
+
+[source,text]
+----
+Mode schema      -->  Generate route creation UI
+Action schema    -->  Generate action UI
+Attribute schema -->  Generate attribute rendering
+----
+
+This lets the same client application adapt automatically to entirely different routing domains.
+
+=== Example React Routing Client
+
+The following example shows the overall structure of a schema-driven client written with React and the browser `fetch` API. It is deliberately plain: no state library, no styling, and no map component. It does the following:
+
+* follows landing-page links to find the modes, actions, and attributes endpoints
+* loads the modes and the schema of the selected mode
+* generates mode-specific form controls from that schema
+* checks the chosen start and destination against the mode's supported regions
+* creates a route, handling both the synchronous and asynchronous outcomes
+* shows progress and errors, and lets the user cancel a running computation
+* renders the resulting route
+
+NOTE: Start and destination are entered as longitude/latitude numbers to keep the example free of dependencies. In a real client these values come from clicks on a map (for example with Leaflet or MapLibre GL), and the `supported_regions` bounding boxes would be drawn on that same map.
+
+==== HTTP Helpers
+
+[source,javascript]
+----
+const BASE_URL = "http://localhost:8080";
+
+// Resolve a possibly relative href (from a link or a Location header).
+const resolve = (href, base) => new URL(href, base).toString();
+
+// fetch() only rejects on network failure. Turn non-2xx responses into
+// errors too, and surface the server's explanation when it provides one
+// (error bodies are RFC 9457 problem details).
+async function request(url, options) {
+  const res = await fetch(url, options);
+  if (!res.ok) {
+    let detail = "";
+    try {
+      const problem = await res.json();
+      detail = problem.detail || problem.title || "";
+    } catch {
+      // The error body was not JSON; the status code is all we have.
+    }
+    const err = new Error(`HTTP ${res.status}${detail ? `: ${detail}` : ""}`);
+    err.status = res.status; // lets callers tell 404 (gone) from 422 / 500
+    throw err;
+  }
+  return res;
+}
+
+const getJson = async (url, options) => (await request(url, options)).json();
+----
+
+==== Discovery from the Landing Page
+
+[source,javascript]
+----
+async function discover(baseUrl) {
+  const landing = await getJson(baseUrl + "/");
+  const href = (rel) => {
+    const link = landing.links?.find((l) => l.rel === rel);
+    return link ? resolve(link.href, baseUrl + "/") : null;
+  };
+
+  return {
+    modesUrl: href("modes"),
+    actionsUrl: href("actions"),
+    attributesUrl: href("attributes"),
+  };
+}
+----
+
+The client never writes `baseUrl + "/modes"`. It uses whatever the landing page advertises.
+
+==== Dynamic Form Generation
+
+The mapping below follows the table in <<building-a-route-planning-user-interface>>. Note that the `enum` check comes _before_ the `type` check. Otherwise every `string` field would fall through to a plain text box and the drop-down case would never be produced.
+
+[source,javascript]
+----
+import { useState } from "react";
+
+function SchemaField({ name, schema, required, value, onChange }) {
+  const label = schema.title || name;
+  const id = `field-${name}`;
+  const wrap = (control) => (
+    <div>
+      <label htmlFor={id}>{label}{required ? " *" : ""}</label>{" "}
+      {control}
+      {schema.description && <small> {schema.description}</small>}
+    </div>
+  );
+
+  if (schema.enum) {
+    return wrap(
+      <select id={id} value={value ?? ""} onChange={(e) => onChange(e.target.value)}>
+        <option value="" disabled>Select...</option>
+        {schema.enum.map((v) => <option key={v} value={v}>{String(v)}</option>)}
+      </select>
+    );
+  }
+
+  switch (schema.type) {
+    case "integer":
+    case "number": {
+      const parse = schema.type === "integer" ? parseInt : parseFloat;
+      return wrap(
+        <input
+          id={id}
+          type="number"
+          min={schema.minimum}
+          max={schema.maximum}
+          step={schema.type === "integer" ? 1 : "any"}
+          value={value ?? ""}
+          onChange={(e) => {
+            const n = parse(e.target.value, 10);
+            onChange(Number.isNaN(n) ? undefined : n);
+          }}
+        />
+      );
+    }
+
+    case "boolean":
+      return wrap(
+        <input
+          id={id}
+          type="checkbox"
+          checked={!!value}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+      );
+
+    case "object":
+      return (
+        <fieldset>
+          <legend>{label}</legend>
+          <SchemaForm schema={schema} value={value || {}} onChange={onChange} />
+        </fieldset>
+      );
+
+    case "array":
+      // A real collection editor is beyond this sketch; JSON is a stopgap.
+      return wrap(
+        <textarea
+          id={id}
+          defaultValue={JSON.stringify(value ?? [])}
+          onBlur={(e) => {
+            try { onChange(JSON.parse(e.target.value)); } catch { /* keep old value */ }
+          }}
+        />
+      );
+
+    case "string":
+    default:
+      return wrap(
+        <input id={id} type="text" value={value ?? ""} onChange={(e) => onChange(e.target.value)} />
+      );
+  }
+}
+
+function SchemaForm({ schema, value, onChange }) {
+  const required = schema.required || [];
+  return (
+    <>
+      {Object.entries(schema.properties || {}).map(([name, propSchema]) => (
+        <SchemaField
+          key={name}
+          name={name}
+          schema={propSchema}
+          required={required.includes(name)}
+          value={value[name]}
+          onChange={(v) => onChange({ ...value, [name]: v })}
+        />
+      ))}
+    </>
+  );
+}
+----
+
+Given a schema such as:
+
+[source,json]
+----
+{
+  "properties": {
+    "profile": {
+      "type": "string",
+      "enum": ["USV", "ship", "hostile-ship"]
+    }
+  }
+}
+----
+
+the generated form becomes a drop-down populated with `USV`, `ship`, and `hostile-ship`, rather than a free-text field the user could mistype into, and the client has no built-in knowledge of maritime routing profiles. This sketch handles the common JSON Schema keywords only. A production client also needs to deal with `$ref`, `oneOf`/`anyOf`, and `type` given as an array such as `["string", "null"]`.
+
+==== Region Check
+
+[source,javascript]
+----
+// bbox = [minLon, minLat, maxLon, maxLat]; point = [lon, lat]
+const inBbox = (point, bbox) =>
+  point[0] >= bbox[0] && point[0] <= bbox[2] &&
+  point[1] >= bbox[1] && point[1] <= bbox[3];
+
+const inSupportedRegion = (point, mode) =>
+  (mode.supported_regions || []).some((r) => inBbox(point, r.bbox));
+----
+
+A mode that declares no `supported_regions` is treated as unrestricted here. Adjust this if your deployment means something different.
+
+==== Creating a Route
+
+The function below checks the mode's `jobControlOptions`: if the mode advertises `async-execute` it sends `Prefer: respond-async` and follows the job; if the mode does not support asynchronous execution (the server answers `400`), it resends the request synchronously. It resolves with the finished route in both cases, so the rest of the UI does not need to care which execution model was used.
+
+[source,javascript]
+----
+const sleep = (ms, signal) =>
+  new Promise((resolveSleep, reject) => {
+    const t = setTimeout(resolveSleep, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(t);
+      reject(new DOMException("Aborted", "AbortError"));
+    });
+  });
+
+const isGeoJson = (res) =>
+  (res.headers.get("Content-Type") || "").includes("geo+json");
+
+async function createRoute(routesUrl, body, mode, { signal, onProgress, onRouteUrl } = {}) {
+  const supportsAsync = (mode?.jobControlOptions ?? ["sync-execute"])
+    .includes("async-execute");
+  const options = {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  };
+  if (supportsAsync) options.headers.Prefer = "respond-async";
+
+  let res;
+  try {
+    res = await request(routesUrl, options);
+  } catch (e) {
+    // The mode does not support async execution: resend without the header.
+    if (supportsAsync && e.status === 400) {
+      delete options.headers.Prefer;
+      res = await request(routesUrl, options);
+    } else {
+      throw e;
+    }
+  }
+
+  // Synchronous outcome: the route is in the response body.
+  if (res.status === 200) {
+    return res.json();
+  }
+
+  // Asynchronous outcome: Location identifies the route resource.
+  if (res.status === 201) {
+    const location = res.headers.get("Location");
+    if (!location) throw new Error("201 Created without a Location header");
+    const routeUrl = resolve(location, routesUrl);
+    onRouteUrl?.(routeUrl);               // remembered so the user can cancel
+    return pollUntilDone(routeUrl, { signal, onProgress });
+  }
+
+  throw new Error(`Unexpected response: HTTP ${res.status}`);
+}
+
+async function pollUntilDone(routeUrl, { signal, onProgress, intervalMs = 1000, maxPolls = 600 } = {}) {
+  for (let i = 0; i < maxPolls; i++) {
+    // 404 / 422 / 500 are thrown by request() with the problem details attached.
+    const res = await request(routeUrl, { signal });
+
+    // 200 + application/geo+json: the computation is complete, this is the route.
+    if (isGeoJson(res)) return res.json();
+
+    // 200 + application/json: a status document.
+    const status = await res.json();
+    onProgress?.(status);
+
+    if (status.status !== "accepted" && status.status !== "running") {
+      // Not in progress and not a route: stop rather than loop on an unknown state.
+      throw new Error(status.message || `Route job ${status.status}`);
+    }
+
+    await sleep(intervalMs, signal); // sequential awaits: polls never overlap
+  }
+  throw new Error("Gave up waiting for the route job");
+}
+
+// DELETE cancels a running computation or removes a finished route.
+async function deleteRoute(routeUrl) {
+  try {
+    return await getJson(routeUrl, { method: "DELETE" }); // status "dismissed"
+  } catch (e) {
+    if (e.status === 404) return null; // unknown, already deleted, or expired
+    throw e;
+  }
+}
+----
+
+The polling loop stops on a route, on any error response, and on any status other than `accepted` or `running`. Polls are strictly sequential, so a slow response cannot cause overlapping requests, and a maximum poll count prevents an unrecognized state from looping forever. An `AbortController` signal lets the UI stop _waiting_, but that alone does not cancel anything on the server. To cancel the computation, the client calls `deleteRoute()`.
+
+==== The Application Component
+
+[source,javascript]
+----
+import { useEffect, useRef, useState } from "react";
+
+export default function RoutingClient() {
+  const [endpoints, setEndpoints] = useState(null);
+  const [modes, setModes] = useState([]);
+  const [selectedMode, setSelectedMode] = useState(null);   // a mode object
+  const [modeSchema, setModeSchema] = useState(null);
+  const [modeParameters, setModeParameters] = useState({});
+  const [start, setStart] = useState([null, null]);          // [lon, lat]
+  const [destination, setDestination] = useState([null, null]);
+  const [progress, setProgress] = useState(null);
+  const [route, setRoute] = useState(null);
+  const [error, setError] = useState(null);
+  const abortRef = useRef(null);
+  const routeUrlRef = useRef(null);                      // set when the job is asynchronous
+
+  // 1. Discover endpoints and modes once.
+  useEffect(() => {
+    (async () => {
+      try {
+        const eps = await discover(BASE_URL);
+        setEndpoints(eps);
+        setModes(await getJson(eps.modesUrl));
+      } catch (e) {
+        setError(`Failed to load modes (${e.message})`);
+      }
+    })();
+  }, []);
+
+  // 2. When a mode is selected, load its schema and reset the parameters.
+  async function selectMode(name) {
+    setError(null);
+    setRoute(null);
+    setModeParameters({});
+    setModeSchema(null);
+    const mode = modes.find((m) => m.name === name) || null;
+    setSelectedMode(mode);
+    if (!mode) return;
+    try {
+      const url = resolve(`${encodeURIComponent(mode.name)}`, endpoints.modesUrl.replace(/\/?$/, "/"));
+      setModeSchema(await getJson(url));
+    } catch (e) {
+      setError(`Failed to load mode schema (${e.message})`);
+    }
+  }
+
+  // 3. Build and submit the request.
+  async function submit() {
+    setError(null);
+    setRoute(null);
+    setProgress(null);
+
+    if (start.includes(null) || destination.includes(null)) {
+      setError("Enter a start and a destination.");
+      return;
+    }
+    for (const [label, point] of [["Start", start], ["Destination", destination]]) {
+      if (!inSupportedRegion(point, selectedMode)) {
+        setError(`${label} is outside the regions supported by "${selectedMode.name}".`);
+        return;
+      }
+    }
+
+    const body = {
+      inputs: {
+        waypoints: {
+          value: {
+            type: "MultiPoint",
+            coordinates: [start, destination], // [lon, lat] pairs
+          },
+        },
+        mode: { value: { id: selectedMode.name, ...modeParameters } },
+      },
+    };
+
+    abortRef.current = new AbortController();
+    routeUrlRef.current = null;
+    try {
+      const routesUrl = resolve("/routes", BASE_URL);
+      setRoute(await createRoute(routesUrl, body, selectedMode, {
+        signal: abortRef.current.signal,
+        onProgress: setProgress,
+        onRouteUrl: (url) => { routeUrlRef.current = url; },
+      }));
+    } catch (e) {
+      if (e.name !== "AbortError") setError(`Route request failed (${e.message})`);
+    } finally {
+      setProgress(null);
+    }
+  }
+
+  // Stop polling first, then ask the server to cancel the computation.
+  async function cancel() {
+    abortRef.current?.abort();
+    if (!routeUrlRef.current) return;
+    try {
+      await deleteRoute(routeUrlRef.current);
+    } catch (e) {
+      setError(`Cancel failed (${e.message})`);
+    }
+  }
+
+  const coordInput = (label, point, setPoint) => (
+    <div>
+      {label}:{" "}
+      <input type="number" step="any" placeholder="lon" value={point[0] ?? ""}
+        onChange={(e) => setPoint([e.target.value === "" ? null : Number(e.target.value), point[1]])} />
+      <input type="number" step="any" placeholder="lat" value={point[1] ?? ""}
+        onChange={(e) => setPoint([point[0], e.target.value === "" ? null : Number(e.target.value)])} />
+    </div>
+  );
+
+  return (
+    <div>
+      {error && <p role="alert">{error}</p>}
+
+      <select value={selectedMode?.name ?? ""} onChange={(e) => selectMode(e.target.value)}>
+        <option value="" disabled>Select a mode...</option>
+        {modes.map((m) => <option key={m.name} value={m.name}>{m.name}</option>)}
+      </select>
+
+      {selectedMode && (
+        <ul>
+          {(selectedMode.supported_regions || []).map((r, i) => (
+            <li key={i}>{r.description || "Region"}: [{r.bbox.join(", ")}]</li>
+          ))}
+        </ul>
+      )}
+
+      {modeSchema && (
+        <SchemaForm schema={modeSchema} value={modeParameters} onChange={setModeParameters} />
+      )}
+
+      {selectedMode && (
+        <>
+          {coordInput("Start", start, setStart)}
+          {coordInput("Destination", destination, setDestination)}
+          <button onClick={submit}>Create route</button>
+          {progress && (
+            <>
+              <progress /> {/* indeterminate: the status document has no percentage */}
+              <span> {progress.status}{progress.message ? `: ${progress.message}` : ""}</span>
+              <button onClick={cancel}>Cancel route</button>
+            </>
+          )}
+        </>
+      )}
+
+      {route && <RouteView route={route} attributesUrl={endpoints.attributesUrl} />}
+    </div>
+  );
+}
+----
+
+Notes on the component:
+
+* Selecting a mode sets `selectedMode` and resets `modeParameters`. Without that reset, parameters from a previous mode would leak into the next request.
+* Coordinates are held and sent as `[longitude, latitude]`. If your map library uses `[lat, lng]` (Leaflet does), swap them when they enter this state.
+* `cancel()` aborts the polling loop and then calls `DELETE` on the route URL. If the server has already dropped the job, `deleteRoute()` treats the `404` as success.
+* Every request failure ends up in the `error` state, so the UI always has somewhere to show it. The error is cleared at the start of each new action.
+* `inputs.waypoints` holds only the two endpoints here. A map client would append the `[longitude, latitude]` of each additional click between the start and the destination; the points must stay in traversal order.
+
+==== Rendering a Route with Discovered Attribute Metadata
+
+The attribute definitions come from the server (`GET /attributes` and `GET /attributes/{attributeId}`), and the client has no built-in knowledge of any particular attribute. For demonstration, assume the server advertises the four attributes shown in <<discovering-attributes>>, and that a finished route looks like this:
+
+[source,json]
+----
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [[-65.0, 42.0], [-63.5, 43.1], [-62.0, 44.0]]
+  },
+  "properties": {
+    "total_distance": 289000,
+    "estimated_duration": 50400,
+    "difficulty": "moderate",
+    "restricted_area_crossing": false
+  }
+}
+----
+
+The route is GeoJSON (`application/geo+json`), so the geometry can be handed directly to a map library as a GeoJSON layer. The component below renders the attribute values using only the discovered definitions: a number is shown with its `unit`, a boolean as yes/no, and an `enum` attribute gets a color derived from the position of its value in the enum. Nothing about "difficulty" or "distance" is built into the client.
+
+[source,javascript]
+----
+const PALETTE = ["green", "gold", "red", "purple", "teal"]; // illustrative only
+
+function RouteView({ route, attributesUrl }) {
+  const [definitions, setDefinitions] = useState({});
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const base = attributesUrl.replace(/\/?$/, "/");
+        const list = await getJson(attributesUrl);
+        const entries = await Promise.all(
+          Object.keys(list).map(async (id) => [
+            id,
+            await getJson(resolve(encodeURIComponent(id), base)),
+          ])
+        );
+        setDefinitions(Object.fromEntries(entries));
+      } catch {
+        // Rendering still works without definitions; we just lose the labels.
+      }
+    })();
+  }, [attributesUrl]);
+
+  const format = (def, value) => {
+    if (value === undefined || value === null) return "n/a";
+    if (def.type === "boolean") return value ? "yes" : "no";
+    if (def.unit) return `${value} ${def.unit}`;
+    return String(value);
+  };
+
+  // For an enum attribute, map each allowed value to a color, in order.
+  const colorFor = (def, value) =>
+    def.enum ? PALETTE[def.enum.indexOf(value) % PALETTE.length] : undefined;
+
+  const values = route.properties || {};
+
+  return (
+    <section>
+      <h3>Route</h3>
+      <dl>
+        {Object.entries(definitions).map(([id, def]) => (
+          <div key={id} title={def.description}>
+            <dt>{def.name || id}</dt>
+            <dd style={{ color: colorFor(def, values[id]) }}>{format(def, values[id])}</dd>
+          </div>
+        ))}
+      </dl>
+      <pre>{JSON.stringify(route, null, 2)}</pre>
+    </section>
+  );
+}
+----
+
+With the demo data above, the component shows `total_distance` as "289000 m", `estimated_duration` as "50400 s", `difficulty` as "moderate" in gold, and `restricted_area_crossing` as "no".
+
+NOTE: The `unit` member and the location of the values in `route.properties` are illustrative assumptions made for this demo. Use whatever the Standard's attribute and Route schemas define. Action definitions from `GET /actions/{actionId}` can be used in the same way to generate action viewers and editors.
+
+==== Profiles and Domain Adaptation
+
+One server might expose `inspection` and `survey`. Another might expose `drone`, `truck`, and `ship`. A third might expose `usv`, `uav`, `autoland`, and `loiter`. A schema-driven client works with all of them, because the workflow is always:
+
+[source,text]
+----
+Server schema --> generated UI --> route request --> generated route --> schema-driven rendering
+----
+
+The client never needs to know whether it is being used for defence planning, maritime navigation, inspection planning, survey planning, or bicycle routing. Those capabilities are described by the server and interpreted dynamically at runtime.
+
+=== Checklist for Client Developers
+
+* Follow landing-page links instead of assuming fixed paths.
+* Discover modes rather than hardcoding them.
+* Use supported regions to improve user experience and pre-empt invalid requests.
+* Generate mode forms, action editors, and attribute renderers from schemas, including the `enum` → drop-down case, not just primitive types.
+* Send coordinates as `[longitude, latitude]`.
+* Be prepared for both execution models: render a `200 OK` response from `POST /routes` directly, and on `201 Created` follow the `Location` header and poll `GET /routes/{routeId}`.
+* Distinguish the two `200 OK` responses of `GET /routes/{routeId}` by `Content-Type`: `application/json` is a status document, `application/geo+json` is the route.
+* Poll sequentially, cap the number of polls, and stop on a route, on `404`, `422`, or `500`, and on any status other than `accepted` or `running`.
+* Let users cancel with `DELETE /routes/{routeId}`, and treat a `404` on `DELETE` as "already gone".
+* Handle non-2xx HTTP responses at every step, and surface the `detail` of the RFC 9457 problem details when the server provides it.
+* Avoid hardcoding action names, attribute names, or assumptions about which routing profiles exist.
+* Build every UI component from server-provided metadata whenever possible.
+
+=== Summary
+
+OGC API - Routes is a schema-driven routing platform that supports both synchronous and asynchronous route creation. Clients should discover modes, actions, attributes, supported regions, and route-generation schemas from the server instead of embedding routing knowledge directly into the application. They should submit route requests expecting either a direct response or a reference to a job whose progress they monitor and which they can cancel.
+
+A robust client uses discovered metadata to generate route-planning forms, validation rules, route viewers, attribute renderers, and action editors dynamically, and treats error and failure states as first-class outcomes to handle, not just the successful path. Built this way, a single client can interoperate with maritime, defence, inspection, survey, aerial, ground, subsurface, and space-routing deployments without modification.

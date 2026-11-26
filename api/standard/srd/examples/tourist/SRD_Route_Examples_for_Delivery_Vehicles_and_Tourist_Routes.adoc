@@ -42,96 +42,45 @@ A multimodal city tour: e-scooter to the centre, a walk with two visits, then an
 [,json]
 ----
 {
-  "start": {
-    "id": "start",
-    "title": "Porta Nuova station",
-    "location": {
-      "type": "Point",
-      "coordinates": [7.6784, 45.0624]
-    }
-  },
-  "intermediateWaypoints": [
-    {
-      "id": "palazzo-reale",
-      "title": "Palazzo Reale",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.6866, 45.0711]
-      },
-      "constraint": {
-        "id": "tc-reale",
-        "title": "Opening time",
-        "type": "noEarlierThan",
-        "timePoint": "2026-10-17T07:00:00Z",
-        "delta": 0
-      }
-    },
-    {
-      "id": "mole-antonelliana",
-      "title": "Mole Antonelliana",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.6933, 45.0689]
-      }
-    },
-    {
-      "id": "valentino-park",
-      "title": "Parco del Valentino",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.687, 45.053]
-      }
-    },
-    {
-      "id": "monte-cappuccini",
-      "title": "Monte dei Cappuccini",
-      "location": {
-        "type": "Point",
-        "coordinates": [7.6993, 45.0626]
-      }
-    }
-  ],
-  "end": {
-    "id": "end",
-    "title": "Gran Madre bike station",
-    "location": {
-      "type": "Point",
-      "coordinates": [7.6975, 45.064]
-    }
-  },
-  "mode": {
-    "id": "micromobility-multimodal",
-    "title": "Micromobility and walking",
-    "domain": [
-      "ground"
-    ],
-    "supportedRegions": [
-      {
-        "id": "reg-turin",
-        "title": "Turin centre",
-        "bbox": [7.64, 45.03, 7.72, 45.09]
-      }
-    ]
-  },
-  "spatialConstraints": [
-    {
-      "id": "sc-area",
-      "title": "Tour area",
-      "type": "doNotLeave",
-      "area": {
-        "type": "Polygon",
+  "inputs": {
+    "name": "Turin highlights (e-scooter, walk, e-bike)",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
         "coordinates": [
           [
-            [7.64, 45.04],
-            [7.72, 45.04],
-            [7.72, 45.09],
-            [7.64, 45.09],
-            [7.64, 45.04]
+            7.6784,
+            45.0624
+          ],
+          [
+            7.6866,
+            45.0711
+          ],
+          [
+            7.6933,
+            45.0689
+          ],
+          [
+            7.687,
+            45.053
+          ],
+          [
+            7.6993,
+            45.0626
+          ],
+          [
+            7.6975,
+            45.064
           ]
         ]
       }
+    },
+    "mode": {
+      "value": {
+        "id": "micromobility-multimodal"
+      }
     }
-  ]
+  }
 }
 ----
 
@@ -679,74 +628,37 @@ An e-bike ride with a ferry crossing, a visit with a locked bike, a viewpoint an
 [,json]
 ----
 {
-  "start": {
-    "id": "start",
-    "title": "Como lakefront",
-    "location": {
-      "type": "Point",
-      "coordinates": [9.0852, 45.8081]
-    }
-  },
-  "intermediateWaypoints": [
-    {
-      "id": "villa-melzi",
-      "title": "Villa Melzi Gardens",
-      "location": {
-        "type": "Point",
-        "coordinates": [9.2606, 45.9835]
-      }
-    },
-    {
-      "id": "punta-spartivento",
-      "title": "Punta Spartivento",
-      "location": {
-        "type": "Point",
-        "coordinates": [9.2608, 45.9915]
-      }
-    }
-  ],
-  "end": {
-    "id": "end",
-    "title": "Bellagio e-bike station",
-    "location": {
-      "type": "Point",
-      "coordinates": [9.2623, 45.9857]
-    }
-  },
-  "mode": {
-    "id": "micromobility-ferry",
-    "title": "Micromobility with ferry",
-    "domain": [
-      "ground",
-      "maritime"
-    ],
-    "supportedRegions": [
-      {
-        "id": "reg-como",
-        "title": "Lake Como",
-        "bbox": [9.05, 45.78, 9.3, 46.02]
-      }
-    ]
-  },
-  "spatialConstraints": [
-    {
-      "id": "sc-lake",
-      "title": "Tour area",
-      "type": "doNotLeave",
-      "area": {
-        "type": "Polygon",
+  "inputs": {
+    "name": "Lake Como e-bike with ferry",
+    "waypoints": {
+      "value": {
+        "type": "MultiPoint",
         "coordinates": [
           [
-            [9.05, 45.78],
-            [9.3, 45.78],
-            [9.3, 46.02],
-            [9.05, 46.02],
-            [9.05, 45.78]
+            9.0852,
+            45.8081
+          ],
+          [
+            9.2606,
+            45.9835
+          ],
+          [
+            9.2608,
+            45.9915
+          ],
+          [
+            9.2623,
+            45.9857
           ]
         ]
       }
+    },
+    "mode": {
+      "value": {
+        "id": "micromobility-ferry"
+      }
     }
-  ]
+  }
 }
 ----
 

@@ -6,7 +6,7 @@ This document also uses terms defined in the OGC Standard for Modular specificat
 For the purposes of this document, the following additional terms and definitions apply.
 
 action::
-operation that a routing API makes available to be included in a route and executed by a vehicle, sensor, camera, gimbal, or payload during the traversal of the route
+operation that a routing API makes available to be included by the server in a route and executed by a vehicle, sensor, camera, gimbal, or payload during the traversal of the route
 
 NOTE: Each action is identified by a name and has a schema that specifies its parameters. Recommended action names are provided in the action registries specified in clause 7.
 
@@ -18,6 +18,8 @@ discoverable collection of attribute definitions published by a routing API at t
 
 contingency::
 predefined fallback plan associated with a route that is executed when one of its trigger conditions occurs, for example "reroute", "abort_mission" or "return_to_base"
+
+NOTE: Contingencies are part of the route representation created by the server, not of the route definition submitted by the client.
 
 cost function::
 a function that maps an event or values of one or more variables into a real number intuitively representing some "cost" associated with the event
@@ -48,6 +50,8 @@ mode::
 restriction based on the route operation or type of transport desired when computing a route, for example "drone", "truck-shortest" or "public-fastest"
 
 NOTE: The mode is a client hint and it is the decision of the server how to consider the selected mode in the computation of the route.
+
+NOTE: In the route definition, a mode is specified either as a string containing the mode identifier, or as an object with a `value` member. The `value` member contains an object whose `id` identifies the mode and whose remaining members are mode-specific parameters validated against the schema served for the mode.
 
 overview::
 representation of the complete route as a single feature (featureType "overview") summarizing the route as a whole, for example its geometry, total length and total duration

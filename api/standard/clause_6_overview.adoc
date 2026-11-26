@@ -21,11 +21,13 @@ and capabilities:
 * Apply spatial constraints to the route computation, for example areas that
   the computed route has to avoid.
 * Specify departure or arrival times for the route.
-* Include actions that are executed during the traversal of the route, for
-  example activating a sensor or capturing an image. The API declares the
-  actions that it supports and the schema of each action.
-* Define contingencies for the route, that is, fallback plans such as rerouting
-  or returning to base that are executed when trigger conditions occur.
+* Support routes with actions that the server includes and that are executed
+  during the traversal of the route, for example activating a sensor or
+  capturing an image. The API declares the actions that it supports and the
+  schema of each action.
+* Support routes with contingencies that the server associates with the route,
+  that is, fallback plans such as rerouting or returning to base that are
+  executed when trigger conditions occur.
 * Enrich the representation of routes and route segments with attributes from a
   discoverable attribute catalog.
 * Support asynchronous execution of route computations.

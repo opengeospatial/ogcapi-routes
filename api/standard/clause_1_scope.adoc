@@ -7,12 +7,14 @@ This standard defines modular API building blocks to:
 * Compute new routes,
 * Specify additional routing parameters, such as intermediate waypoints, transport
   modes, spatial constraints and temporal constraints,
-* Include actions executed during the traversal of the route and contingencies that
-  specify fallback plans when trigger conditions occur,
+* Include, in the route returned by the server, actions executed during the traversal
+  of the route and contingencies that specify fallback plans when trigger conditions occur,
 * Enrich routes and route segments with attributes from a discoverable attribute
   catalog,
 * Manage routes on the server,
 * Support asynchronous execution of route computations.
+
+Route computation requests are designed to be compatible with <<OGCAPIProcesses,OGC API - Processes - Part 1: Core>>: the request payload sent to `/routes` is also a valid process execution request, so the same payload can be submitted to a Routes API or to a generic Processes API. In that sense, OGC API - Routes can be considered a profile of OGC API - Processes for routing (see <<alignment-processes>>).
 
 Routes are represented as a feature collection encoded in GeoJSON according to the <<REM,OGC Route Exchange Model>>.
 

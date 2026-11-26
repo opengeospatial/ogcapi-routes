@@ -7,6 +7,9 @@ The OGC API family of standards is organized by resource type.
 The OGC API - Routes - Part 1: Core standard specifies the fundamental API building blocks for interacting with the "route" resources. Routing is one of the most widely used geospatial operations in the world today.
  
 This standard uses the <<REM,Route Exchange Model>> to represent routes.
+
+The design of this Standard is aligned with the <<OGCAPIProcesses,OGC API - Processes - Part 1: Core>> Standard: the payload of a route computation request doubles as a valid process execution request, so that OGC API - Routes can be used interchangeably with a generic OGC API - Processes implementation exposing routing as a process. In this sense, OGC API - Routes is also a profile of OGC API - Processes.
+
  
 For providers of routes, the API building blocks and the Route Exchange Model provide a simple model to publish and offer those routes as resources for use by other systems.
  
@@ -22,7 +25,7 @@ Accordingly, any routing API will accept two waypoints, the start and end positi
 
 The following are keywords to be used by search engines and document catalogues.
 
-OGC, Routing, Routing API, Route Exchange Model, Route, Waypoint, Mode, Action, Attribute, Contingency
+OGC, Routing, Routing API, Route Exchange Model, Route, Waypoint, Mode, Action, Attribute, Contingency, Processes, Profile
 
 [big]*iii.   Preface*
 
@@ -39,7 +42,7 @@ The following organizations submitted this Document to the Open Geospatial Conso
 * US Army Geospatial Center (AGC)
 * Ecere Corporation
 * interactive instruments GmbH
-* Skymantics LLC
+* Skymantics LLC & Skymantics Europe SL
 
 [[submitters]]
 [big]*v.     Submitters*
@@ -53,6 +56,7 @@ All questions regarding this submission should be directed to the editor or the 
 |Jeff Harrison |US Army Geospatial Center (AGC)
 |Amy Youmans |US Army Geospatial Center (AGC)
 |Jérôme Jacovella-St-Louis |Ecere Corporation
-|Ignacio Correas |Skymantics LLC
+|Ignacio Correas |Skymantics LLC & Skymantics Europe SL
+|Teodor Hanchevici |Individual
 |===
 

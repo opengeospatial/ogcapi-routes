@@ -6,223 +6,41 @@
       "description": "A delivery drone drops one parcel on a winch line and lands for a verified handover at the second stop.",
       "vehicleClass": "DRONE",
       "routeDefinition": {
-        "start": {
-          "id": "start",
-          "title": "Hub Mirafiori",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.634,
-              45.03
-            ]
-          }
-        },
-        "intermediateWaypoints": [
-          {
-            "id": "S1",
-            "title": "Stop S1",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.642,
-                45.0345
-              ]
-            },
-            "constraint": {
-              "id": "tw-s1",
-              "title": "Delivery window S1",
-              "type": "interval",
-              "timePoint": "2026-10-12T09:10:00Z",
-              "delta": 1800
-            }
-          },
-          {
-            "id": "S2",
-            "title": "Stop S2",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6485,
-                45.039
-              ]
-            },
-            "constraint": {
-              "id": "tw-s2",
-              "title": "Delivery window S2",
-              "type": "interval",
-              "timePoint": "2026-10-12T09:20:00Z",
-              "delta": 1800
-            }
-          }
-        ],
-        "end": {
-          "id": "end",
-          "title": "Hub Mirafiori",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.634,
-              45.03
-            ]
-          }
-        },
-        "mode": {
-          "id": "uav-delivery",
-          "title": "Delivery drone",
-          "domain": [
-            "air"
-          ],
-          "supportedRegions": [
-            {
-              "id": "reg-tur",
-              "title": "Turin south",
-              "bbox": [
-                7.55,
-                44.95,
-                7.75,
-                45.1
-              ]
-            }
-          ]
-        },
-        "spatialConstraints": [
-          {
-            "id": "sc-school",
-            "title": "School zone",
-            "type": "doNotEnter",
-            "area": {
-              "type": "Polygon",
+        "inputs": {
+          "name": "Drone delivery round (2 parcels)",
+          "waypoints": {
+            "value": {
+              "type": "MultiPoint",
               "coordinates": [
                 [
-                  [
-                    7.644,
-                    45.03
-                  ],
-                  [
-                    7.647,
-                    45.03
-                  ],
-                  [
-                    7.647,
-                    45.032
-                  ],
-                  [
-                    7.644,
-                    45.032
-                  ],
-                  [
-                    7.644,
-                    45.03
-                  ]
-                ]
-              ]
-            },
-            "buffer": 30,
-            "temporal_constraint": [
-              {
-                "id": "tc-school",
-                "title": "School hours",
-                "type": "interval",
-                "timePoint": "2026-10-12T07:30:00Z",
-                "delta": 28800
-              }
-            ]
-          }
-        ]
-      },
-      "route": {
-        "type": "FeatureCollection",
-        "id": "https://example.org/api/routes/del-drone-0731",
-        "title": "Drone delivery round, 2 parcels",
-        "description": "A delivery drone drops one parcel on a winch line and lands for a verified handover at the second stop.",
-        "describedBy": {
-          "start": {
-            "id": "start",
-            "title": "Hub Mirafiori",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.634,
-                45.03
-              ]
-            }
-          },
-          "intermediateWaypoints": [
-            {
-              "id": "S1",
-              "title": "Stop S1",
-              "location": {
-                "type": "Point",
-                "coordinates": [
+                  7.634,
+                  45.03
+                ],
+                [
                   7.642,
                   45.0345
-                ]
-              },
-              "constraint": {
-                "id": "tw-s1",
-                "title": "Delivery window S1",
-                "type": "interval",
-                "timePoint": "2026-10-12T09:10:00Z",
-                "delta": 1800
-              }
-            },
-            {
-              "id": "S2",
-              "title": "Stop S2",
-              "location": {
-                "type": "Point",
-                "coordinates": [
+                ],
+                [
                   7.6485,
                   45.039
+                ],
+                [
+                  7.634,
+                  45.03
                 ]
-              },
-              "constraint": {
-                "id": "tw-s2",
-                "title": "Delivery window S2",
-                "type": "interval",
-                "timePoint": "2026-10-12T09:20:00Z",
-                "delta": 1800
-              }
-            }
-          ],
-          "end": {
-            "id": "end",
-            "title": "Hub Mirafiori",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.634,
-                45.03
               ]
             }
           },
           "mode": {
-            "id": "uav-delivery",
-            "title": "Delivery drone",
-            "domain": [
-              "air"
-            ],
-            "supportedRegions": [
-              {
-                "id": "reg-tur",
-                "title": "Turin south",
-                "bbox": [
-                  7.55,
-                  44.95,
-                  7.75,
-                  45.1
-                ]
-              }
-            ]
+            "value": {
+              "id": "uav-delivery"
+            }
           },
-          "spatialConstraints": [
-            {
-              "id": "sc-school",
-              "title": "School zone",
-              "type": "doNotEnter",
-              "area": {
-                "type": "Polygon",
-                "coordinates": [
+          "spatial_constraints": {
+            "value": {
+              "type": "MultiPolygon",
+              "coordinates": [
+                [
                   [
                     [
                       7.644,
@@ -246,29 +64,89 @@
                     ]
                   ]
                 ]
-              },
-              "buffer": 30,
-              "temporal_constraint": [
-                {
-                  "id": "tc-school",
-                  "title": "School hours",
-                  "type": "interval",
-                  "timePoint": "2026-10-12T07:30:00Z",
-                  "delta": 28800
-                }
               ]
             }
-          ]
+          }
+        }
+      },
+      "route": {
+        "type": "FeatureCollection",
+        "id": "https://example.org/api/routes/del-drone-0731",
+        "title": "Drone delivery round, 2 parcels",
+        "description": "A delivery drone drops one parcel on a winch line and lands for a verified handover at the second stop.",
+        "describedBy": {
+          "inputs": {
+            "name": "Drone delivery round (2 parcels)",
+            "waypoints": {
+              "value": {
+                "type": "MultiPoint",
+                "coordinates": [
+                  [
+                    7.634,
+                    45.03
+                  ],
+                  [
+                    7.642,
+                    45.0345
+                  ],
+                  [
+                    7.6485,
+                    45.039
+                  ],
+                  [
+                    7.634,
+                    45.03
+                  ]
+                ]
+              }
+            },
+            "mode": {
+              "value": {
+                "id": "uav-delivery"
+              }
+            },
+            "spatial_constraints": {
+              "value": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                  [
+                    [
+                      [
+                        7.644,
+                        45.03
+                      ],
+                      [
+                        7.647,
+                        45.03
+                      ],
+                      [
+                        7.647,
+                        45.032
+                      ],
+                      [
+                        7.644,
+                        45.032
+                      ],
+                      [
+                        7.644,
+                        45.03
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
         },
         "actions": [
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/dronedel-12",
             "sequence": 1,
             "params": {
               "speed": 12,
               "speedType": "ground"
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "vehicleClass": "DRONE",
@@ -315,36 +193,36 @@
             "condition": "link-lost",
             "timeout_s": 15,
             "action": {
-              "actionType": "vehicle.return-to-home",
               "target": "https://example.org/api/systems/dronedel-12",
               "params": {
                 "destination": "home",
                 "finalAction": "land"
-              }
+              },
+              "actionType": "vehicle.return-to-home"
             }
           },
           {
             "condition": "recipient-unavailable",
             "stop": "S2",
             "action": {
-              "actionType": "delivery.return-parcel",
               "target": "https://example.org/api/systems/dronedel-12",
               "params": {
                 "parcelId": "P-1002",
                 "reason": "recipient-absent"
-              }
+              },
+              "actionType": "delivery.return-parcel"
             }
           },
           {
             "condition": "landing-site-blocked",
             "stop": "S2",
             "action": {
-              "actionType": "delivery.report-issue",
               "target": "https://example.org/api/systems/dronedel-12",
               "params": {
                 "category": "blocked-path",
                 "needsHelp": true
-              }
+              },
+              "actionType": "delivery.report-issue"
             }
           }
         ],
@@ -356,12 +234,11 @@
               "featureType": "overview",
               "length": 3047,
               "duration_s": 254,
-              "totalDuration_s": 764,
               "processingTime": "2026-10-12T08:00:00Z",
               "constraints": [
-                "sc-school (doNotEnter, buffer 30 m, 07:30-15:30 UTC) avoided",
-                "tw-s1, tw-s2 delivery windows met"
-              ]
+                "sc-school avoided"
+              ],
+              "totalDuration_s": 764
             },
             "geometry": {
               "type": "LineString",
@@ -443,16 +320,15 @@
               "timestamp": "2026-10-12T09:00:00Z",
               "actions": [
                 {
-                  "actionType": "delivery.load-at-depot",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 2,
                   "params": {
                     "depotId": "HUB-MIR",
                     "maxDuration": 300
-                  }
+                  },
+                  "actionType": "delivery.load-at-depot"
                 },
                 {
-                  "actionType": "vehicle.takeoff",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 3,
                   "params": {
@@ -460,7 +336,8 @@
                       "value": 40,
                       "reference": "home"
                     }
-                  }
+                  },
+                  "actionType": "vehicle.takeoff"
                 }
               ]
             },
@@ -478,13 +355,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S1",
               "previousEnd": "start",
               "waypointId": "S1",
               "length": 807,
               "duration_s": 67,
               "travelMode": "uav-delivery",
-              "timestamp": "2026-10-12T09:06:07Z",
               "constraint": {
                 "id": "tw-s1",
                 "title": "Delivery window S1",
@@ -494,80 +369,82 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "vehicle.set-speed",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 4,
                   "params": {
                     "speed": 14
-                  }
+                  },
+                  "actionType": "vehicle.set-speed"
                 },
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 5,
                   "params": {
                     "event": "approaching",
                     "leadTime": 120,
                     "channel": "app"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 6,
                   "params": {
                     "stopId": "S1",
                     "approachMode": "hover",
                     "toleranceRadius": 3
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 7,
                   "params": {
                     "event": "arrived"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 },
                 {
-                  "actionType": "delivery.drop-package-line",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 8,
                   "params": {
                     "lineLength": 12,
                     "hoverHeight": 15,
                     "rate": 1.0
-                  }
+                  },
+                  "actionType": "delivery.drop-package-line"
                 },
                 {
-                  "actionType": "delivery.capture-proof",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 9,
                   "params": {
                     "type": "photo",
                     "parcelId": "P-1001"
-                  }
+                  },
+                  "actionType": "delivery.capture-proof"
                 },
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 10,
                   "params": {
                     "event": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 11,
                   "params": {
                     "stopId": "S1",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T09:06:07Z",
+              "title": "Stop S1"
             },
             "geometry": {
               "type": "Point",
@@ -583,13 +460,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S2",
               "previousEnd": "seg1",
               "waypointId": "S2",
               "length": 718,
               "duration_s": 60,
               "travelMode": "uav-delivery",
-              "timestamp": "2026-10-12T09:08:37Z",
               "constraint": {
                 "id": "tw-s2",
                 "title": "Delivery window S2",
@@ -599,45 +474,44 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 12,
                   "params": {
                     "event": "approaching",
                     "leadTime": 120
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 13,
                   "params": {
                     "stopId": "S2",
                     "approachMode": "drop-point"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "vehicle.land",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 14,
                   "params": {
                     "precision": "required",
                     "disarmAfter": false
-                  }
+                  },
+                  "actionType": "vehicle.land"
                 },
                 {
-                  "actionType": "delivery.verify-recipient",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 15,
                   "params": {
                     "method": "qr-code",
                     "maxAttempts": 3
-                  }
+                  },
+                  "actionType": "delivery.verify-recipient"
                 },
                 {
-                  "actionType": "delivery.handover",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 16,
                   "params": {
@@ -646,19 +520,19 @@
                     "proof": "photo",
                     "contactless": true,
                     "compartment": 0
-                  }
+                  },
+                  "actionType": "delivery.handover"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 17,
                   "params": {
                     "stopId": "S2",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 },
                 {
-                  "actionType": "vehicle.takeoff",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 18,
                   "params": {
@@ -666,9 +540,12 @@
                       "value": 40,
                       "reference": "home"
                     }
-                  }
+                  },
+                  "actionType": "vehicle.takeoff"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T09:08:37Z",
+              "title": "Stop S2"
             },
             "geometry": {
               "type": "Point",
@@ -684,13 +561,13 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Hub Mirafiori",
               "previousEnd": "seg2",
               "waypointId": "end",
               "length": 1522,
               "duration_s": 127,
               "travelMode": "uav-delivery",
-              "timestamp": "2026-10-12T09:12:44Z"
+              "timestamp": "2026-10-12T09:12:44Z",
+              "title": "Hub Mirafiori"
             },
             "geometry": {
               "type": "Point",
@@ -710,30 +587,30 @@
               "timestamp": "2026-10-12T09:12:44Z",
               "actions": [
                 {
-                  "actionType": "vehicle.land",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 19,
                   "params": {
                     "precision": "required"
-                  }
+                  },
+                  "actionType": "vehicle.land"
                 },
                 {
-                  "actionType": "delivery.unload-at-depot",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 20,
                   "params": {
                     "depotId": "HUB-MIR",
                     "reason": "end-of-shift"
-                  }
+                  },
+                  "actionType": "delivery.unload-at-depot"
                 },
                 {
-                  "actionType": "delivery.charge",
                   "target": "https://example.org/api/systems/dronedel-12",
                   "sequence": 21,
                   "params": {
                     "stationId": "HUB-MIR-PAD3",
                     "targetLevel": 100
-                  }
+                  },
+                  "actionType": "delivery.charge"
                 }
               ]
             },
@@ -754,186 +631,41 @@
       "description": "A sidewalk robot passes a gate, verifies a PIN for a hand-to-recipient handover, waits at a crossing and waits for a second recipient.",
       "vehicleClass": "ROBOT",
       "routeDefinition": {
-        "start": {
-          "id": "start",
-          "title": "Hub Crocetta",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.656,
-              45.059
-            ]
-          }
-        },
-        "intermediateWaypoints": [
-          {
-            "id": "S1",
-            "title": "Stop S1",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6602,
-                45.0615
-              ]
-            }
-          },
-          {
-            "id": "S2",
-            "title": "Stop S2",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6648,
-                45.064
-              ]
-            }
-          }
-        ],
-        "end": {
-          "id": "end",
-          "title": "Hub Crocetta",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.656,
-              45.059
-            ]
-          }
-        },
-        "mode": {
-          "id": "sidewalk-robot",
-          "title": "Sidewalk delivery robot",
-          "domain": [
-            "ground"
-          ],
-          "supportedRegions": [
-            {
-              "id": "reg-cro",
-              "title": "Crocetta district",
-              "bbox": [
-                7.64,
-                45.05,
-                7.68,
-                45.07
-              ]
-            }
-          ]
-        },
-        "spatialConstraints": [
-          {
-            "id": "sc-works",
-            "title": "Construction site",
-            "type": "doNotEnter",
-            "area": {
-              "type": "Polygon",
+        "inputs": {
+          "name": "Sidewalk robot round (2 parcels)",
+          "waypoints": {
+            "value": {
+              "type": "MultiPoint",
               "coordinates": [
                 [
-                  [
-                    7.661,
-                    45.0618
-                  ],
-                  [
-                    7.6618,
-                    45.0618
-                  ],
-                  [
-                    7.6618,
-                    45.0624
-                  ],
-                  [
-                    7.661,
-                    45.0624
-                  ],
-                  [
-                    7.661,
-                    45.0618
-                  ]
-                ]
-              ]
-            },
-            "buffer": 5
-          }
-        ]
-      },
-      "route": {
-        "type": "FeatureCollection",
-        "id": "https://example.org/api/routes/del-robot-1158",
-        "title": "Sidewalk robot round, 2 parcels",
-        "description": "A sidewalk robot passes a gate, verifies a PIN, waits at a crossing and waits for a second recipient.",
-        "describedBy": {
-          "start": {
-            "id": "start",
-            "title": "Hub Crocetta",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.656,
-                45.059
-              ]
-            }
-          },
-          "intermediateWaypoints": [
-            {
-              "id": "S1",
-              "title": "Stop S1",
-              "location": {
-                "type": "Point",
-                "coordinates": [
+                  7.656,
+                  45.059
+                ],
+                [
                   7.6602,
                   45.0615
-                ]
-              }
-            },
-            {
-              "id": "S2",
-              "title": "Stop S2",
-              "location": {
-                "type": "Point",
-                "coordinates": [
+                ],
+                [
                   7.6648,
                   45.064
+                ],
+                [
+                  7.656,
+                  45.059
                 ]
-              }
-            }
-          ],
-          "end": {
-            "id": "end",
-            "title": "Hub Crocetta",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.656,
-                45.059
               ]
             }
           },
           "mode": {
-            "id": "sidewalk-robot",
-            "title": "Sidewalk delivery robot",
-            "domain": [
-              "ground"
-            ],
-            "supportedRegions": [
-              {
-                "id": "reg-cro",
-                "title": "Crocetta district",
-                "bbox": [
-                  7.64,
-                  45.05,
-                  7.68,
-                  45.07
-                ]
-              }
-            ]
+            "value": {
+              "id": "sidewalk-robot"
+            }
           },
-          "spatialConstraints": [
-            {
-              "id": "sc-works",
-              "title": "Construction site",
-              "type": "doNotEnter",
-              "area": {
-                "type": "Polygon",
-                "coordinates": [
+          "spatial_constraints": {
+            "value": {
+              "type": "MultiPolygon",
+              "coordinates": [
+                [
                   [
                     [
                       7.661,
@@ -957,19 +689,88 @@
                     ]
                   ]
                 ]
-              },
-              "buffer": 5
+              ]
             }
-          ]
+          }
+        }
+      },
+      "route": {
+        "type": "FeatureCollection",
+        "id": "https://example.org/api/routes/del-robot-1158",
+        "title": "Sidewalk robot round, 2 parcels",
+        "description": "A sidewalk robot passes a gate, verifies a PIN, waits at a crossing and waits for a second recipient.",
+        "describedBy": {
+          "inputs": {
+            "name": "Sidewalk robot round (2 parcels)",
+            "waypoints": {
+              "value": {
+                "type": "MultiPoint",
+                "coordinates": [
+                  [
+                    7.656,
+                    45.059
+                  ],
+                  [
+                    7.6602,
+                    45.0615
+                  ],
+                  [
+                    7.6648,
+                    45.064
+                  ],
+                  [
+                    7.656,
+                    45.059
+                  ]
+                ]
+              }
+            },
+            "mode": {
+              "value": {
+                "id": "sidewalk-robot"
+              }
+            },
+            "spatial_constraints": {
+              "value": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                  [
+                    [
+                      [
+                        7.661,
+                        45.0618
+                      ],
+                      [
+                        7.6618,
+                        45.0618
+                      ],
+                      [
+                        7.6618,
+                        45.0624
+                      ],
+                      [
+                        7.661,
+                        45.0624
+                      ],
+                      [
+                        7.661,
+                        45.0618
+                      ]
+                    ]
+                  ]
+                ]
+              }
+            }
+          }
         },
         "actions": [
           {
-            "actionType": "vehicle.set-speed",
             "target": "https://example.org/api/systems/robot-31",
             "sequence": 1,
             "params": {
               "speed": 1.4
-            }
+            },
+            "actionType": "vehicle.set-speed"
           }
         ],
         "vehicleClass": "ROBOT",
@@ -1016,7 +817,6 @@
             "condition": "recipient-absent",
             "stop": "S2",
             "action": {
-              "actionType": "delivery.handover",
               "target": "https://example.org/api/systems/robot-31",
               "params": {
                 "parcelId": "P-2002",
@@ -1024,30 +824,31 @@
                 "proof": "photo",
                 "contactless": true,
                 "compartment": 1
-              }
+              },
+              "actionType": "delivery.handover"
             }
           },
           {
             "condition": "access-denied",
             "stop": "S1",
             "action": {
-              "actionType": "delivery.return-parcel",
               "target": "https://example.org/api/systems/robot-31",
               "params": {
                 "parcelId": "P-2001",
                 "reason": "access-denied"
-              }
+              },
+              "actionType": "delivery.return-parcel"
             }
           },
           {
             "condition": "path-blocked",
             "action": {
-              "actionType": "delivery.report-issue",
               "target": "https://example.org/api/systems/robot-31",
               "params": {
                 "category": "blocked-path",
                 "needsHelp": false
-              }
+              },
+              "actionType": "delivery.report-issue"
             }
           }
         ],
@@ -1059,12 +860,11 @@
               "featureType": "overview",
               "length": 1782,
               "duration_s": 1318,
-              "totalDuration_s": 1938,
               "processingTime": "2026-10-12T09:30:00Z",
               "constraints": [
-                "sc-works (doNotEnter, buffer 5 m) avoided",
-                "no stairs, kerbs under 8 cm, slope under 8 %"
-              ]
+                "sc-works avoided"
+              ],
+              "totalDuration_s": 1938
             },
             "geometry": {
               "type": "LineString",
@@ -1166,13 +966,13 @@
               "timestamp": "2026-10-12T10:30:00Z",
               "actions": [
                 {
-                  "actionType": "delivery.load-at-depot",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 2,
                   "params": {
                     "depotId": "HUB-CRO",
                     "maxDuration": 240
-                  }
+                  },
+                  "actionType": "delivery.load-at-depot"
                 }
               ]
             },
@@ -1190,72 +990,69 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S1",
               "previousEnd": "start",
               "waypointId": "S1",
               "length": 433,
               "duration_s": 289,
               "travelMode": "sidewalk",
-              "timestamp": "2026-10-12T10:38:49Z",
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 3,
                   "params": {
                     "event": "approaching",
                     "leadTime": 300
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.request-access",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 4,
                   "params": {
                     "accessType": "gate",
                     "credential": "ref-8841",
                     "timeout": 120
-                  }
+                  },
+                  "actionType": "delivery.request-access"
                 },
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 5,
                   "params": {
                     "stopId": "S1",
                     "approachMode": "door"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 6,
                   "params": {
                     "event": "arrived"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 },
                 {
-                  "actionType": "delivery.verify-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 7,
                   "params": {
                     "method": "pin",
                     "maxAttempts": 3
-                  }
+                  },
+                  "actionType": "delivery.verify-recipient"
                 },
                 {
-                  "actionType": "delivery.open-compartment",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 8,
                   "params": {
                     "compartment": 2,
                     "autoCloseAfter": 60
-                  }
+                  },
+                  "actionType": "delivery.open-compartment"
                 },
                 {
-                  "actionType": "delivery.handover",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 9,
                   "params": {
@@ -1264,34 +1061,37 @@
                     "proof": "photo",
                     "contactless": false,
                     "compartment": 2
-                  }
+                  },
+                  "actionType": "delivery.handover"
                 },
                 {
-                  "actionType": "delivery.close-compartment",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 10,
                   "params": {
                     "compartment": 2
-                  }
+                  },
+                  "actionType": "delivery.close-compartment"
                 },
                 {
-                  "actionType": "delivery.release-access",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 11,
                   "params": {
                     "accessType": "gate"
-                  }
+                  },
+                  "actionType": "delivery.release-access"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 12,
                   "params": {
                     "stopId": "S1",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T10:38:49Z",
+              "title": "Stop S1"
             },
             "geometry": {
               "type": "Point",
@@ -1307,32 +1107,32 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Crossing Corso Duca",
               "previousEnd": "seg1",
               "length": 232,
               "duration_s": 232,
               "travelMode": "sidewalk",
-              "timestamp": "2026-10-12T10:45:11Z",
               "segment_actions": [
                 {
-                  "actionType": "vehicle.set-speed",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 13,
                   "params": {
                     "speed": 1.0
-                  }
+                  },
+                  "actionType": "vehicle.set-speed"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "mission.wait",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 14,
                   "params": {
                     "duration": 30
-                  }
+                  },
+                  "actionType": "mission.wait"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T10:45:11Z",
+              "title": "Crossing Corso Duca"
             },
             "geometry": {
               "type": "Point",
@@ -1348,61 +1148,58 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S2",
               "previousEnd": "seg2",
               "waypointId": "S2",
               "length": 226,
               "duration_s": 161,
               "travelMode": "sidewalk",
-              "timestamp": "2026-10-12T10:48:22Z",
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 15,
                   "params": {
                     "event": "approaching",
                     "leadTime": 300
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 16,
                   "params": {
                     "stopId": "S2",
                     "approachMode": "curb"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 17,
                   "params": {
                     "event": "arrived"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 },
                 {
-                  "actionType": "delivery.hold-for-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 18,
                   "params": {
                     "maxWait": 180,
                     "onTimeout": "safe-place"
-                  }
+                  },
+                  "actionType": "delivery.hold-for-recipient"
                 },
                 {
-                  "actionType": "delivery.verify-recipient",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 19,
                   "params": {
                     "method": "qr-code"
-                  }
+                  },
+                  "actionType": "delivery.verify-recipient"
                 },
                 {
-                  "actionType": "delivery.handover",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 20,
                   "params": {
@@ -1411,18 +1208,21 @@
                     "proof": "photo",
                     "contactless": true,
                     "compartment": 1
-                  }
+                  },
+                  "actionType": "delivery.handover"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 21,
                   "params": {
                     "stopId": "S2",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T10:48:22Z",
+              "title": "Stop S2"
             },
             "geometry": {
               "type": "Point",
@@ -1438,13 +1238,13 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Hub Crocetta",
               "previousEnd": "seg3",
               "waypointId": "end",
               "length": 891,
               "duration_s": 636,
               "travelMode": "sidewalk",
-              "timestamp": "2026-10-12T11:02:18Z"
+              "timestamp": "2026-10-12T11:02:18Z",
+              "title": "Hub Crocetta"
             },
             "geometry": {
               "type": "Point",
@@ -1464,21 +1264,21 @@
               "timestamp": "2026-10-12T11:02:18Z",
               "actions": [
                 {
-                  "actionType": "delivery.charge",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 22,
                   "params": {
                     "targetLevel": 100
-                  }
+                  },
+                  "actionType": "delivery.charge"
                 },
                 {
-                  "actionType": "delivery.unload-at-depot",
                   "target": "https://example.org/api/systems/robot-31",
                   "sequence": 23,
                   "params": {
                     "depotId": "HUB-CRO",
                     "reason": "end-of-shift"
-                  }
+                  },
+                  "actionType": "delivery.unload-at-depot"
                 }
               ]
             },
@@ -1499,196 +1299,76 @@
       "description": "An electric van with time windows, an age-checked handover, a pickup and a charging stop.",
       "vehicleClass": "VAN",
       "routeDefinition": {
-        "start": {
-          "id": "start",
-          "title": "Depot Nord",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.642,
-              45.105
-            ]
-          }
-        },
-        "intermediateWaypoints": [
-          {
-            "id": "S1",
-            "title": "Stop S1",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.658,
-                45.098
-              ]
-            },
-            "constraint": {
-              "id": "tw-s1",
-              "title": "Delivery window S1",
-              "type": "interval",
-              "timePoint": "2026-10-12T08:30:00Z",
-              "delta": 1800
-            }
-          },
-          {
-            "id": "S2",
-            "title": "Stop S2",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6665,
-                45.0905
-              ]
-            },
-            "constraint": {
-              "id": "tw-s2",
-              "title": "Delivery window S2",
-              "type": "interval",
-              "timePoint": "2026-10-12T08:45:00Z",
-              "delta": 2700
-            }
-          },
-          {
-            "id": "S3",
-            "title": "Stop S3",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.659,
-                45.0835
-              ]
-            },
-            "constraint": {
-              "id": "tw-s3",
-              "title": "Pickup window S3",
-              "type": "interval",
-              "timePoint": "2026-10-12T09:00:00Z",
-              "delta": 3600
-            }
-          },
-          {
-            "id": "S4",
-            "title": "Stop S4",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.6385,
-                45.0745
-              ]
-            },
-            "constraint": {
-              "id": "tw-s4",
-              "title": "Delivery window S4",
-              "type": "interval",
-              "timePoint": "2026-10-12T10:30:00Z",
-              "delta": 3600
-            }
-          }
-        ],
-        "end": {
-          "id": "end",
-          "title": "Depot Nord",
-          "location": {
-            "type": "Point",
-            "coordinates": [
-              7.642,
-              45.105
-            ]
-          }
-        },
-        "mode": {
-          "id": "delivery-van",
-          "title": "Delivery van",
-          "domain": [
-            "ground"
-          ],
-          "supportedRegions": [
-            {
-              "id": "reg-tur",
-              "title": "Turin north",
-              "bbox": [
-                7.55,
-                45.05,
-                7.75,
-                45.15
-              ]
-            }
-          ]
-        },
-        "spatialConstraints": [
-          {
-            "id": "sc-ztl",
-            "title": "Limited traffic zone",
-            "type": "doNotEnter",
-            "area": {
-              "type": "Polygon",
+        "inputs": {
+          "name": "Van round (4 stops, pickup, charging)",
+          "waypoints": {
+            "value": {
+              "type": "MultiPoint",
               "coordinates": [
                 [
-                  [
-                    7.65,
-                    45.09
-                  ],
-                  [
-                    7.656,
-                    45.09
-                  ],
-                  [
-                    7.656,
-                    45.095
-                  ],
-                  [
-                    7.65,
-                    45.095
-                  ],
-                  [
-                    7.65,
-                    45.09
-                  ]
+                  7.642,
+                  45.105
+                ],
+                [
+                  7.658,
+                  45.098
+                ],
+                [
+                  7.6665,
+                  45.0905
+                ],
+                [
+                  7.659,
+                  45.0835
+                ],
+                [
+                  7.6385,
+                  45.0745
+                ],
+                [
+                  7.642,
+                  45.105
                 ]
               ]
             }
           },
-          {
-            "id": "sc-ztl-permit",
-            "title": "Permit corridor",
-            "type": "override",
-            "area": {
-              "type": "Polygon",
+          "mode": {
+            "value": {
+              "id": "delivery-van"
+            }
+          },
+          "spatial_constraints": {
+            "value": {
+              "type": "MultiPolygon",
               "coordinates": [
                 [
                   [
-                    7.6515,
-                    45.0915
-                  ],
-                  [
-                    7.6535,
-                    45.0915
-                  ],
-                  [
-                    7.6535,
-                    45.0935
-                  ],
-                  [
-                    7.6515,
-                    45.0935
-                  ],
-                  [
-                    7.6515,
-                    45.0915
+                    [
+                      7.65,
+                      45.09
+                    ],
+                    [
+                      7.656,
+                      45.09
+                    ],
+                    [
+                      7.656,
+                      45.095
+                    ],
+                    [
+                      7.65,
+                      45.095
+                    ],
+                    [
+                      7.65,
+                      45.09
+                    ]
                   ]
                 ]
               ]
-            },
-            "temporal_constraint": [
-              {
-                "id": "tc-permit",
-                "title": "Permit window",
-                "type": "interval",
-                "timePoint": "2026-10-12T06:00:00Z",
-                "delta": 14400
-              }
-            ]
+            }
           }
-        ]
+        }
       },
       "route": {
         "type": "FeatureCollection",
@@ -1696,196 +1376,76 @@
         "title": "Van round, 4 stops with pickup and charging",
         "description": "An electric van with time windows, an age-checked handover, a pickup and a charging stop.",
         "describedBy": {
-          "start": {
-            "id": "start",
-            "title": "Depot Nord",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.642,
-                45.105
-              ]
-            }
-          },
-          "intermediateWaypoints": [
-            {
-              "id": "S1",
-              "title": "Stop S1",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.658,
-                  45.098
-                ]
-              },
-              "constraint": {
-                "id": "tw-s1",
-                "title": "Delivery window S1",
-                "type": "interval",
-                "timePoint": "2026-10-12T08:30:00Z",
-                "delta": 1800
-              }
-            },
-            {
-              "id": "S2",
-              "title": "Stop S2",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.6665,
-                  45.0905
-                ]
-              },
-              "constraint": {
-                "id": "tw-s2",
-                "title": "Delivery window S2",
-                "type": "interval",
-                "timePoint": "2026-10-12T08:45:00Z",
-                "delta": 2700
-              }
-            },
-            {
-              "id": "S3",
-              "title": "Stop S3",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.659,
-                  45.0835
-                ]
-              },
-              "constraint": {
-                "id": "tw-s3",
-                "title": "Pickup window S3",
-                "type": "interval",
-                "timePoint": "2026-10-12T09:00:00Z",
-                "delta": 3600
-              }
-            },
-            {
-              "id": "S4",
-              "title": "Stop S4",
-              "location": {
-                "type": "Point",
-                "coordinates": [
-                  7.6385,
-                  45.0745
-                ]
-              },
-              "constraint": {
-                "id": "tw-s4",
-                "title": "Delivery window S4",
-                "type": "interval",
-                "timePoint": "2026-10-12T10:30:00Z",
-                "delta": 3600
-              }
-            }
-          ],
-          "end": {
-            "id": "end",
-            "title": "Depot Nord",
-            "location": {
-              "type": "Point",
-              "coordinates": [
-                7.642,
-                45.105
-              ]
-            }
-          },
-          "mode": {
-            "id": "delivery-van",
-            "title": "Delivery van",
-            "domain": [
-              "ground"
-            ],
-            "supportedRegions": [
-              {
-                "id": "reg-tur",
-                "title": "Turin north",
-                "bbox": [
-                  7.55,
-                  45.05,
-                  7.75,
-                  45.15
-                ]
-              }
-            ]
-          },
-          "spatialConstraints": [
-            {
-              "id": "sc-ztl",
-              "title": "Limited traffic zone",
-              "type": "doNotEnter",
-              "area": {
-                "type": "Polygon",
+          "inputs": {
+            "name": "Van round (4 stops, pickup, charging)",
+            "waypoints": {
+              "value": {
+                "type": "MultiPoint",
                 "coordinates": [
                   [
-                    [
-                      7.65,
-                      45.09
-                    ],
-                    [
-                      7.656,
-                      45.09
-                    ],
-                    [
-                      7.656,
-                      45.095
-                    ],
-                    [
-                      7.65,
-                      45.095
-                    ],
-                    [
-                      7.65,
-                      45.09
-                    ]
+                    7.642,
+                    45.105
+                  ],
+                  [
+                    7.658,
+                    45.098
+                  ],
+                  [
+                    7.6665,
+                    45.0905
+                  ],
+                  [
+                    7.659,
+                    45.0835
+                  ],
+                  [
+                    7.6385,
+                    45.0745
+                  ],
+                  [
+                    7.642,
+                    45.105
                   ]
                 ]
               }
             },
-            {
-              "id": "sc-ztl-permit",
-              "title": "Permit corridor",
-              "type": "override",
-              "area": {
-                "type": "Polygon",
+            "mode": {
+              "value": {
+                "id": "delivery-van"
+              }
+            },
+            "spatial_constraints": {
+              "value": {
+                "type": "MultiPolygon",
                 "coordinates": [
                   [
                     [
-                      7.6515,
-                      45.0915
-                    ],
-                    [
-                      7.6535,
-                      45.0915
-                    ],
-                    [
-                      7.6535,
-                      45.0935
-                    ],
-                    [
-                      7.6515,
-                      45.0935
-                    ],
-                    [
-                      7.6515,
-                      45.0915
+                      [
+                        7.65,
+                        45.09
+                      ],
+                      [
+                        7.656,
+                        45.09
+                      ],
+                      [
+                        7.656,
+                        45.095
+                      ],
+                      [
+                        7.65,
+                        45.095
+                      ],
+                      [
+                        7.65,
+                        45.09
+                      ]
                     ]
                   ]
                 ]
-              },
-              "temporal_constraint": [
-                {
-                  "id": "tc-permit",
-                  "title": "Permit window",
-                  "type": "interval",
-                  "timePoint": "2026-10-12T06:00:00Z",
-                  "delta": 14400
-                }
-              ]
+              }
             }
-          ]
+          }
         },
         "vehicleClass": "VAN",
         "verticalReference": "msl",
@@ -1930,24 +1490,24 @@
           {
             "condition": "recipient-absent",
             "action": {
-              "actionType": "delivery.reattempt",
               "target": "https://example.org/api/systems/van-05",
               "params": {
                 "parcelId": "P-3002",
                 "earliest": "2026-10-13T08:00:00Z",
                 "latest": "2026-10-13T18:00:00Z"
-              }
+              },
+              "actionType": "delivery.reattempt"
             }
           },
           {
             "condition": "parking-unavailable",
             "action": {
-              "actionType": "delivery.report-issue",
               "target": "https://example.org/api/systems/van-05",
               "params": {
                 "category": "access",
                 "needsHelp": false
-              }
+              },
+              "actionType": "delivery.report-issue"
             }
           }
         ],
@@ -1959,14 +1519,13 @@
               "featureType": "overview",
               "length": 8869,
               "duration_s": 1062,
-              "totalDuration_s": 4422,
               "processingTime": "2026-10-12T07:00:00Z",
               "maxHeight_m": 2.8,
-              "maxWeight_t": 3.5,
               "constraints": [
-                "sc-ztl avoided (override sc-ztl-permit not needed)",
-                "height 2.8 m, weight 3.5 t"
-              ]
+                "sc-ztl avoided"
+              ],
+              "totalDuration_s": 4422,
+              "maxWeight_t": 3.5
             },
             "geometry": {
               "type": "LineString",
@@ -2108,13 +1667,13 @@
               "timestamp": "2026-10-12T08:00:00Z",
               "actions": [
                 {
-                  "actionType": "delivery.load-at-depot",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 1,
                   "params": {
                     "depotId": "DEP-N",
                     "maxDuration": 900
-                  }
+                  },
+                  "actionType": "delivery.load-at-depot"
                 }
               ]
             },
@@ -2132,13 +1691,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S1",
               "previousEnd": "start",
               "waypointId": "S1",
               "length": 1484,
               "duration_s": 186,
               "travelMode": "road",
-              "timestamp": "2026-10-12T08:18:06Z",
               "constraint": {
                 "id": "tw-s1",
                 "title": "Delivery window S1",
@@ -2148,36 +1705,35 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 2,
                   "params": {
                     "event": "approaching",
                     "leadTime": 300,
                     "channel": "sms"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 3,
                   "params": {
                     "stopId": "S1"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.park",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 4,
                   "params": {
                     "parkingType": "curb",
                     "maxDuration": 300
-                  }
+                  },
+                  "actionType": "delivery.park"
                 },
                 {
-                  "actionType": "delivery.handover",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 5,
                   "params": {
@@ -2185,18 +1741,21 @@
                     "method": "doorstep",
                     "proof": "photo",
                     "contactless": true
-                  }
+                  },
+                  "actionType": "delivery.handover"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 6,
                   "params": {
                     "stopId": "S1",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T08:18:06Z",
+              "title": "Stop S1"
             },
             "geometry": {
               "type": "Point",
@@ -2212,13 +1771,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S2",
               "previousEnd": "seg1",
               "waypointId": "S2",
               "length": 1071,
               "duration_s": 134,
               "travelMode": "road",
-              "timestamp": "2026-10-12T08:24:20Z",
               "constraint": {
                 "id": "tw-s2",
                 "title": "Delivery window S2",
@@ -2228,45 +1785,44 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 7,
                   "params": {
                     "event": "approaching",
                     "leadTime": 300,
                     "channel": "sms"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 8,
                   "params": {
                     "stopId": "S2"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.park",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 9,
                   "params": {
                     "parkingType": "curb",
                     "maxDuration": 300
-                  }
+                  },
+                  "actionType": "delivery.park"
                 },
                 {
-                  "actionType": "delivery.verify-recipient",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 10,
                   "params": {
                     "method": "id-check",
                     "ageCheck": 18
-                  }
+                  },
+                  "actionType": "delivery.verify-recipient"
                 },
                 {
-                  "actionType": "delivery.handover",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 11,
                   "params": {
@@ -2274,18 +1830,21 @@
                     "method": "hand-to-recipient",
                     "proof": "signature",
                     "contactless": false
-                  }
+                  },
+                  "actionType": "delivery.handover"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 12,
                   "params": {
                     "stopId": "S2",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T08:24:20Z",
+              "title": "Stop S2"
             },
             "geometry": {
               "type": "Point",
@@ -2301,13 +1860,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S3",
               "previousEnd": "seg2",
               "waypointId": "S3",
               "length": 979,
               "duration_s": 122,
               "travelMode": "road",
-              "timestamp": "2026-10-12T08:30:22Z",
               "constraint": {
                 "id": "tw-s3",
                 "title": "Pickup window S3",
@@ -2317,53 +1874,55 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 13,
                   "params": {
                     "event": "approaching",
                     "leadTime": 300,
                     "channel": "sms"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 14,
                   "params": {
                     "stopId": "S3"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.park",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 15,
                   "params": {
                     "parkingType": "curb",
                     "maxDuration": 300
-                  }
+                  },
+                  "actionType": "delivery.park"
                 },
                 {
-                  "actionType": "delivery.pickup",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 16,
                   "params": {
                     "parcelId": "R-77",
                     "method": "hand-to-vehicle"
-                  }
+                  },
+                  "actionType": "delivery.pickup"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 17,
                   "params": {
                     "stopId": "S3",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T08:30:22Z",
+              "title": "Stop S3"
             },
             "geometry": {
               "type": "Point",
@@ -2379,24 +1938,24 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Charging stop",
               "previousEnd": "seg3",
               "length": 938,
               "duration_s": 117,
               "travelMode": "road",
-              "timestamp": "2026-10-12T08:36:19Z",
               "actions": [
                 {
-                  "actionType": "delivery.charge",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 18,
                   "params": {
                     "stationId": "CHG-12",
                     "targetLevel": 70,
                     "maxDuration": 1500
-                  }
+                  },
+                  "actionType": "delivery.charge"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T08:36:19Z",
+              "title": "Charging stop"
             },
             "geometry": {
               "type": "Point",
@@ -2412,13 +1971,11 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Stop S4",
               "previousEnd": "seg4",
               "waypointId": "S4",
               "length": 989,
               "duration_s": 124,
               "travelMode": "road",
-              "timestamp": "2026-10-12T09:03:23Z",
               "constraint": {
                 "id": "tw-s4",
                 "title": "Delivery window S4",
@@ -2428,36 +1985,35 @@
               },
               "segment_actions": [
                 {
-                  "actionType": "delivery.notify-recipient",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 19,
                   "params": {
                     "event": "approaching",
                     "leadTime": 300,
                     "channel": "sms"
-                  }
+                  },
+                  "actionType": "delivery.notify-recipient"
                 }
               ],
               "actions": [
                 {
-                  "actionType": "delivery.arrive-at-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 20,
                   "params": {
                     "stopId": "S4"
-                  }
+                  },
+                  "actionType": "delivery.arrive-at-stop"
                 },
                 {
-                  "actionType": "delivery.park",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 21,
                   "params": {
                     "parkingType": "curb",
                     "maxDuration": 300
-                  }
+                  },
+                  "actionType": "delivery.park"
                 },
                 {
-                  "actionType": "delivery.handover",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 22,
                   "params": {
@@ -2465,18 +2021,21 @@
                     "method": "safe-place",
                     "proof": "photo",
                     "contactless": true
-                  }
+                  },
+                  "actionType": "delivery.handover"
                 },
                 {
-                  "actionType": "delivery.depart-stop",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 23,
                   "params": {
                     "stopId": "S4",
                     "outcome": "delivered"
-                  }
+                  },
+                  "actionType": "delivery.depart-stop"
                 }
-              ]
+              ],
+              "timestamp": "2026-10-12T09:03:23Z",
+              "title": "Stop S4"
             },
             "geometry": {
               "type": "Point",
@@ -2492,13 +2051,13 @@
             "type": "Feature",
             "properties": {
               "featureType": "segment",
-              "title": "Depot Nord",
               "previousEnd": "seg5",
               "waypointId": "end",
               "length": 3408,
               "duration_s": 379,
               "travelMode": "road",
-              "timestamp": "2026-10-12T09:13:42Z"
+              "timestamp": "2026-10-12T09:13:42Z",
+              "title": "Depot Nord"
             },
             "geometry": {
               "type": "Point",
@@ -2518,13 +2077,13 @@
               "timestamp": "2026-10-12T09:13:42Z",
               "actions": [
                 {
-                  "actionType": "delivery.unload-at-depot",
                   "target": "https://example.org/api/systems/van-05",
                   "sequence": 24,
                   "params": {
                     "depotId": "DEP-N",
                     "reason": "returns"
-                  }
+                  },
+                  "actionType": "delivery.unload-at-depot"
                 }
               ]
             },

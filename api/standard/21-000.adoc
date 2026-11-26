@@ -18,9 +18,9 @@
 |Submission Date: <yyyy-mm-dd>
 |Approval Date:   <yyyy-mm-dd>
 |Publication Date:   <yyyy-mm-dd>
-|External identifier of this OGC(R) document: http://www.opengis.net/doc/is/ogcapi-routes-1/1.0.0-draft.1
+|External identifier of this OGC(R) document: http://www.opengis.net/doc/is/ogcapi-routes-1/1.0.0-draft.2
 |Internal reference number of this OGC(R) document:    21-000
-|Version: 1.0.0-draft.1
+|Version: 1.0.0-draft.2
 |Category: OGC(R) Implementation Specification
 |Editor:   Clemens Portele, Ignacio Correas
 |===
@@ -102,6 +102,8 @@ include::clause_9_security_considerations.adoc[]
 add or remove annexes after "A" as necessary
 ////
 include::annex-a.adoc[]
+
+include::srd/building-clients.adoc[]
 
 include::srd/SRD_Common_Command_Registry_for_Uncrewed_Systems_UAV_UGV_USV_UUV.adoc[]
 

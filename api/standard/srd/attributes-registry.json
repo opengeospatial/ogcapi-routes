@@ -164,7 +164,8 @@
       "name": "Total length",
       "definition": "Full 2D length of the route geometry.",
       "scope": [
-        "route"
+        "route",
+        "segment"
       ],
       "schema": {
         "type": "number",

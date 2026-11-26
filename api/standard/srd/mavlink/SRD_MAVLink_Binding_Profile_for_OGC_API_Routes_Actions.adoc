@@ -361,7 +361,7 @@ Each `params[]` entry has `mavParam` (1--7) and one source: `field` (a schema pr
 }
 ----
 
-* `actionType` SHALL correspond to an `id` resolvable at `+GET /actions/{actionId}+`.
+* `type` SHALL correspond to an `id` resolvable at `+GET /actions/{actionId}+`.
 * `params` SHALL validate against that schema.
 * `target` is optional. When present it SHALL follow REQ 16. When absent, it is resolved when the route is loaded (registry Clause 2.11).
 * `sequence` SHALL follow REQ 18.
@@ -449,7 +449,7 @@ mavlink://<network>/<system_id>[/<component_id>]
 GET /routes/{routeId}/definition?profile=mavlink&format=mission
 ----
 
-returning `+{ "missionItems": [...], "guidedSteps": [...], "mapping": [...] }+`. Items use MAVLink field names (`seq`, `frame`, `command`, `current`, `autocontinue`, `param1..param4`, `x`, `y`, `z`, `mission_type`). `mapping` gives provenance `{seq, featureIndex, actionType, target, sequence}` per item.
+returning `+{ "missionItems": [...], "guidedSteps": [...], "mapping": [...] }+`. Items use MAVLink field names (`seq`, `frame`, `command`, `current`, `autocontinue`, `param1..param4`, `x`, `y`, `z`, `mission_type`). `mapping` gives provenance `{seq, featureIndex, type, target, sequence}` per item.
 
 === 4.8 Classes (c) and (d): binding to a live MAVLink endpoint
 
@@ -695,7 +695,7 @@ GET /actions/capture-photo/binding
       "geometry": { "type": "Point", "coordinates": [7.64, 45.03] } },
     { "type": "Feature",
       "properties": { "type": "waypoint", "actions": [
-        { "actionType": "hover-and-land", "target": "mavlink:7/1", "sequence": 1, "params": { "hoverSeconds": 10 } } ] },
+        { "type": "hover-and-land", "target": "mavlink:7/1", "sequence": 1, "params": { "hoverSeconds": 10 } } ] },
       "geometry": { "type": "Point", "coordinates": [7.65, 45.04] } }
   ]
 }
@@ -812,7 +812,7 @@ All rows have `autocontinue = 1`, `current = 0`, `mission_type = 0`. Three detai
 The hover-and-land composite of Clause 5.1 can be written with registry identifiers. Waypoint 2 then carries two actions for `mavlink:7/1`:
 
 |===
-| `actionType` | `sequence` | `params` | Native action
+| `type` | `sequence` | `params` | Native action
 
 | `vehicle.hold-position`
 | 1
